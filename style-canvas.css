@@ -1,0 +1,47 @@
+
+.outer {
+position:absolute;
+width:100%;
+height:100%;
+box-sizing:border-box;
+margin:0px;
+top:0px;
+left:0px;
+padding-top:3em;
+padding-bottom:1.5em;
+
+}
+
+
+@media (orientation: portrait) {
+.inner {
+position:relative;
+box-sizing:border-box;
+width:95%;
+padding-bottom:95%;
+left:2.5%;
+}
+}
+
+@media (orientation: landscape) {
+.inner {
+position:relative;
+box-sizing:border-box;
+height:100%;
+width:90vh;
+left:50%;transform: translateX(-50%);
+top:0px;
+}
+}
+
+.centeredSquare {
+position:absolute;
+left:0px;top:0px;
+box-sizing:border-box;
+width:100%;
+height:100%;
+}
+
+
+
+
