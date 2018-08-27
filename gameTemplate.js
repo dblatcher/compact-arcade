@@ -9,7 +9,7 @@ function createGame () {
 		{width:1000,height:1000,
 			items:[],
 			effects:[{type:'message',message:'empty game', animateFrame:0, lastFrame:-1}],
-			victoryCondition() {
+			victoryCondition : function() {
 				return false;
 			}
 		}
@@ -17,10 +17,10 @@ function createGame () {
 		
 		sound : {
 			path : "./sounds/",
-			play(choosenSound) {
+			play: function(choosenSound) {
 				this[choosenSound].play();
 			},
-			stop(choosenSound) {
+			stop: function(choosenSound) {
 				this[choosenSound].pause();
 			}
 		},
@@ -45,7 +45,7 @@ function createGame () {
 			waitingToReset:false,
 			gameStatus:'none',
 			highscoreName:'',
-			reset() {
+			reset:function() {
 				this.score = 0;
 				this.lives = game.startingLives;
 				this.highscoreName = '';
@@ -67,10 +67,12 @@ function createGame () {
 		}
 		
 		window.onblur = function() {
+			console.log('###blur');
 			game.keyMap={}; 	
 			clearInterval(game.timer);
 		};
 		window.onfocus = function() {
+			console.log('###focus');
 			game.timer = setInterval(function(){game.refresh()},25);
 		};
 

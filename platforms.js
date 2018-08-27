@@ -27,7 +27,7 @@ game.level = [
 		effects:[
 			{type:'message',message:'under dev!', animateFrame:0, lastFrame:50}
 		],
-		victoryCondition() {
+		victoryCondition : function() {
 			return false;
 		}
 	}
@@ -242,7 +242,7 @@ game.data = {
 };
 
 game.make = {
-	body(spec) {
+	body:function(spec) {
 		var that = {}
 		that.x = spec.x || 0 ;
 		that.y = spec.y || 0;
@@ -277,7 +277,7 @@ game.make = {
 		return that;
 	},
 
-	platform(spec) {
+	platform:function(spec) {
 		var that = game.make.body(spec);
 		that.type = 'block';
 		that.width = spec.width || 50;
@@ -296,7 +296,7 @@ game.make = {
 		return that;
 	},
 	
-	character(spec) {
+	character:function(spec) {
 		var that = game.make.body(spec);
 		that.isGod = spec.isGod || false;
 		that.frame = 0;
@@ -492,7 +492,7 @@ game.make = {
 		return that;
 	},
 	
-	flyingCharacter(spec) {
+	flyingCharacter:function(spec) {
 		var that = game.make.character(spec);
 		
 		var move = function() {
@@ -525,7 +525,7 @@ game.make = {
 		return that;
 	},
 	
-	man(spec) {
+	man:function(spec) {
 		var that = game.make.character(spec);
 		that.type = 'man';
 		that.spriteData = spec.sprite ? game.data[spec.sprite] : game.data['man'];
@@ -549,7 +549,7 @@ game.make = {
 		return that;
 	},
 	
-	monster(spec) {
+	monster:function(spec) {
 		
 		if (spec.flying){
 			var that = game.make.flyingCharacter(spec);
@@ -575,7 +575,7 @@ game.make = {
 		return that;
 	},
 	
-	bigBat(spec){
+	bigBat:function(spec){
 		spec.flying = true;
 		spec.sprite = 'bat';
 		var that = game.make.monster(spec);
@@ -588,7 +588,7 @@ game.make = {
 
 game.calc = {
 	
-	round(number, dp){
+	round:function(number, dp){
 		var value = number;
 		var pow = Math.pow(10,dp);
 		value = value * pow;
@@ -597,32 +597,32 @@ game.calc = {
 	}
 	,
 	
-	distance(p1,p2) {
+	distance:function(p1,p2) {
 		p2 = p2 || {x:0,y:0};
 		return Math.sqrt(  (p1.x-p2.x)*(p1.x-p2.x) +  (p1.y-p2.y)*(p1.y-p2.y))
 	}
 	,
-	reflectHeading(heading,wallAngle) {
+	reflectHeading:function(heading,wallAngle) {
 	var reflect = 2*wallAngle - heading;
 	if (reflect > (Math.PI)*2) {reflect -= (Math.PI)*2};
 	return reflect;
 	},
 	
-	tangent(circle, point) {
+	tangent:function(circle, point) {
 		var radiusHeading = game.calc.heading (circle.x - point.x, circle.y - point.y);
 		var tangentHeading = radiusHeading + (Math.PI)*0.5;
 		if (tangentHeading > (Math.PI)*2) {tangentHeading -= (Math.PI)*2};
 		return tangentHeading;
 	},
 	
-	areIntersecting (bk, ds) {
+	areIntersecting: function (bk, ds) {
 		return !(ds.x > bk.x+bk.width || 
 				 ds.x+ds.width < bk.x || 
 				 ds.y+ds.height <= bk.y ||
 				 ds.y >= bk.y+bk.height);
 	},
 
-	intersectionSide (movingObject,hitObject) {
+	intersectionSide: function (movingObject,hitObject) {
 		var side, leadingCorner = {}, blockCorner = {};
 		
 		if (movingObject.speed === 0 && movingObject.fallSpeed === 0) {
@@ -654,7 +654,7 @@ game.calc = {
 		return side;
 	},
 	
-	willLandOn(movingObject,hitObject) {		
+	willLandOn: function(movingObject,hitObject) {		
 		if 	(  movingObject.y < ( hitObject.y + hitObject.height) 
 			&&(  movingObject.y + movingObject.fallSpeed) >= ( hitObject.y + hitObject.height) ) {
 			if ( ( movingObject.x > hitObject.x && movingObject.x < hitObject.x+hitObject.width) 

@@ -5,19 +5,20 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<link rel="stylesheet" href="./style-canvas.css" />
+	
 </head>
 
 <body>
 
 
 
-<div class="headSpacer"></div>
+<h1>test page</h1>
 
 <main>
 
 <div class = 'squareResponsive outer'>
 	<div class = 'squareResponsive inner'>
-		<canvas id='gameSpace' class = 'centeredSquare' height='1000' width='1000'></canvas>
+		<canvas id='gameSpace' class = 'centeredSquare' height='1000' width='1000'>NOT SUPPORTED</canvas>
 		<div id = 'scoreOverlay' class = 'centeredSquare' style = 'color:red'></div>
 	</div>
 </div>
@@ -25,6 +26,7 @@
 </main>
 
 
+<script src="https://cdn.polyfill.io/v2/polyfill.js"></script>
 
 <script src = './gameTemplate.js' ></script>
 <script src = './platforms.js' ></script>
@@ -32,7 +34,7 @@
 
 <script>
 
-
+console.log('running');
 	
 game.initialise({
 	canvasElement:document.getElementById("gameSpace"),
