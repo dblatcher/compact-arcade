@@ -64,7 +64,16 @@ function createGame () {
 		
 		document.onkeydown = document.onkeyup = function(e){
 			e = e || event; // to deal with IE
-			game.keyMap[e.key] = e.type == 'keydown';
+			game.keyMap[standardiseKey(e.key)] = e.type == 'keydown';
+			function standardiseKey(key) {
+				if (key === 'Left') {return 'ArrowLeft'};
+				if (key === 'Right') {return 'ArrowRight'};
+				if (key === 'Down') {return 'ArrowDown'};
+				if (key === 'Up') {return 'ArrowUp'};
+				if (key === 'Spacebar') {return ' '};
+				if (key === 'Del') {return 'Delete'};
+				return key;
+			}
 		}
 		
 		window.onblur = function() {
@@ -73,7 +82,6 @@ function createGame () {
 			
 		};
 		window.onfocus = function() {
-			
 			game.session.paused = false;
 			game.timer = setTimeout(function(){game.refresh()},25);
 		};
