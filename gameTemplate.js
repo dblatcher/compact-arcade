@@ -36,6 +36,7 @@ function createGame () {
 	};
 	
 	game.session = {
+			paused: false,
 			items : [],
 			effect:[],
 			player:{},
@@ -67,13 +68,14 @@ function createGame () {
 		}
 		
 		window.onblur = function() {
-			console.log('###blur');
-			game.keyMap={}; 	
-			clearInterval(game.timer);
+			game.keyMap={};
+			game.session.paused = true;
+			
 		};
 		window.onfocus = function() {
-			console.log('###focus');
-			game.timer = setInterval(function(){game.refresh()},25);
+			
+			game.session.paused = false;
+			game.timer = setTimeout(function(){game.refresh()},25);
 		};
 
 		for(var loop=0; loop < this.soundFiles.length; loop++) {
@@ -84,7 +86,7 @@ function createGame () {
 		};
 					
 		this.session.reset();			
-		this.timer = setInterval(function(){game.refresh()},25);
+		this.timer = setTimeout(function(){game.refresh()},25);
 		
 		function addSound(src) {
 			var soundElement;
@@ -156,8 +158,11 @@ function createGame () {
 		
 		timeStamp = new Date() - timeStamp; 
 		//	if (timeStamp > 24) console.log('long cycle:' + timeStamp);
-		clearInterval(game.timer);
-		game.timer = setInterval(function(){game.refresh()},(25-timeStamp > 0 ? 25-timeStamp : 1) );
+
+		
+		if (game.session.paused === false) {
+			game.timer = setTimeout(function(){game.refresh()},(25-timeStamp > 0 ? 25-timeStamp : 1) );
+		}
 	};
 	
 	game.runItemActions = function(){},
