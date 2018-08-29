@@ -30,8 +30,18 @@ function createGame () {
 		},
 		
 		make : {},
-		
 		calc : {},
+		session: {},
+		customNewLevelAction : function(){},
+		renderBackground : function(){},
+		initialise : function(){},
+		setUpLevel : function(){},
+		refresh : function(){},
+		runItemActions : function(){},
+		reactToHighscoreEntry : function(){},
+		renderScreen : function(){},
+		checkIfLevelFinished : function(){},
+		handleDeadPlayer : function(){},
 		
 	};
 	
@@ -116,9 +126,7 @@ function createGame () {
 		};
 		
 	};
-	
-	game.customNewLevelAction = function(){};
-	
+		
 	game.setUpLevel = function(level) {
 		var effectClone, init;
 		if (level !== game.session.currentLevel || level === 0 ) {
@@ -172,9 +180,7 @@ function createGame () {
 			game.timer = setTimeout(function(){game.refresh()},(25-timeStamp > 0 ? 25-timeStamp : 1) );
 		}
 	};
-	
-	game.runItemActions = function(){},
-	
+		
 	game.reactToHighscoreEntry = function() {
 		var entryCharacters = "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",loop,letter;
 		for (loop=0;loop<entryCharacters.length;loop++) {
@@ -286,8 +292,6 @@ function createGame () {
 			ctx.fillText(statusLineText, 10, 10);
 			
 		};
-	
-	game.renderBackground = function(){};
 			
 	game.checkIfLevelFinished = function () {
 		if (this.level[this.session.currentLevel].victoryCondition() === true) {
