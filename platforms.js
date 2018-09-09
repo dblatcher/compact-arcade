@@ -33,24 +33,7 @@ game.level = [
 	}
 ];
 
-game.runItemActions = function() {
-	for (var m=0;m<this.session.items.length;m++) {
-		this.session.items[m].automaticAction();
-		if (this.session.items[m].dead === false && typeof(this.session.items[m].move) === 'function') {
-			this.session.items[m].move();
-			
-			for (var t = 0; t<this.session.items.length; t++) {
-				if (t !== m) {
-					if (this.calc.areIntersecting(this.session.items[m],this.session.items[t])) {
-						this.session.items[m].handleCollision(this.session.items[t])
-					}
-				}
-			}
-			
-		};
-	};
-	
-};
+
 
 game.renderBackground = function(plotOffset) {
 	var c = this.canvasElement;
@@ -101,9 +84,6 @@ game.reactToControls = function() {
 		};			
 	};
 
-};
-
-game.customNewLevelAction = function(level){
 };
 
 game.data = {
@@ -241,350 +221,315 @@ game.data = {
 	},
 };
 
-game.make = {
-	body:function(spec) {
-		var that = {}
-		that.x = spec.x || 0 ;
-		that.y = spec.y || 0;
-		that.width = spec.width || 1;
-		that.height = spec.height || 1;
-		that.color = spec.color || 'gray';		
-		that.dead = false;
-		that.type= 'none';
-		
-		that.plotY = function() {
-			return game.level[game.session.currentLevel].height - this.y - this.height;
-		}
-		
-		
-		var handleCollision = function(item) {		
-			if (typeof(this.hit[item.type]) === 'function') {this.hit[item.type].apply(this,[item])}
-			if (typeof(item.hit[this.type]) === 'function') {item.hit[this.type].apply(item,[this,true])}
-		};
-		that.handleCollision = handleCollision;
-		that.hit={};
-		
-		var render = function (ctx,plotOffset){
-			ctx.beginPath();
-			ctx.fillStyle = this.color;
-			ctx.arc(this.x- plotOffset.x,this.plotY() - plotOffset.y,20,0,2*Math.PI);
-			ctx.fill();	
-		}
-		that.render = render;
-		
-		var automaticAction = function() {return false};
-		that.automaticAction = automaticAction;
-		return that;
-	},
 
-	platform:function(spec) {
-		var that = game.make.body(spec);
-		that.type = 'block';
-		that.width = spec.width || 50;
-		that.height = spec.height || 5;
-		that.isObstacle = spec.isObstacle || false;
-		that.bounce = spec.bounce || 0;
-		
-		render = function(ctx,plotOffset) {
-			ctx.beginPath();
-			ctx.fillStyle = this.color;
-			ctx.rect(this.x- plotOffset.x,this.plotY() - plotOffset.y,this.width,this.height);
-			ctx.fill();			
-		};
-		that.render = render;
-		
-		return that;
-	},
+game.make.platform = function(spec) {
+	var that = game.make.body(spec);
+	that.type = 'block';
+	that.width = spec.width || 50;
+	that.height = spec.height || 5;
+	that.isObstacle = spec.isObstacle || false;
+	that.bounce = spec.bounce || 0;
 	
-	character:function(spec) {
-		var that = game.make.body(spec);
-		that.isGod = spec.isGod || false;
-		that.frame = 0;
-		that.direction = spec.direction || 'right';
-		that.action = spec.action || 'stand';
-		that.fallSpeed = spec.fallSpeed || 0;
-		that.speed = spec.speed || 0;
-		
-		that.behaviour = game.data[spec.behaviour] || 0;
-		that.behaviourTrigger = [];
-		
-		var automaticAction = function(){			
-			if (game.cycleCount % 10 === 0 ){
-				this.frame++;
-				if (this.frame >= this.spriteData.animateCycle[this.action][this.direction].length) {
-					if (this.spriteData.animateCycle[this.action].end) {
-						this.spriteData.animateCycle[this.action].end.apply(this,[]);
-					} else {this.frame=0;}
-				};
+	render = function(ctx,plotOffset) {
+		ctx.beginPath();
+		ctx.fillStyle = this.color;
+		ctx.rect(this.x- plotOffset.x,this.plotY() - plotOffset.y,this.width,this.height);
+		ctx.fill();			
+	};
+	that.render = render;
+	
+	return that;
+};
+
+game.make.character = function(spec) {
+	var that = game.make.body(spec);
+	that.isGod = spec.isGod || false;
+	that.frame = 0;
+	that.direction = spec.direction || 'right';
+	that.action = spec.action || 'stand';
+	that.fallSpeed = spec.fallSpeed || 0;
+	that.speed = spec.speed || 0;
+	
+	that.behaviour = game.data[spec.behaviour] || 0;
+	that.behaviourTrigger = [];
+	
+	var automaticAction = function(){			
+		if (game.cycleCount % 10 === 0 ){
+			this.frame++;
+			if (this.frame >= this.spriteData.animateCycle[this.action][this.direction].length) {
+				if (this.spriteData.animateCycle[this.action].end) {
+					this.spriteData.animateCycle[this.action].end.apply(this,[]);
+				} else {this.frame=0;}
 			};
-			if (typeof(this.behaviour) === 'function') {
-				this.behaviour( {type:'noTrigger', data:0} );
-				for (var l=0; l<this.behaviourTrigger.length; l++) {
-					this.behaviour( this.behaviourTrigger[l] );
+		};
+		if (typeof(this.behaviour) === 'function') {
+			this.behaviour( {type:'noTrigger', data:0} );
+			for (var l=0; l<this.behaviourTrigger.length; l++) {
+				this.behaviour( this.behaviourTrigger[l] );
+			}
+		};
+		this.behaviourTrigger = [];
+	};
+	that.automaticAction = automaticAction;
+	
+	var setAction = function(newAction,newDirection) {
+		newDirection = newDirection || this.direction;
+		if (newDirection === 'reverse') {newDirection = this.direction === 'left' ? 'right' : 'left'};
+		if (this.action === 'die') {return false;}; // if the character is dying, don't stop dying
+		
+		if (newAction === this.action && newDirection === this.direction) {return false};
+		this.action = newAction;
+		this.direction = newDirection;
+		this.frame = 0;
+		return(true);
+	}
+	that.setAction = setAction;
+	
+	var render = function(ctx,plotOffset) {
+		var frame = this.spriteData.frameMap[this.spriteData.animateCycle[this.action][this.direction][this.frame]];
+		
+		var leftOff = (this.direction === 'left') ?
+			this.spriteData.frontOff*this.width || 0:
+			this.spriteData.backOff*this.width || 0;
+		var rightOff = (this.direction === 'right') ?
+			this.spriteData.frontOff*this.width || 0:
+			this.spriteData.backOff*this.width || 0;
+		var topOff = this.spriteData.topOff*this.height || 0;
+	
+		ctx.beginPath();
+		ctx.drawImage(game.sprite[frame.source],
+		frame.x,frame.y,this.spriteData.frameWidth,this.spriteData.frameHeight,
+		this.x-plotOffset.x-leftOff, this.plotY()-plotOffset.y-topOff,
+		this.width+leftOff+rightOff,this.height+topOff);	
+		
+		//ctx.beginPath();
+		//ctx.rect(this.x-plotOffset.x, this.plotY()-plotOffset.y,this.width,this.height);
+		//ctx.stroke();
+	};
+	that.render = render;
+			
+	var isOnGround = function(){
+		var block = game.session.items.filter(function(i){return i.type == 'block'});
+		block.push({x:1,y:100, width:game.level[game.session.currentLevel].width,height:0});
+					
+		for (var l = 0;l<block.length;l++) {
+			if 	(  this.y <= ( block[l].y + block[l].height) 
+				&&(  this.y + this.fallSpeed) >= ( block[l].y + block[l].height) ) {
+				
+				if ( ( (this.x + this.width) > block[l].x && (this.x + this.width) < block[l].x+block[l].width) 
+						|| ( this.x > block[l].x && this.x < block[l].x+block[l].width)) {	
+					return block[l];
+				};
+				
+			};
+		};	
+		return false;
+	}
+	that.isOnGround = isOnGround;
+	
+	var findImpactPoint = function () {
+		var block = game.session.items.filter(function(i){return i.type == 'block'});
+		var impacts = [];
+		var consolidatedPoint = {};
+		
+		block.push({x:0,y:0,width:1,height:game.level[game.session.currentLevel].height,isObstacle:true});
+		block.push({x:game.level[game.session.currentLevel].width,y:0,width:1,height:game.level[game.session.currentLevel].height,isObstacle:true});
+		block.push({x:-1,y:99, width:game.level[game.session.currentLevel].width,height:1});
+
+		for (var l = 0;l<block.length;l++) {
+			if (block[l].isObstacle) {
+				if (game.calc.areIntersecting(block[l],this)) {
+					impacts.push({block:block[l], side:game.calc.intersectionSide(this,block[l])});
+				}
+			} else {
+				if (game.calc.willLandOn(this,block[l])) {
+					impacts.push({block:block[l],side:'top'});
 				}
 			};
-			this.behaviourTrigger = [];
 		};
-		that.automaticAction = automaticAction;
+		if (impacts.length === 0) {return false};
 		
-		var setAction = function(newAction,newDirection) {
-			newDirection = newDirection || this.direction;
-			if (newDirection === 'reverse') {newDirection = this.direction === 'left' ? 'right' : 'left'};
-			if (this.action === 'die') {return false;}; // if the character is dying, don't stop dying
-			
-			if (newAction === this.action && newDirection === this.direction) {return false};
-			this.action = newAction;
-			this.direction = newDirection;
-			this.frame = 0;
-			return(true);
-		}
-		that.setAction = setAction;
-		
-		var render = function(ctx,plotOffset) {
-			var frame = this.spriteData.frameMap[this.spriteData.animateCycle[this.action][this.direction][this.frame]];
-			
-			var leftOff = (this.direction === 'left') ?
-				this.spriteData.frontOff*this.width || 0:
-				this.spriteData.backOff*this.width || 0;
-			var rightOff = (this.direction === 'right') ?
-				this.spriteData.frontOff*this.width || 0:
-				this.spriteData.backOff*this.width || 0;
-			var topOff = this.spriteData.topOff*this.height || 0;
-		
-			ctx.beginPath();
-			ctx.drawImage(game.sprite[frame.source],
-			frame.x,frame.y,this.spriteData.frameWidth,this.spriteData.frameHeight,
-			this.x-plotOffset.x-leftOff, this.plotY()-plotOffset.y-topOff,
-			this.width+leftOff+rightOff,this.height+topOff);	
-			
-			//ctx.beginPath();
-			//ctx.rect(this.x-plotOffset.x, this.plotY()-plotOffset.y,this.width,this.height);
-			//ctx.stroke();
+		for (var l = 0;l<impacts.length;l++) {
+			if (impacts[l].side === 'top') { 
+				consolidatedPoint['top'] = (typeof(consolidatedPoint['top'] === 'undefined' )) ?
+					impacts[l].block.y + impacts[l].block.height:
+					Math.max(impacts[l].block.y + impacts[l].block.height, consolidatedPoint['top']);
+				consolidatedPoint.bounce = impacts[l].block.bounce || 0;
+			};
+			if (impacts[l].side === 'bottom') { 
+				consolidatedPoint['bottom'] = (typeof(consolidatedPoint['bottom'] === 'undefined' )) ?
+					impacts[l].block.y :
+					Math.min(impacts[l].block.y, consolidatedPoint['bottom']);
+			};
+			if (impacts[l].side === 'right') { 
+				consolidatedPoint['right'] = (typeof(consolidatedPoint['right'] === 'undefined' )) ?
+					impacts[l].block.x + impacts[l].block.width:
+					Math.max(impacts[l].block.x + impacts[l].block.width, consolidatedPoint['right']);
+			};
+			if (impacts[l].side === 'left') { 
+				consolidatedPoint['left'] = (typeof(consolidatedPoint['left'] === 'undefined' )) ?
+					impacts[l].block.x :
+					Math.min(impacts[l].block.x, consolidatedPoint['left']);
+			};
 		};
-		that.render = render;
+		return consolidatedPoint;
+	}
+	that.findImpactPoint = findImpactPoint;
+
+	var move = function() {	
+		if (this.action === 'walk') {
+			if (this.direction === 'left') {
+				if (this.speed > -this.maxSpeed) {
+					this.speed -= this.acceleration;
+				}
+			};
+			if (this.direction === 'right') {
+				if (this.speed < this.maxSpeed) {
+					this.speed += this.acceleration;
+				}
+			};
+		};
+		if (this.action === 'stand') {this.speed = 0};
+		
+		if (!this.isOnGround()) {
+			this.fallSpeed += 1;
+			this.setAction('jump');
+		};
+		
+		this.x += this.speed;
+		this.y -= this.fallSpeed;
+		
+		var impact = this.findImpactPoint();
+		if (impact){
+			this.behaviourTrigger.push( {type:'hitWall', data:impact} );
+			if (impact.top) {					
+				this.y = impact.top;
 				
-		var isOnGround = function(){
-			var block = game.session.items.filter(function(i){return i.type == 'block'});
-			block.push({x:1,y:100, width:game.level[game.session.currentLevel].width,height:0});
-						
-			for (var l = 0;l<block.length;l++) {
-				if 	(  this.y <= ( block[l].y + block[l].height) 
-					&&(  this.y + this.fallSpeed) >= ( block[l].y + block[l].height) ) {
-					
-					if ( ( (this.x + this.width) > block[l].x && (this.x + this.width) < block[l].x+block[l].width) 
-							|| ( this.x > block[l].x && this.x < block[l].x+block[l].width)) {	
-						return block[l];
-					};
-					
-				};
-			};	
-			return false;
-		}
-		that.isOnGround = isOnGround;
-		
-		var findImpactPoint = function () {
-			var block = game.session.items.filter(function(i){return i.type == 'block'});
-			var impacts = [];
-			var consolidatedPoint = {};
-			
-			block.push({x:0,y:0,width:1,height:game.level[game.session.currentLevel].height,isObstacle:true});
-			block.push({x:game.level[game.session.currentLevel].width,y:0,width:1,height:game.level[game.session.currentLevel].height,isObstacle:true});
-			block.push({x:-1,y:99, width:game.level[game.session.currentLevel].width,height:1});
-
-			for (var l = 0;l<block.length;l++) {
-				if (block[l].isObstacle) {
-					if (game.calc.areIntersecting(block[l],this)) {
-						impacts.push({block:block[l], side:game.calc.intersectionSide(this,block[l])});
-					}
-				} else {
-					if (game.calc.willLandOn(this,block[l])) {
-						impacts.push({block:block[l],side:'top'});
-					}
-				};
-			};
-			if (impacts.length === 0) {return false};
-			
-			for (var l = 0;l<impacts.length;l++) {
-				if (impacts[l].side === 'top') { 
-					consolidatedPoint['top'] = (typeof(consolidatedPoint['top'] === 'undefined' )) ?
-						impacts[l].block.y + impacts[l].block.height:
-						Math.max(impacts[l].block.y + impacts[l].block.height, consolidatedPoint['top']);
-					consolidatedPoint.bounce = impacts[l].block.bounce || 0;
-				};
-				if (impacts[l].side === 'bottom') { 
-					consolidatedPoint['bottom'] = (typeof(consolidatedPoint['bottom'] === 'undefined' )) ?
-						impacts[l].block.y :
-						Math.min(impacts[l].block.y, consolidatedPoint['bottom']);
-				};
-				if (impacts[l].side === 'right') { 
-					consolidatedPoint['right'] = (typeof(consolidatedPoint['right'] === 'undefined' )) ?
-						impacts[l].block.x + impacts[l].block.width:
-						Math.max(impacts[l].block.x + impacts[l].block.width, consolidatedPoint['right']);
-				};
-				if (impacts[l].side === 'left') { 
-					consolidatedPoint['left'] = (typeof(consolidatedPoint['left'] === 'undefined' )) ?
-						impacts[l].block.x :
-						Math.min(impacts[l].block.x, consolidatedPoint['left']);
-				};
-			};
-			return consolidatedPoint;
-		}
-		that.findImpactPoint = findImpactPoint;
-
-		var move = function() {	
-			if (this.action === 'walk') {
-				if (this.direction === 'left') {
-					if (this.speed > -this.maxSpeed) {
-						this.speed -= this.acceleration;
-					}
-				};
-				if (this.direction === 'right') {
-					if (this.speed < this.maxSpeed) {
-						this.speed += this.acceleration;
-					}
-				};
-			};
-			if (this.action === 'stand') {this.speed = 0};
-			
-			if (!this.isOnGround()) {
-				this.fallSpeed += 1;
-				this.setAction('jump');
-			};
-			
-			this.x += this.speed;
-			this.y -= this.fallSpeed;
-			
-			var impact = this.findImpactPoint();
-			if (impact){
-				this.behaviourTrigger.push( {type:'hitWall', data:impact} );
-				if (impact.top) {					
-					this.y = impact.top;
-					
-					this.fallSpeed = -Math.floor(this.fallSpeed*impact.bounce);					
-					if(	this.fallSpeed >= -1) {;						
-						game.sound.play('land.mp3');
-						this.fallSpeed = 0;
-						this.setAction('stand');
-					} else {
-						game.sound.play('bounce.mp3');
-					}
-					
-				};
-				if (impact.bottom ) {
+				this.fallSpeed = -Math.floor(this.fallSpeed*impact.bounce);					
+				if(	this.fallSpeed >= -1) {;						
 					game.sound.play('land.mp3');
 					this.fallSpeed = 0;
-					this.y = impact.bottom-this.height;
-				};
-				if (impact.left) {
-					this.speed = 0;
-					this.x = ( impact.left - this.width - 1);
-				};
-				if (impact.right) {
-					this.speed = 0;
-					this.x = ( impact.right + 1);
-				};
-			};
-			
-
-		};
-		that.move = move;
+					this.setAction('stand');
+				} else {
+					game.sound.play('bounce.mp3');
+				}
 				
-		return that;
-	},
-	
-	flyingCharacter:function(spec) {
-		var that = game.make.character(spec);
-		
-		var move = function() {
-			if (this.action === 'walk') {
-				if (this.direction === 'left') {
-					if (this.speed > -this.maxSpeed) {
-						this.speed -= this.acceleration;
-					}
-				};
-				if (this.direction === 'right') {
-					if (this.speed < this.maxSpeed) {
-						this.speed += this.acceleration;
-					}
-				};
 			};
-				
-			var impact = this.findImpactPoint();
-			if (impact){
-				this.behaviourTrigger.push ( {type:'hitWall', data:impact} );
+			if (impact.bottom ) {
+				game.sound.play('land.mp3');
+				this.fallSpeed = 0;
+				this.y = impact.bottom-this.height;
+			};
+			if (impact.left) {
 				this.speed = 0;
-				this.fallSpeed = 2;
-				this.setAction('die');
+				this.x = ( impact.left - this.width - 1);
 			};
-			
-			this.x += this.speed;
-			this.y -= this.fallSpeed;
-		};
-		that.move = move;
-		
-		return that;
-	},
-	
-	man:function(spec) {
-		var that = game.make.character(spec);
-		that.type = 'man';
-		that.spriteData = spec.sprite ? game.data[spec.sprite] : game.data['man'];
-		
-		that.height = that.spriteData.frameHeight*6;
-		that.width = that.spriteData.frameWidth*6;
-		that.height = 80;
-		that.width = 40;
-
-		that.maxSpeed = spec.maxSpeed || 10;
-		that.jumpForce = spec.jumpForce || 22;
-		that.acceleration = spec.acceleration || 0.75;
-		
-		that.hit.monster = function(monster){
-			if (!this.isGod) {
+			if (impact.right) {
 				this.speed = 0;
-				this.setAction('die');
-			}
-		}
+				this.x = ( impact.right + 1);
+			};
+		};
+		
+
+	};
+	that.move = move;
 			
-		return that;
-	},
+	return that;
+};
+
+game.make.flyingCharacter = function(spec) {
+	var that = game.make.character(spec);
 	
-	monster:function(spec) {
+	var move = function() {
+		if (this.action === 'walk') {
+			if (this.direction === 'left') {
+				if (this.speed > -this.maxSpeed) {
+					this.speed -= this.acceleration;
+				}
+			};
+			if (this.direction === 'right') {
+				if (this.speed < this.maxSpeed) {
+					this.speed += this.acceleration;
+				}
+			};
+		};
+			
+		var impact = this.findImpactPoint();
+		if (impact){
+			this.behaviourTrigger.push ( {type:'hitWall', data:impact} );
+			this.speed = 0;
+			this.fallSpeed = 2;
+			this.setAction('die');
+		};
 		
-		if (spec.flying){
-			var that = game.make.flyingCharacter(spec);
-			that.height = spec.height || 50;
-			that.width = spec.height || 50;
-		} else {
-			var that = game.make.character(spec);
-			that.height = spec.height || 90;
-			that.width = spec.width || 60;
-		}
-		
-		that.type = 'monster';
-		that.spriteData = spec.sprite ? game.data[spec.sprite] : game.data['orc'];
-		
-		that.maxSpeed = spec.maxSpeed || 4;
-		that.jumpForce = spec.jumpForce || 20;
-		that.acceleration = spec.acceleration || 0.50;
-				
-		that.hit.monster = function(monster){
-			this.behaviourTrigger.push( {type:'hitMonster', data:monster} );
-		}
-		
-		return that;
-	},
+		this.x += this.speed;
+		this.y -= this.fallSpeed;
+	};
+	that.move = move;
 	
-	bigBat:function(spec){
-		spec.flying = true;
-		spec.sprite = 'bat';
-		var that = game.make.monster(spec);
+	return that;
+};
+
+game.make.man = function(spec) {
+	var that = game.make.character(spec);
+	that.type = 'man';
+	that.spriteData = spec.sprite ? game.data[spec.sprite] : game.data['man'];
+	
+	that.height = that.spriteData.frameHeight*6;
+	that.width = that.spriteData.frameWidth*6;
+	that.height = 80;
+	that.width = 40;
+
+	that.maxSpeed = spec.maxSpeed || 10;
+	that.jumpForce = spec.jumpForce || 22;
+	that.acceleration = spec.acceleration || 0.75;
+	
+	that.hit.monster = function(monster){
+		if (!this.isGod) {
+			this.speed = 0;
+			this.setAction('die');
+		}
+	}
+		
+	return that;
+};
+
+game.make.monster = function(spec) {
+	
+	if (spec.flying){
+		var that = game.make.flyingCharacter(spec);
+		that.height = spec.height || 50;
+		that.width = spec.height || 50;
+	} else {
+		var that = game.make.character(spec);
 		that.height = spec.height || 90;
-		that.width = spec.height || 90;
-		return that;
+		that.width = spec.width || 60;
 	}
 	
+	that.type = 'monster';
+	that.spriteData = spec.sprite ? game.data[spec.sprite] : game.data['orc'];
+	
+	that.maxSpeed = spec.maxSpeed || 4;
+	that.jumpForce = spec.jumpForce || 20;
+	that.acceleration = spec.acceleration || 0.50;
+			
+	that.hit.monster = function(monster){
+		this.behaviourTrigger.push( {type:'hitMonster', data:monster} );
+	}
+	
+	return that;
 };
+
+game.make.bigBat = function(spec){
+	spec.flying = true;
+	spec.sprite = 'bat';
+	var that = game.make.monster(spec);
+	that.height = spec.height || 90;
+	that.width = spec.height || 90;
+	return that;
+};
+
+
 
 game.calc = {
 	

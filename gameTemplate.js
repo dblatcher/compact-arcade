@@ -32,6 +32,7 @@ function createGame () {
 		make : {},
 		calc : {},
 		session: {},
+		
 		customNewLevelAction : function(){},
 		renderBackground : function(){},
 		initialise : function(){},
@@ -330,7 +331,59 @@ function createGame () {
 			return true;
 		};
 		
-
+	game.runItemActions = function() {
+		for (var m=0;m<this.session.items.length;m++) {
+			this.session.items[m].automaticAction();
+			if (this.session.items[m].dead === false && typeof(this.session.items[m].move) === 'function') {
+				this.session.items[m].move();
+				
+				for (var t = 0; t<this.session.items.length; t++) {
+					if (t !== m) {
+						if (this.calc.areIntersecting(this.session.items[m],this.session.items[t])) {
+							this.session.items[m].handleCollision(this.session.items[t])
+						}
+					}
+				}
+				
+			};
+		};
+		
+	};
+	
+  game.make.body = function(spec) {
+		var that = {}
+		that.x = spec.x || 0 ;
+		that.y = spec.y || 0;
+		that.width = spec.width || 10;
+		that.height = spec.height || 10;
+		that.color = spec.color || 'gray';		
+		that.dead = false;
+		that.type= 'none';
+		
+		that.plotY = function() {
+			return game.level[game.session.currentLevel].height - this.y - this.height;
+		}
+		
+		var handleCollision = function(item) {		
+			if (typeof(this.hit[item.type]) === 'function') {this.hit[item.type].apply(this,[item])}
+			if (typeof(item.hit[this.type]) === 'function') {item.hit[this.type].apply(item,[this,true])}
+		};
+		that.handleCollision = handleCollision;
+		that.hit={};
+		
+		var render = function (ctx,plotOffset){
+			ctx.beginPath();
+			ctx.fillStyle = this.color;
+			ctx.rect(this.x- plotOffset.x,this.plotY() - plotOffset.y,this.width,this.height);
+			ctx.fill();	
+		}
+		that.render = render;
+		
+		var automaticAction = function() {return false};
+		that.automaticAction = automaticAction;
+		return that;
+	};
+		
 	return game;
 }
 
