@@ -24,7 +24,7 @@ function makeInstanceOfGame() {
 				{func:'platform', spec:{x:1250,y:150, width:350, height:50, color:'green',isObstacle:true}},
 				{func:'platform', spec:{x:1300,y:200, width:300, height:50, color:'green',isObstacle:true}},
 				{func:'platform', spec:{x:1350,y:250, width:250, height:50, color:'green',isObstacle:true}},
-				{func:'man', spec:{x:1230,y:700,isGod:true,action:'jump'}, isPlayer:true},
+				{func:'man', spec:{x:1230,y:700,isGod:false,action:'jump'}, isPlayer:true},
 			],
 			effects:[
 				{type:'message',message:'under dev!', animateFrame:0, lastFrame:50}

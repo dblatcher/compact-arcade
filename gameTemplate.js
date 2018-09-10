@@ -2,7 +2,7 @@
 function createGameTemplate () {
 	var game = {
 		timer:0, cycleCount:0, numberOfCyclesBetweenCheckingLevelEnds:10, 
-		keyMap:{}, startingLives:5,
+		keyMap:{}, startingLives:1,
 		soundFiles: [], spriteFiles:[],
 		
 		level: [ 
@@ -41,7 +41,7 @@ function createGameTemplate () {
 		runItemActions : function(){},
 		reactToHighscoreEntry : function(){},
 		renderScreen : function(){},
-		checkIfLevelFinished : function(){},
+		handleEndOfLevel : function(){},
 		handleDeadPlayer : function(){},
 		
 	};
@@ -155,18 +155,17 @@ function createGameTemplate () {
 		var timeStamp = new Date();
 		
 		if (this.session.gameStatus === 'play') {
-			
 			if (this.session.player.dead === false) {this.reactToControls()};
-			this.runItemActions();
-			
-			if (game.cycleCount % game.numberOfCyclesBetweenCheckingLevelEnds === 0 || game.session.currentLevel === 0 ) {
-				this.checkIfLevelFinished();
+			this.runItemActions();		
+			if (game.cycleCount % game.numberOfCyclesBetweenCheckingLevelEnds === 0 || game.session.currentLevel === 0 ) {		
+				if (this.level[this.session.currentLevel].victoryCondition() === true) {
+					this.handleEndOfLevel()
+				};
 				if (game.session.player.dead == true && game.session.waitingToReset === false) {
 					this.handleDeadPlayer();
 				};			
 			};
-			game.cycleCount++;
-			
+			game.cycleCount++;	
 		} 			
 		
 		if (this.session.gameStatus === 'highscoreEntry') {
@@ -178,7 +177,6 @@ function createGameTemplate () {
 		timeStamp = new Date() - timeStamp; 
 		//	if (timeStamp > 24) console.log('long cycle:' + timeStamp);
 
-		
 		if (game.session.paused === false) {
 			game.timer = setTimeout(function(){game.refresh()},(25-timeStamp > 0 ? 25-timeStamp : 1) );
 		}
@@ -296,22 +294,18 @@ function createGameTemplate () {
 			
 		};
 			
-	game.checkIfLevelFinished = function () {
-		if (this.level[this.session.currentLevel].victoryCondition() === true) {
-			if (this.level[this.session.currentLevel].score) {this.session.score += this.level[this.session.currentLevel].score}
-			if (this.session.currentLevel+1 < this.level.length) { this.setUpLevel(this.session.currentLevel+1)}
-			else {
-				game.session.effect.push ({type:'message',message:'You win!', animateFrame:0, lastFrame:3000/25});
-				game.session.waitingToReset = true;
-				game.session.player={};
-				setTimeout(function() {
-					game.session.waitingToReset = false;
-					game.session.gameStatus = 'highscoreEntry';
-				},3000);
-			};
-			return true;
-		}
-		return false;
+	game.handleEndOfLevel = function () {	
+		if (this.level[this.session.currentLevel].score) {this.session.score += this.level[this.session.currentLevel].score}
+		if (this.session.currentLevel+1 < this.level.length) { this.setUpLevel(this.session.currentLevel+1)}
+		else {
+			game.session.effect.push ({type:'message',message:'You win!', animateFrame:0, lastFrame:3000/25});
+			game.session.waitingToReset = true;
+			game.session.player={};
+			setTimeout(function() {
+				game.session.waitingToReset = false;
+				game.session.gameStatus = 'highscoreEntry';
+			},3000);
+		};
 	};
 		
 	game.handleDeadPlayer = function () {
