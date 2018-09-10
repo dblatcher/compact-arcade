@@ -34,14 +34,18 @@
 
 <script>
 
-console.log('running');
+console.log('running in game debug mode.');
 	
-game.initialise({
+/* Declaring gameInstance gives access to it and its properties in the console.
+   This is useful for debugging and playtesting but allows players to cheat.
+	 Call initialise on an anonymous instance to 'hide' the instance Object:
+		makeInstanceOfGame().initialise( ... );	
+*/
+var gameInstance = makeInstanceOfGame();	
+gameInstance.initialise({
 	canvasElement:document.getElementById("gameSpace"),
 	scoreElement:document.getElementById("scoreOverlay"),
 	sendScoreFunction:function(name, score){
-		
-
 	}
 });
 	

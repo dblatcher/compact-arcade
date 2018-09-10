@@ -1,5 +1,5 @@
 
-function createGame () {
+function createGameTemplate () {
 	var game = {
 		timer:0, cycleCount:0, numberOfCyclesBetweenCheckingLevelEnds:10, 
 		keyMap:{}, startingLives:5,
