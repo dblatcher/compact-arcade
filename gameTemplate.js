@@ -2,7 +2,7 @@
 function createGame () {
 	var game = {
 		timer:0, cycleCount:0, numberOfCyclesBetweenCheckingLevelEnds:10, 
-		keyMap:{}, startingLives:0,
+		keyMap:{}, startingLives:5,
 		soundFiles: [], spriteFiles:[],
 		
 		level: [ 
@@ -383,7 +383,28 @@ function createGame () {
 		that.automaticAction = automaticAction;
 		return that;
 	};
-		
+	
+	game.calc.areIntersecting = function (bk, ds) {
+		return !(ds.x > bk.x+bk.width || 
+				 ds.x+ds.width < bk.x || 
+				 ds.y+ds.height <= bk.y ||
+				 ds.y >= bk.y+bk.height);
+	}; 
+	
+	game.calc.distance = function(p1,p2) {
+		p2 = p2 || {x:0,y:0};
+		return Math.sqrt(  (p1.x-p2.x)*(p1.x-p2.x) +  (p1.y-p2.y)*(p1.y-p2.y))
+	};
+	
+	game.calc.round = function(number, dp){
+		var value = number;
+		var pow = Math.pow(10,dp);
+		value = value * pow;
+		value = Math.round(value) / pow;
+		return value;
+	};
+	
+	
 	return game;
 }
 

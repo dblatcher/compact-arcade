@@ -529,86 +529,48 @@ game.make.bigBat = function(spec){
 	return that;
 };
 
-
-
-game.calc = {
 	
-	round:function(number, dp){
-		var value = number;
-		var pow = Math.pow(10,dp);
-		value = value * pow;
-		value = Math.round(value) / pow;
-		return value;
+game.calc.intersectionSide = function (movingObject,hitObject) {
+	var side, leadingCorner = {}, blockCorner = {};
+	
+	if (movingObject.speed === 0 && movingObject.fallSpeed === 0) {
+		return 'false';
 	}
-	,
 	
-	distance:function(p1,p2) {
-		p2 = p2 || {x:0,y:0};
-		return Math.sqrt(  (p1.x-p2.x)*(p1.x-p2.x) +  (p1.y-p2.y)*(p1.y-p2.y))
-	}
-	,
-	reflectHeading:function(heading,wallAngle) {
-	var reflect = 2*wallAngle - heading;
-	if (reflect > (Math.PI)*2) {reflect -= (Math.PI)*2};
-	return reflect;
-	},
-	
-	tangent:function(circle, point) {
-		var radiusHeading = game.calc.heading (circle.x - point.x, circle.y - point.y);
-		var tangentHeading = radiusHeading + (Math.PI)*0.5;
-		if (tangentHeading > (Math.PI)*2) {tangentHeading -= (Math.PI)*2};
-		return tangentHeading;
-	},
-	
-	areIntersecting: function (bk, ds) {
-		return !(ds.x > bk.x+bk.width || 
-				 ds.x+ds.width < bk.x || 
-				 ds.y+ds.height <= bk.y ||
-				 ds.y >= bk.y+bk.height);
-	},
-
-	intersectionSide: function (movingObject,hitObject) {
-		var side, leadingCorner = {}, blockCorner = {};
-		
-		if (movingObject.speed === 0 && movingObject.fallSpeed === 0) {
-			return 'false';
-		}
-		
-		if (movingObject.speed === 0) {
-			side = movingObject.fallSpeed > 0 ? 'top' : 'bottom';
-			return side;
-		};
-		if (movingObject.fallSpeed === 0 ) {
-			side = movingObject.speed > 0 ? 'left' : 'right';
-			return side;
-		};
-		
-		leadingCorner.x = movingObject.speed > 0 ? movingObject.x + movingObject.width : movingObject.x;
-		leadingCorner.y = movingObject.fallSpeed < 0 ? movingObject.y + movingObject.height : movingObject.y;
-		blockCorner.x = movingObject.speed < 0 ? hitObject.x + hitObject.width : hitObject.x;
-		blockCorner.y = movingObject.fallSpeed > 0 ? hitObject.y + hitObject.height : hitObject.y;
-			
-		var timeForLeadingCornerToReachX = (blockCorner.x - leadingCorner.x) / movingObject.speed;
-		var timeForLeadingCornerToReachY = (blockCorner.y - leadingCorner.y) / -movingObject.fallSpeed;
-		
-		if (timeForLeadingCornerToReachX > timeForLeadingCornerToReachY) {
-			side = movingObject.speed > 0 ? 'left' : 'right'; 
-		} else{
-			side = movingObject.fallSpeed > 0 ? 'top' : 'bottom';
-		};
+	if (movingObject.speed === 0) {
+		side = movingObject.fallSpeed > 0 ? 'top' : 'bottom';
 		return side;
-	},
+	};
+	if (movingObject.fallSpeed === 0 ) {
+		side = movingObject.speed > 0 ? 'left' : 'right';
+		return side;
+	};
 	
-	willLandOn: function(movingObject,hitObject) {		
-		if 	(  movingObject.y < ( hitObject.y + hitObject.height) 
-			&&(  movingObject.y + movingObject.fallSpeed) >= ( hitObject.y + hitObject.height) ) {
-			if ( ( movingObject.x > hitObject.x && movingObject.x < hitObject.x+hitObject.width) 
-					|| ( movingObject.x+movingObject.width > hitObject.x && movingObject.x+movingObject.width < hitObject.x+hitObject.width)) {	
-				return true;
-			};
-		};
-		return false;
-	},
+	leadingCorner.x = movingObject.speed > 0 ? movingObject.x + movingObject.width : movingObject.x;
+	leadingCorner.y = movingObject.fallSpeed < 0 ? movingObject.y + movingObject.height : movingObject.y;
+	blockCorner.x = movingObject.speed < 0 ? hitObject.x + hitObject.width : hitObject.x;
+	blockCorner.y = movingObject.fallSpeed > 0 ? hitObject.y + hitObject.height : hitObject.y;
+		
+	var timeForLeadingCornerToReachX = (blockCorner.x - leadingCorner.x) / movingObject.speed;
+	var timeForLeadingCornerToReachY = (blockCorner.y - leadingCorner.y) / -movingObject.fallSpeed;
 	
+	if (timeForLeadingCornerToReachX > timeForLeadingCornerToReachY) {
+		side = movingObject.speed > 0 ? 'left' : 'right'; 
+	} else{
+		side = movingObject.fallSpeed > 0 ? 'top' : 'bottom';
+	};
+	return side;
 };
+
+game.calc.willLandOn =  function(movingObject,hitObject) {		
+	if 	(  movingObject.y < ( hitObject.y + hitObject.height) 
+		&&(  movingObject.y + movingObject.fallSpeed) >= ( hitObject.y + hitObject.height) ) {
+		if ( ( movingObject.x > hitObject.x && movingObject.x < hitObject.x+hitObject.width) 
+				|| ( movingObject.x+movingObject.width > hitObject.x && movingObject.x+movingObject.width < hitObject.x+hitObject.width)) {	
+			return true;
+		};
+	};
+	return false;
+};
+
 
