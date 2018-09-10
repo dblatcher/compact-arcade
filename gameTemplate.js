@@ -350,7 +350,7 @@ function createGameTemplate () {
 		
 	};
 	
-  game.make.body = function(spec) {
+  game.make.item = function(spec) {
 		var that = {}
 		that.x = spec.x || 0 ;
 		that.y = spec.y || 0;

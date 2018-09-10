@@ -228,7 +228,7 @@ function makeInstanceOfGame() {
 
 
 	game.make.platform = function(spec) {
-		var that = game.make.body(spec);
+		var that = game.make.item(spec);
 		that.type = 'block';
 		that.width = spec.width || 50;
 		that.height = spec.height || 5;
@@ -238,7 +238,7 @@ function makeInstanceOfGame() {
 	};
 
 	game.make.character = function(spec) {
-		var that = game.make.body(spec);
+		var that = game.make.item(spec);
 		that.isGod = spec.isGod || false;
 		that.frame = 0;
 		that.direction = spec.direction || 'right';
