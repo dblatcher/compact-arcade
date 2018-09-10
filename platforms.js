@@ -88,7 +88,7 @@ function makeInstanceOfGame() {
 
 	};
 
-	game.data = {
+	game.spriteData = {
 		man : { 
 			frameWidth:10,
 			frameHeight:16,
@@ -169,7 +169,10 @@ function makeInstanceOfGame() {
 				jump:{right:[2,3],left:[0,1]},
 				die:{right:[4,5,4,5],left:[4,5,4,5],end:function() {this.dead = true;}},
 			}
-		},
+		}
+	};
+
+	game.behaviourData = {
 		dumb: function (trigger) {
 			switch (trigger.type) {
 				case 'hitWall':
@@ -230,16 +233,7 @@ function makeInstanceOfGame() {
 		that.width = spec.width || 50;
 		that.height = spec.height || 5;
 		that.isObstacle = spec.isObstacle || false;
-		that.bounce = spec.bounce || 0;
-		
-		render = function(ctx,plotOffset) {
-			ctx.beginPath();
-			ctx.fillStyle = this.color;
-			ctx.rect(this.x- plotOffset.x,this.plotY() - plotOffset.y,this.width,this.height);
-			ctx.fill();			
-		};
-		that.render = render;
-		
+		that.bounce = spec.bounce || 0;		
 		return that;
 	};
 
@@ -252,7 +246,7 @@ function makeInstanceOfGame() {
 		that.fallSpeed = spec.fallSpeed || 0;
 		that.speed = spec.speed || 0;
 		
-		that.behaviour = game.data[spec.behaviour] || 0;
+		that.behaviour = game.behaviourData[spec.behaviour] || 0;
 		that.behaviourTrigger = [];
 		
 		var automaticAction = function(){			
@@ -300,13 +294,15 @@ function makeInstanceOfGame() {
 		
 			ctx.beginPath();
 			ctx.drawImage(game.sprite[frame.source],
-			frame.x,frame.y,this.spriteData.frameWidth,this.spriteData.frameHeight,
-			this.x-plotOffset.x-leftOff, this.plotY()-plotOffset.y-topOff,
-			this.width+leftOff+rightOff,this.height+topOff);	
+				frame.x,frame.y,this.spriteData.frameWidth,this.spriteData.frameHeight,
+				this.x-plotOffset.x-leftOff, this.plotY()-plotOffset.y-topOff,
+				this.width+leftOff+rightOff,this.height+topOff);	
 			
-			//ctx.beginPath();
-			//ctx.rect(this.x-plotOffset.x, this.plotY()-plotOffset.y,this.width,this.height);
-			//ctx.stroke();
+			/* for debugging - render the collision area as a rectangle
+			ctx.beginPath();
+			ctx.rect(this.x-plotOffset.x, this.plotY()-plotOffset.y,this.width,this.height);
+			ctx.stroke();
+			*/
 		};
 		that.render = render;
 				
@@ -475,7 +471,7 @@ function makeInstanceOfGame() {
 	game.make.man = function(spec) {
 		var that = game.make.character(spec);
 		that.type = 'man';
-		that.spriteData = spec.sprite ? game.data[spec.sprite] : game.data['man'];
+		that.spriteData = spec.sprite ? game.spriteData[spec.sprite] : game.spriteData['man'];
 		
 		that.height = that.spriteData.frameHeight*6;
 		that.width = that.spriteData.frameWidth*6;
@@ -509,7 +505,7 @@ function makeInstanceOfGame() {
 		}
 		
 		that.type = 'monster';
-		that.spriteData = spec.sprite ? game.data[spec.sprite] : game.data['orc'];
+		that.spriteData = spec.sprite ? game.spriteData[spec.sprite] : game.spriteData['orc'];
 		
 		that.maxSpeed = spec.maxSpeed || 4;
 		that.jumpForce = spec.jumpForce || 20;
