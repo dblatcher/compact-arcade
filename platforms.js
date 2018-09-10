@@ -6,7 +6,23 @@ function makeInstanceOfGame() {
 	game.spriteFiles = ['man.png', 'man-r.png','tree.png','orc.png','orc-r.png','bat.png'];	
 
 	game.level = [
-		{width:2000,height:1000,
+	
+		{width:1000, height:1500,
+			items :[
+			{func:'platform', spec:{x:500,y:150, width:350, height:150, color:'yellow',isObstacle:true,bounce:0.6}},
+			{func:'platform', spec:{x:500,y:500, width:250, color:'red'}},
+			{func:'platform', spec:{x:500,y:700, width:250, color:'red'}},
+			{func:'man', spec:{x:100,y:1350,isGod:false,action:'jump'}, isPlayer:true},
+			],
+			effects : [
+				{func:'message', spec:{message:'under dev! Level2', lastFrame:50}}
+			],
+			victoryCondition : function() {
+				return game.session.player.x>900;
+			}
+		},
+	
+		{width:2000,height:1000, score:50,
 			items: [
 				{func:'monster', spec:{x:400,y:170, action:'stand', direction:'left',flying:true, maxSpeed:10, sprite:'bat',behaviour:'flyAtPlayerWhenClose'}},
 				{func:'monster', spec:{x:1100,y:500, action:'stand', direction:'left',flying:true, maxSpeed:10, sprite:'bat',behaviour:'flyAround'}},
@@ -33,6 +49,7 @@ function makeInstanceOfGame() {
 				return game.session.player.x>1900;
 			}
 		}
+
 	];
 
 
@@ -43,22 +60,30 @@ function makeInstanceOfGame() {
 
 		ctx.fillStyle = "lightskyblue";
 		ctx.fillRect(0,0,c.width,c.height);
-
+		
+		
+		var floor = game.level[game.session.currentLevel].height;
+		
 		ctx.fillStyle = "green";
-		ctx.fillRect(0,c.height-100,c.width,c.height);
+		ctx.fillRect(0,floor-100-plotOffset.y,c.width,100);
 		
 		ctx.beginPath();
 		ctx.drawImage(game.sprite['tree.png'],
-		800-(plotOffset.x/2),c.height-300-plotOffset.y,
+		800-(plotOffset.x/2),floor-300-plotOffset.y,
 		200,200);
 
 		ctx.drawImage(game.sprite['tree.png'],
-		500-(plotOffset.x/2),c.height-300-plotOffset.y,
+		500-(plotOffset.x/2),floor-300-plotOffset.y,
 		200,200);
 		
 		ctx.drawImage(game.sprite['tree.png'],
-		400-(plotOffset.x/3),c.height-200-plotOffset.y,
+		400-(plotOffset.x/3),floor-200-plotOffset.y,
 		100,100);
+		
+		function plotY() {
+			return game.level[game.session.currentLevel].height - this.y - this.height;
+		}
+		
 	} 
 
 	game.reactToControls = function() {

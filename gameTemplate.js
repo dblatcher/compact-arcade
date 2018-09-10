@@ -203,7 +203,7 @@ function createGameTemplate () {
 		
 	game.renderScreen = function() {
 			var c = this.canvasElement;	var ctx = c.getContext("2d");
-			var plotOffset = {}, statusLineText='', highscoreNameText='';
+			var plotOffset = {x:0,y:0}, statusLineText='', highscoreNameText='';
 			
 			if (this.scoreElement) {
 				if (this.session.currentLevel === 0) {
@@ -217,10 +217,13 @@ function createGameTemplate () {
 			ctx.fillRect(0,0,c.width,c.height);
 			ctx.lineWidth = 1;
 			
-			plotOffset.x = Math.min(game.level[game.session.currentLevel].width-1000,Math.max(this.session.player.x-500,0)) || 0;
-			plotOffset.y = Math.min(game.level[game.session.currentLevel].height-1000,Math.max(this.session.player.y-500,0)) || 0;			
+			if (game.session.player.plotY){
+				plotOffset.x = Math.min(game.level[game.session.currentLevel].width-1000,Math.max(this.session.player.x-500,0)) || 0;
+				plotOffset.y = Math.min(game.level[game.session.currentLevel].height-1000,Math.max(this.session.player.plotY()-500,0)) || 0;			
+			};
 			
 			this.renderBackground(plotOffset);
+			console.log(plotOffset);
 			
 			if (this.session.gameStatus === 'play') {
 				for (p=0;p<this.session.items.length;p++) {
