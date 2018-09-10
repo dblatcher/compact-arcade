@@ -8,7 +8,9 @@ function createGameTemplate () {
 		level: [ 
 		{width:1000,height:1000,
 			items:[],
-			effects:[{type:'message',message:'empty game', animateFrame:0, lastFrame:-1}],
+			effects:[
+				{ func:'message',spec:{message:'empty game'} }
+			],
 			victoryCondition : function() {
 				return false;
 			}
@@ -30,6 +32,7 @@ function createGameTemplate () {
 		},
 		
 		make : {},
+		makeEffect : {},
 		calc : {},
 		session: {},
 		
@@ -129,7 +132,7 @@ function createGameTemplate () {
 	};
 		
 	game.setUpLevel = function(level) {
-		var effectClone, init;
+		var init;
 		if (level !== game.session.currentLevel || level === 0 ) {
 			this.customNewLevelAction(level);
 		}
@@ -138,14 +141,10 @@ function createGameTemplate () {
 		for (init = 0; init < this.level[level].items.length; init++) {
 			this.session.items.push(this.make[this.level[level].items[init].func](this.level[level].items[init].spec));
 			if (this.level[level].items[init].isPlayer) {this.session.player = this.session.items[this.session.items.length-1]};
-		};
-					
-		this.session.effect = [];
-		if (this.level[level].effects) {
-			for (init = 0; init < this.level[level].effects.length; init++) {
-				effectClone = JSON.parse(JSON.stringify(this.level[level].effects[init]));
-				this.session.effect.push( effectClone );
-			};
+		};			
+		this.session.effect = []
+		for (init = 0; init < this.level[level].effects.length; init++) {
+			this.session.effect.push( this.makeEffect[this.level[level].effects[init].func](this.level[level].effects[init].spec) );
 		};
 		game.keyMap ={};
 		game.cycleCount = 0;
@@ -204,7 +203,7 @@ function createGameTemplate () {
 		
 	game.renderScreen = function() {
 			var c = this.canvasElement;	var ctx = c.getContext("2d");
-			var effect,rgbString, plotOffset = {}, statusLineText='', highscoreNameText='';
+			var plotOffset = {}, statusLineText='', highscoreNameText='';
 			
 			if (this.scoreElement) {
 				if (this.session.currentLevel === 0) {
@@ -231,39 +230,10 @@ function createGameTemplate () {
 				}			
 
 				for (p=0;p<this.session.effect.length;p++) {
-					effect = this.session.effect[p];
-					ctx.lineWidth = 1;
-					if (effect.type == 'expandingRing'){
-						ctx.beginPath();
-						ctx.arc(effect.x- plotOffset.x,effect.y- plotOffset.y,1+effect.animateFrame,0,2*Math.PI);
-						rgbString = 'rgb(' + (250-(effect.animateFrame*4.5)) + ',' + (250-(effect.animateFrame*4.5)) + ',' + (250-(effect.animateFrame*4.5)) + ')';
-						ctx.strokeStyle = rgbString;
-						ctx.lineWidth = 2;
-						ctx.stroke();
-					}
-					if (effect.type == 'sparks') {
-						ctx.beginPath();
-						ctx.fillStyle = 'red';
-						for (pp=0;pp<20;pp++){
-							ctx.fillRect(
-								effect.x+(Math.random()*30)-15 - plotOffset.x,
-								effect.y+(Math.random()*30)-15 - plotOffset.y,
-								2,2
-							);
-						}
-						ctx.stroke();
-					}
-					if (effect.type === 'message' && effect.message) {
-						ctx.beginPath();
-						ctx.font = "10vh arial";
-						ctx.fillStyle = "red";
-						ctx.textAlign = "center";
-						ctx.fillText(effect.message, c.width/2, c.height/2);					
-					}
-					
-					effect.animateFrame++;			
+					this.session.effect[p].render(ctx,plotOffset,c);
+					this.session.effect[p].animateFrame++;			
 				}
-				function checkEffectNotFinished(item) {return (item.animateFrame <= item.lastFrame || item.lastFrame === -1)}
+				function checkEffectNotFinished(effect) {return (effect.animateFrame <= effect.lastFrame || effect.lastFrame === -1)}
 				this.session.effect = this.session.effect.filter(checkEffectNotFinished);
 			}
 			
@@ -298,7 +268,7 @@ function createGameTemplate () {
 		if (this.level[this.session.currentLevel].score) {this.session.score += this.level[this.session.currentLevel].score}
 		if (this.session.currentLevel+1 < this.level.length) { this.setUpLevel(this.session.currentLevel+1)}
 		else {
-			game.session.effect.push ({type:'message',message:'You win!', animateFrame:0, lastFrame:3000/25});
+			game.session.effect.push (game.makeEffect.message({message:'You win!', lastFrame:3000/25}));
 			game.session.waitingToReset = true;
 			game.session.player={};
 			setTimeout(function() {
@@ -316,7 +286,7 @@ function createGameTemplate () {
 					game.setUpLevel(game.session.currentLevel);
 				},2500);
 			} else {
-				game.session.effect.push ({type:'message',message:'Game Over!', animateFrame:0, lastFrame:3000/25});
+				game.session.effect.push (game.makeEffect.message({message:'game over!', lastFrame:3000/25}));
 				game.session.waitingToReset = true;
 				game.session.player={};
 				setTimeout(function() {
@@ -383,6 +353,54 @@ function createGameTemplate () {
 	
 		return that;
 	};
+	
+	game.makeEffect.effect = function(spec) {
+		var that = {};
+		that.animateFrame = 0;
+		that.lastFrame = spec.lastFrame || -1;
+		var render = function (ctx,plotOffset){
+		}
+		that.render = render;
+		
+		return that;
+	};
+	
+	game.makeEffect.message = function(spec) {
+		var that = game.makeEffect.effect(spec);
+		that.message = spec.message || "no message defined!";
+		that.color = spec.color || "black";
+		that.font = spec.font || "arial";
+		that.size = spec.size || "15vh";
+		
+		var render = function (ctx,plotOffset,c){
+			ctx.beginPath();
+			ctx.font = this.size + " " + this.font;
+			ctx.fillStyle = this.color;
+			ctx.textAlign = "center";
+			ctx.fillText(this.message, c.width/2, c.height/2);		
+		};
+		that.render = render;
+		
+		return that;
+	};
+	
+	game.makeEffect.expandingRing = function(spec) {
+		var that = game.makeEffect.effect(spec);
+		that.x = spec.x || 0;
+		that.y = spec.y || 0;
+		
+		var render = function (ctx,plotOffset,c){
+			ctx.beginPath();
+			ctx.arc(this.x- plotOffset.x,this.y- plotOffset.y,1+this.animateFrame,0,2*Math.PI);
+			var rgbString = 'rgb(' + (250-(this.animateFrame*4.5)) + ',' + (250-(this.animateFrame*4.5)) + ',' + (250-(this.animateFrame*4.5)) + ')';
+			ctx.strokeStyle = rgbString;
+			ctx.lineWidth = 2;
+			ctx.stroke();
+		};
+		that.render = render;
+		
+		return that;
+	}
 	
 	game.calc.areIntersecting = function (bk, ds) {
 		return !(ds.x > bk.x+bk.width || 

@@ -27,10 +27,10 @@ function makeInstanceOfGame() {
 				{func:'man', spec:{x:1230,y:700,isGod:false,action:'jump'}, isPlayer:true},
 			],
 			effects:[
-				{type:'message',message:'under dev!', animateFrame:0, lastFrame:50}
+				{func:'message', spec:{message:'under dev!', lastFrame:50}}
 			],
 			victoryCondition : function() {
-				return false;
+				return game.session.player.x>1900;
 			}
 		}
 	];
