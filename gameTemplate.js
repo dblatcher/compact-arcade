@@ -155,9 +155,10 @@ function createGameTemplate () {
 		var timeStamp = new Date();
 		
 		if (this.session.gameStatus === 'play') {
+			
 			if (this.session.player.dead === false) {this.reactToControls()};
 			this.runItemActions();
-			this.session.items = this.session.items.filter(function(item){return item.dead==false});
+			
 			if (game.cycleCount % game.numberOfCyclesBetweenCheckingLevelEnds === 0 || game.session.currentLevel === 0 ) {
 				this.checkIfLevelFinished();
 				if (game.session.player.dead == true && game.session.waitingToReset === false) {
@@ -165,6 +166,7 @@ function createGameTemplate () {
 				};			
 			};
 			game.cycleCount++;
+			
 		} 			
 		
 		if (this.session.gameStatus === 'highscoreEntry') {
@@ -332,22 +334,32 @@ function createGameTemplate () {
 		};
 		
 	game.runItemActions = function() {
-		for (var m=0;m<this.session.items.length;m++) {
-			this.session.items[m].automaticAction();
-			if (this.session.items[m].dead === false && typeof(this.session.items[m].move) === 'function') {
-				this.session.items[m].move();
+		var items = this.session.items;
+		
+		for (var m=0;m<items.length;m++) {
+			
+			for (var a=0;a<items[m].automaticActions.length;a++) {
+				if (typeof(items[m].automaticActions[a]) === 'function') {
+					items[m].automaticActions[a].apply(items[m],[]);
+				}
+			};
+			
+			
+			if (items[m].dead === false && typeof(items[m].move) === 'function') {
+				items[m].move();
 				
-				for (var t = 0; t<this.session.items.length; t++) {
+				for (var t = 0; t<items.length; t++) {
 					if (t !== m) {
-						if (this.calc.areIntersecting(this.session.items[m],this.session.items[t])) {
-							this.session.items[m].handleCollision(this.session.items[t])
+						if (this.calc.areIntersecting(items[m],items[t])) {	
+							if (typeof(items[m].hit[items[t].type]) === 'function') {items[m].hit[items[t].type].apply(items[m],[items[t]])}
+							if (typeof(items[t].hit[items[m].type]) === 'function') {items[t].hit[items[m].type].apply(items[t],[items[m],true])}
 						}
 					}
 				}
 				
 			};
 		};
-		
+		items = items.filter(function(item){return item.dead==false});	
 	};
 	
   game.make.item = function(spec) {
@@ -363,13 +375,8 @@ function createGameTemplate () {
 		that.plotY = function() {
 			return game.level[game.session.currentLevel].height - this.y - this.height;
 		}
-		
-		var handleCollision = function(item) {		
-			if (typeof(this.hit[item.type]) === 'function') {this.hit[item.type].apply(this,[item])}
-			if (typeof(item.hit[this.type]) === 'function') {item.hit[this.type].apply(item,[this,true])}
-		};
-		that.handleCollision = handleCollision;
 		that.hit={};
+		that.automaticActions = [];
 		
 		var render = function (ctx,plotOffset){
 			ctx.beginPath();
@@ -379,8 +386,7 @@ function createGameTemplate () {
 		}
 		that.render = render;
 		
-		var automaticAction = function() {return false};
-		that.automaticAction = automaticAction;
+	
 		return that;
 	};
 	

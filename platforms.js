@@ -249,7 +249,9 @@ function makeInstanceOfGame() {
 		that.behaviour = game.behaviourData[spec.behaviour] || 0;
 		that.behaviourTrigger = [];
 		
-		var automaticAction = function(){			
+		
+		
+		var updateSpriteFrame	= function(){			
 			if (game.cycleCount % 10 === 0 ){
 				this.frame++;
 				if (this.frame >= this.spriteData.animateCycle[this.action][this.direction].length) {
@@ -258,6 +260,9 @@ function makeInstanceOfGame() {
 					} else {this.frame=0;}
 				};
 			};
+		};
+		
+		var runDefinedBehaviour = function() {
 			if (typeof(this.behaviour) === 'function') {
 				this.behaviour( {type:'noTrigger', data:0} );
 				for (var l=0; l<this.behaviourTrigger.length; l++) {
@@ -266,7 +271,9 @@ function makeInstanceOfGame() {
 			};
 			this.behaviourTrigger = [];
 		};
-		that.automaticAction = automaticAction;
+
+		that.automaticActions.push(updateSpriteFrame,runDefinedBehaviour);
+		
 		
 		var setAction = function(newAction,newDirection) {
 			newDirection = newDirection || this.direction;
