@@ -7,18 +7,22 @@ function makeInstanceOfGame() {
 
 	game.level = [
 	
-		{width:1000, height:1500,
+		{width:1000, height:2000,
 			items :[
 			{func:'platform', spec:{x:500,y:150, width:350, height:150, color:'yellow',isObstacle:true,bounce:0.6}},
 			{func:'platform', spec:{x:500,y:500, width:250, color:'red'}},
 			{func:'platform', spec:{x:500,y:700, width:250, color:'red'}},
-			{func:'man', spec:{x:100,y:1350,isGod:false,action:'jump'}, isPlayer:true},
+			{func:'platform', spec:{x:250,y:900, width:250, color:'red'}},
+			{func:'platform', spec:{x:400,y:1100, width:250, color:'red'}},
+			{func:'platform', spec:{x:400,y:1200, width:250, color:'red'}},
+			{func:'platform', spec:{x:500,y:1410, width:250, color:'red'}},
+			{func:'man', spec:{x:100,y:350,isGod:false,action:'jump'}, isPlayer:true},
 			],
 			effects : [
 				{func:'message', spec:{message:'under dev! Level2', lastFrame:50}}
 			],
 			victoryCondition : function() {
-				return game.session.player.x>900;
+				return game.session.player.y>1500;
 			}
 		},
 	

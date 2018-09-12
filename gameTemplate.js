@@ -223,7 +223,6 @@ function createGameTemplate () {
 			};
 			
 			this.renderBackground(plotOffset);
-			console.log(plotOffset);
 			
 			if (this.session.gameStatus === 'play') {
 				for (p=0;p<this.session.items.length;p++) {
