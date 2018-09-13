@@ -361,6 +361,13 @@ function createGameTemplate (disks) {
 		var that = {};
 		that.animateFrame = 0;
 		that.lastFrame = spec.lastFrame || -1;
+		that.height = spec.height || 0;
+		that.width = spec.width || 0;
+		that.x = spec.x || 0;
+		that.y = spec.y || 0;
+		that.plotY = function() {
+			return game.level[game.session.currentLevel].height - this.y - this.height;
+		}
 		var render = function (ctx,plotOffset){
 		}
 		that.render = render;
@@ -389,12 +396,11 @@ function createGameTemplate (disks) {
 	
 	game.makeEffect.expandingRing = function(spec) {
 		var that = game.makeEffect.effect(spec);
-		that.x = spec.x || 0;
-		that.y = spec.y || 0;
+
 		
 		var render = function (ctx,plotOffset,c){
 			ctx.beginPath();
-			ctx.arc(this.x- plotOffset.x,this.y- plotOffset.y,1+this.animateFrame,0,2*Math.PI);
+			ctx.arc(this.x- plotOffset.x,this.plotY()- plotOffset.y,1+this.animateFrame,0,2*Math.PI);
 			var rgbString = 'rgb(' + (250-(this.animateFrame*4.5)) + ',' + (250-(this.animateFrame*4.5)) + ',' + (250-(this.animateFrame*4.5)) + ')';
 			ctx.strokeStyle = rgbString;
 			ctx.lineWidth = 2;
