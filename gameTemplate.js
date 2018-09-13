@@ -325,7 +325,8 @@ function createGameTemplate (disks) {
 				
 			};
 		};
-		items = items.filter(function(item){return item.dead==false});	
+				
+		this.session.items = items.filter(function(item){return item.dead==false});	
 	};
 	
   game.make.item = function(spec) {
