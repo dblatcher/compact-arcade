@@ -29,6 +29,7 @@
 <script src="https://cdn.polyfill.io/v2/polyfill.js"></script>
 
 <script src = './gameTemplate.js' ></script>
+<script src = './spriteHandling.js' ></script>
 <script src = './platforms.js' ></script>
 
 
@@ -41,7 +42,8 @@ console.log('running in game debug mode.');
 	 Call initialise on an anonymous instance to 'hide' the instance Object:
 		makeInstanceOfGame().initialise( ... );	
 */
-var gameInstance = makeInstanceOfGame();	
+var gameInstance = createGameTemplate([spriteHandling,platformGame]);	
+
 gameInstance.initialise({
 	canvasElement:document.getElementById("gameSpace"),
 	scoreElement:document.getElementById("scoreOverlay"),

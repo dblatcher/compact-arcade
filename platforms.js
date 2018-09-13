@@ -1,9 +1,9 @@
+// dependency : spriteHandling
 
-function makeInstanceOfGame() {
-	var game = createGameTemplate();
+function platformGame(game) {
 
-	game.soundFiles = ['jump.mp3','land.mp3','bounce.mp3'];	
-	game.spriteFiles = ['man.png', 'man-r.png','tree.png','orc.png','orc-r.png','bat.png'];	
+	game.soundFiles.push ('jump.mp3','land.mp3','bounce.mp3');	
+	game.spriteFiles.push ('man.png', 'man-r.png','tree.png','orc.png','orc-r.png','bat.png');	
 
 	game.level = [
 	
@@ -277,19 +277,7 @@ function makeInstanceOfGame() {
 		
 		that.behaviour = game.behaviourData[spec.behaviour] || 0;
 		that.behaviourTrigger = [];
-		
-		
-		
-		var updateSpriteFrame	= function(){			
-			if (game.cycleCount % 10 === 0 ){
-				this.frame++;
-				if (this.frame >= this.spriteData.animateCycle[this.action][this.direction].length) {
-					if (this.spriteData.animateCycle[this.action].end) {
-						this.spriteData.animateCycle[this.action].end.apply(this,[]);
-					} else {this.frame=0;}
-				};
-			};
-		};
+
 		
 		var runDefinedBehaviour = function() {
 			if (typeof(this.behaviour) === 'function') {
@@ -301,44 +289,17 @@ function makeInstanceOfGame() {
 			this.behaviourTrigger = [];
 		};
 
-		that.automaticActions.push(updateSpriteFrame,runDefinedBehaviour);
+		that.automaticActions.push(game.library.spriteHandling.updateSpriteFrame,runDefinedBehaviour);
 		
 		
 		var setAction = function(newAction,newDirection) {
-			newDirection = newDirection || this.direction;
-			if (newDirection === 'reverse') {newDirection = this.direction === 'left' ? 'right' : 'left'};
 			if (this.action === 'die') {return false;}; // if the character is dying, don't stop dying
-			
-			if (newAction === this.action && newDirection === this.direction) {return false};
-			this.action = newAction;
-			this.direction = newDirection;
-			this.frame = 0;
-			return(true);
+			game.library.spriteHandling.setAction.apply(this,[newAction,newDirection]);
 		}
 		that.setAction = setAction;
 		
 		var render = function(ctx,plotOffset) {
-			var frame = this.spriteData.frameMap[this.spriteData.animateCycle[this.action][this.direction][this.frame]];
-			
-			var leftOff = (this.direction === 'left') ?
-				this.spriteData.frontOff*this.width || 0:
-				this.spriteData.backOff*this.width || 0;
-			var rightOff = (this.direction === 'right') ?
-				this.spriteData.frontOff*this.width || 0:
-				this.spriteData.backOff*this.width || 0;
-			var topOff = this.spriteData.topOff*this.height || 0;
-		
-			ctx.beginPath();
-			ctx.drawImage(game.sprite[frame.source],
-				frame.x,frame.y,this.spriteData.frameWidth,this.spriteData.frameHeight,
-				this.x-plotOffset.x-leftOff, this.plotY()-plotOffset.y-topOff,
-				this.width+leftOff+rightOff,this.height+topOff);	
-			
-			/* for debugging - render the collision area as a rectangle
-			ctx.beginPath();
-			ctx.rect(this.x-plotOffset.x, this.plotY()-plotOffset.y,this.width,this.height);
-			ctx.stroke();
-			*/
+			game.library.spriteHandling.renderSprite(this,ctx,plotOffset);
 		};
 		that.render = render;
 				

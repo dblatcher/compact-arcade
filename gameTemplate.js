@@ -1,5 +1,4 @@
-
-function createGameTemplate () {
+function createGameTemplate (disks) {
 	var game = {
 		timer:0, cycleCount:0, numberOfCyclesBetweenCheckingLevelEnds:10, 
 		keyMap:{}, startingLives:1,
@@ -47,6 +46,7 @@ function createGameTemplate () {
 		handleEndOfLevel : function(){},
 		handleDeadPlayer : function(){},
 		
+		library : {}
 	};
 	
 	game.session = {
@@ -422,6 +422,11 @@ function createGameTemplate () {
 		value = value * pow;
 		value = Math.round(value) / pow;
 		return value;
+	};
+	
+	
+	for (var loadingDisk = 0; loadingDisk < disks.length; loadingDisk++) {
+		game = disks[loadingDisk](game);
 	};
 	
 	
