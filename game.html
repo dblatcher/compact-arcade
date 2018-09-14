@@ -31,7 +31,7 @@
 <script src = './gameTemplate.js' ></script>
 <script src = './spriteHandling.js' ></script>
 <script src = './platforms.js' ></script>
-
+<script src = './spaceshooter.js' ></script>
 
 <script>
 
@@ -40,9 +40,12 @@ console.log('running in game debug mode.');
 /* Declaring gameInstance gives access to it and its properties in the console.
    This is useful for debugging and playtesting but allows players to cheat.
 	 Call initialise on an anonymous instance to 'hide' the instance Object:
-		makeInstanceOfGame().initialise( ... );	
+		createGameTemplate([disks],{Options}).initialise( ... );	
 */
-var gameInstance = createGameTemplate([spriteHandling,platformGame]);	
+var gameInstance = createGameTemplate([spriteHandling,platformGame],{
+	leftOffset:200,
+	startingLives:3
+});	
 
 gameInstance.initialise({
 	canvasElement:document.getElementById("gameSpace"),

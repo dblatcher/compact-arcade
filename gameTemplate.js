@@ -1,7 +1,12 @@
-function createGameTemplate (disks) {
+	function createGameTemplate (disks, options) {
+	
+	if (typeof(options) !==  "object") {options = {} };
+	options.leftOffset = options.leftOffset || 500;
+	options.startingLives = options.startingLives || 2;
+		
 	var game = {
 		timer:0, cycleCount:0, numberOfCyclesBetweenCheckingLevelEnds:10, 
-		keyMap:{}, startingLives:1,
+		keyMap:{}, startingLives:options.startingLives,
 		soundFiles: [], spriteFiles:[],
 		
 		level: [ 
@@ -50,25 +55,25 @@ function createGameTemplate (disks) {
 	};
 	
 	game.session = {
-			paused: false,
-			items : [],
-			effect:[],
-			player:{},
-			currentLevel : 0,
-			score:0,
-			lives:2,
-			waitingToReset:false,
-			gameStatus:'none',
-			highscoreName:'',
-			reset:function() {
-				this.score = 0;
-				this.lives = game.startingLives;
-				this.highscoreName = '';
-				this.gameStatus = 'play';
-				this.player ={};
-				game.setUpLevel(0);
-			}
-		};
+		paused: false,
+		items : [],
+		effect:[],
+		player:{},
+		currentLevel : 0,
+		score:0,
+		lives:2,
+		waitingToReset:false,
+		gameStatus:'none',
+		highscoreName:'',
+		reset:function() {
+			this.score = 0;
+			this.lives = game.startingLives;
+			this.highscoreName = '';
+			this.gameStatus = 'play';
+			this.player ={};
+			game.setUpLevel(0);
+		}
+	};
 	
 	game.initialise = function(outputs) {
 		this.canvasElement = outputs.canvasElement;
@@ -202,69 +207,73 @@ function createGameTemplate (disks) {
 	};
 		
 	game.renderScreen = function() {
-			var c = this.canvasElement;	var ctx = c.getContext("2d");
-			var plotOffset = {x:0,y:0}, statusLineText='', highscoreNameText='';
-			
-			if (this.scoreElement) {
-				if (this.session.currentLevel === 0) {
-					this.scoreElement.style.display = 'block';
-				} else {
-					this.scoreElement.style.display = 'none';
+		var c = this.canvasElement;	var ctx = c.getContext("2d");
+		var plotOffset = {x:0,y:0}, statusLineText='', highscoreNameText='';
+		
+		if (this.scoreElement) {
+			if (this.session.currentLevel === 0) {
+				this.scoreElement.style.display = 'block';
+			} else {
+				this.scoreElement.style.display = 'none';
+			}
+		}
+		
+		ctx.fillStyle = "black";
+		ctx.fillRect(0,0,c.width,c.height);
+		ctx.lineWidth = 1;
+		
+		if (game.session.player.plotY){
+			plotOffset.x = 
+				Math.min(
+					game.level[game.session.currentLevel].width-1000,
+					Math.max(this.session.player.x-options.leftOffset,0)
+				) || 0;
+			plotOffset.y = Math.min(game.level[game.session.currentLevel].height-1000,Math.max(this.session.player.plotY()-500,0)) || 0;			
+		};
+		
+		this.renderBackground(plotOffset);
+		
+		if (this.session.gameStatus === 'play') {
+			for (p=0;p<this.session.items.length;p++) {
+				if (this.session.items[p].dead == false) {
+					this.session.items[p].render(ctx,plotOffset)
 				}
-			}
-			
-			ctx.fillStyle = "black";
-			ctx.fillRect(0,0,c.width,c.height);
-			ctx.lineWidth = 1;
-			
-			if (game.session.player.plotY){
-				plotOffset.x = Math.min(game.level[game.session.currentLevel].width-1000,Math.max(this.session.player.x-500,0)) || 0;
-				plotOffset.y = Math.min(game.level[game.session.currentLevel].height-1000,Math.max(this.session.player.plotY()-500,0)) || 0;			
-			};
-			
-			this.renderBackground(plotOffset);
-			
-			if (this.session.gameStatus === 'play') {
-				for (p=0;p<this.session.items.length;p++) {
-					if (this.session.items[p].dead == false) {
-						this.session.items[p].render(ctx,plotOffset)
-					}
-				}			
+			}			
 
-				for (p=0;p<this.session.effect.length;p++) {
-					this.session.effect[p].render(ctx,plotOffset,c);
-					this.session.effect[p].animateFrame++;			
-				}
-				function checkEffectNotFinished(effect) {return (effect.animateFrame <= effect.lastFrame || effect.lastFrame === -1)}
-				this.session.effect = this.session.effect.filter(checkEffectNotFinished);
+			for (p=0;p<this.session.effect.length;p++) {
+				this.session.effect[p].render(ctx,plotOffset,c);
+				this.session.effect[p].animateFrame++;			
 			}
-			
-			if (this.session.gameStatus === 'highscoreEntry') {
-				ctx.beginPath();
-				ctx.font = "4vh sans-serif";
-				ctx.fillStyle = "red";
-				ctx.textAlign = "center";
-				ctx.textBaseline="top";
-
-				ctx.fillText('ENTER NAME', c.width/2, c.height*(0.25));
-
-				ctx.font = "18vh sans-serif";
-				ctx.fillStyle = "red";
-				ctx.textAlign = "center";
-				ctx.textBaseline="top";			
-				ctx.fillText(this.session.highscoreName, c.width/2, c.height*(0.50));
-			}
-			
-			statusLineText = 'Lives: ' + game.session.lives + ' Score: ' + game.session.score;
+			function checkEffectNotFinished(effect) {return (effect.animateFrame <= effect.lastFrame || effect.lastFrame === -1)}
+			this.session.effect = this.session.effect.filter(checkEffectNotFinished);
+		}
+		
+		if (this.session.gameStatus === 'highscoreEntry') {
 			ctx.beginPath();
-			ctx.font = "3vh sans-serif";
-			ctx.fillStyle = "white";
-			ctx.textAlign = "left";
+			ctx.font = "4vh sans-serif";
+			ctx.fillStyle = "red";
+			ctx.textAlign = "center";
 			ctx.textBaseline="top";
 
-			ctx.fillText(statusLineText, 10, 10);
-			
-		};
+			ctx.fillText('ENTER NAME', c.width/2, c.height*(0.25));
+
+			ctx.font = "18vh sans-serif";
+			ctx.fillStyle = "red";
+			ctx.textAlign = "center";
+			ctx.textBaseline="top";			
+			ctx.fillText(this.session.highscoreName, c.width/2, c.height*(0.50));
+		}
+		
+		statusLineText = 'Lives: ' + game.session.lives + ' Score: ' + game.session.score;
+		ctx.beginPath();
+		ctx.font = "3vh sans-serif";
+		ctx.fillStyle = "white";
+		ctx.textAlign = "left";
+		ctx.textBaseline="top";
+
+		ctx.fillText(statusLineText, 10, 10);
+		
+	};
 			
 	game.handleEndOfLevel = function () {	
 		if (this.level[this.session.currentLevel].score) {this.session.score += this.level[this.session.currentLevel].score}
@@ -281,23 +290,23 @@ function createGameTemplate (disks) {
 	};
 		
 	game.handleDeadPlayer = function () {
-			if (game.session.lives-- > 0) {
-				game.session.waitingToReset = true;
-				setTimeout(function() {
-					game.session.waitingToReset = false;
-					game.setUpLevel(game.session.currentLevel);
-				},2500);
-			} else {
-				game.session.effect.push (game.makeEffect.message({message:'game over!', lastFrame:3000/25}));
-				game.session.waitingToReset = true;
-				game.session.player={};
-				setTimeout(function() {
-					game.session.waitingToReset = false;
-					game.session.gameStatus = 'highscoreEntry';
-				},3000);
-			};	
-			return true;
-		};
+		if (game.session.lives-- > 0) {
+			game.session.waitingToReset = true;
+			setTimeout(function() {
+				game.session.waitingToReset = false;
+				game.setUpLevel(game.session.currentLevel);
+			},2500);
+		} else {
+			game.session.effect.push (game.makeEffect.message({message:'game over!', lastFrame:3000/25}));
+			game.session.waitingToReset = true;
+			game.session.player={};
+			setTimeout(function() {
+				game.session.waitingToReset = false;
+				game.session.gameStatus = 'highscoreEntry';
+			},3000);
+		};	
+		return true;
+	};
 		
 	game.runItemActions = function() {
 		var items = this.session.items;
@@ -329,7 +338,7 @@ function createGameTemplate (disks) {
 		this.session.items = items.filter(function(item){return item.dead==false});	
 	};
 	
-  game.make.item = function(spec) {
+	game.make.item = function(spec) {
 		var that = {}
 		that.x = spec.x || 0 ;
 		that.y = spec.y || 0;
