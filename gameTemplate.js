@@ -3,7 +3,16 @@
 	if (typeof(options) !==  "object") {options = {} };
 	options.leftOffset = options.leftOffset || 500;
 	options.startingLives = options.startingLives || 2;
-		
+	options.gameCycleTime = options.gameCycleTime || 25
+	options.resetDelayAfterDeath = options.resetDelayAfterDeath || 1000;
+
+	if (typeof(options.bottomOfScreenIsZeroY) === 'undefined' ) {
+		options.bottomOfScreenIsZeroY = true;
+	};
+	if (typeof(options.runCollisionTestInMainLoop) === 'undefined' ) {
+		options.runCollisionTestInMainLoop = true;
+	};
+	
 	var game = {
 		timer:0, cycleCount:0, numberOfCyclesBetweenCheckingLevelEnds:10, 
 		keyMap:{}, startingLives:options.startingLives,
@@ -102,7 +111,7 @@
 		};
 		window.onfocus = function() {
 			game.session.paused = false;
-			game.timer = setTimeout(function(){game.refresh()},25);
+			game.timer = setTimeout(function(){game.refresh()},options.gameCycleTime);
 		};
 
 		for(var loop=0; loop < this.soundFiles.length; loop++) {
@@ -113,7 +122,7 @@
 		};
 					
 		this.session.reset();			
-		this.timer = setTimeout(function(){game.refresh()},25);
+		this.timer = setTimeout(function(){game.refresh()},options.gameCycleTime);
 		
 		function addSound(src) {
 			var soundElement;
@@ -182,7 +191,7 @@
 		//	if (timeStamp > 24) console.log('long cycle:' + timeStamp);
 
 		if (game.session.paused === false) {
-			game.timer = setTimeout(function(){game.refresh()},(25-timeStamp > 0 ? 25-timeStamp : 1) );
+			game.timer = setTimeout(function(){game.refresh()},(options.gameCycleTime-timeStamp > 0 ? options.gameCycleTime-timeStamp : 1) );
 		}
 	};
 		
@@ -222,13 +231,17 @@
 		ctx.fillRect(0,0,c.width,c.height);
 		ctx.lineWidth = 1;
 		
-		if (game.session.player.plotY){
+		if (game.session.player){
 			plotOffset.x = 
 				Math.min(
 					game.level[game.session.currentLevel].width-1000,
 					Math.max(this.session.player.x-options.leftOffset,0)
 				) || 0;
-			plotOffset.y = Math.min(game.level[game.session.currentLevel].height-1000,Math.max(this.session.player.plotY()-500,0)) || 0;			
+			plotOffset.y = 
+				Math.min(
+					game.level[game.session.currentLevel].height-1000,
+					Math.max(this.session.player.plotY()-500,0)
+				) || 0 ;				
 		};
 		
 		this.renderBackground(plotOffset);
@@ -279,7 +292,7 @@
 		if (this.level[this.session.currentLevel].score) {this.session.score += this.level[this.session.currentLevel].score}
 		if (this.session.currentLevel+1 < this.level.length) { this.setUpLevel(this.session.currentLevel+1)}
 		else {
-			game.session.effect.push (game.makeEffect.message({message:'You win!', lastFrame:3000/25}));
+			game.session.effect.push (game.makeEffect.message({message:'You win!', lastFrame:3000/options.gameCycleTime}));
 			game.session.waitingToReset = true;
 			game.session.player={};
 			setTimeout(function() {
@@ -295,34 +308,33 @@
 			setTimeout(function() {
 				game.session.waitingToReset = false;
 				game.setUpLevel(game.session.currentLevel);
-			},2500);
+			},options.resetDelayAfterDeath);
 		} else {
-			game.session.effect.push (game.makeEffect.message({message:'game over!', lastFrame:3000/25}));
+			game.session.effect.push (game.makeEffect.message({
+				message:'game over!', 
+				lastFrame:options.resetDelayAfterDeath/options.gameCycleTime
+			}));
 			game.session.waitingToReset = true;
 			game.session.player={};
 			setTimeout(function() {
 				game.session.waitingToReset = false;
 				game.session.gameStatus = 'highscoreEntry';
-			},3000);
+			},options.resetDelayAfterDeath);
 		};	
 		return true;
 	};
-		
-	game.runItemActions = function() {
+	
+	game.runItemActions = options.runCollisionTestInMainLoop ?
+	function() {
 		var items = this.session.items;
-		
 		for (var m=0;m<items.length;m++) {
-			
 			for (var a=0;a<items[m].automaticActions.length;a++) {
 				if (typeof(items[m].automaticActions[a]) === 'function') {
 					items[m].automaticActions[a].apply(items[m],[]);
 				}
 			};
-			
-			
 			if (items[m].dead === false && typeof(items[m].move) === 'function') {
 				items[m].move();
-				
 				for (var t = 0; t<items.length; t++) {
 					if (t !== m) {
 						if (this.calc.areIntersecting(items[m],items[t])) {	
@@ -331,10 +343,22 @@
 						}
 					}
 				}
-				
 			};
-		};
-				
+		};	
+		this.session.items = items.filter(function(item){return item.dead==false});	
+	} :
+	function() {
+		var items = this.session.items;
+		for (var m=0;m<items.length;m++) {
+			for (var a=0;a<items[m].automaticActions.length;a++) {
+				if (typeof(items[m].automaticActions[a]) === 'function') {
+					items[m].automaticActions[a].apply(items[m],[]);
+				}
+			};
+			if (items[m].dead === false && typeof(items[m].move) === 'function') {
+				items[m].move();
+			};
+		};	
 		this.session.items = items.filter(function(item){return item.dead==false});	
 	};
 	
@@ -348,9 +372,15 @@
 		that.dead = false;
 		that.type= 'none';
 		
-		that.plotY = function() {
+		var plotY = options.bottomOfScreenIsZeroY ?
+		function() {
 			return game.level[game.session.currentLevel].height - this.y - this.height;
-		}
+		} : 
+		function() {
+			return this.y;
+		} ;		
+		that.plotY = plotY
+		
 		that.hit={};
 		that.automaticActions = [];
 		
@@ -374,9 +404,14 @@
 		that.width = spec.width || 0;
 		that.x = spec.x || 0;
 		that.y = spec.y || 0;
-		that.plotY = function() {
+		var plotY = options.bottomOfScreenIsZeroY ?
+		function() {
 			return game.level[game.session.currentLevel].height - this.y - this.height;
-		}
+		} : 
+		function() {
+			return this.height;
+		} ;		
+		that.plotY = plotY
 		var render = function (ctx,plotOffset){
 		}
 		that.render = render;
@@ -448,7 +483,3 @@
 	
 	return game;
 }
-
-
-
-

@@ -43,8 +43,10 @@ console.log('running in game debug mode.');
 		createGameTemplate([disks],{Options}).initialise( ... );	
 */
 var gameInstance = createGameTemplate([spriteHandling,platformGame],{
-	leftOffset:200,
-	startingLives:3
+	leftOffset:500,
+	startingLives:3,
+	runCollisionTestInMainLoop:true,
+	bottomOfScreenIsZeroY : true,
 });	
 
 gameInstance.initialise({
