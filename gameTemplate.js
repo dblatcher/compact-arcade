@@ -1,4 +1,4 @@
-	function createGameTemplate (disks, options) {
+function createGameTemplate (disks, options) {
 	
 	if (typeof(options) !==  "object") {options = {} };
 	options.leftOffset = options.leftOffset || 500;
@@ -231,7 +231,7 @@
 		ctx.fillRect(0,0,c.width,c.height);
 		ctx.lineWidth = 1;
 		
-		if (game.session.player){
+		if (game.session.player.render){
 			plotOffset.x = 
 				Math.min(
 					game.level[game.session.currentLevel].width-1000,
