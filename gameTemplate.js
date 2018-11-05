@@ -145,20 +145,22 @@ function createGameTemplate (disks, options) {
 		
 	};
 		
-	game.setUpLevel = function(level) {
-		var init;
-		if (level !== game.session.currentLevel || level === 0 ) {
-			this.customNewLevelAction(level);
+	game.setUpLevel = function(levelNumber) {
+		var init, level;
+		if (levelNumber !== game.session.currentLevel || levelNumber === 0 ) {
+			this.customNewLevelAction(levelNumber);
 		}
-		game.session.currentLevel = level;
+		game.session.currentLevel = levelNumber;
 		this.session.items = [];
-		for (init = 0; init < this.level[level].items.length; init++) {
-			this.session.items.push(this.make[this.level[level].items[init].func](this.level[level].items[init].spec));
-			if (this.level[level].items[init].isPlayer) {this.session.player = this.session.items[this.session.items.length-1]};
+		level = this.level[levelNumber];
+		
+		for (init = 0; init < level.items.length; init++) {
+			this.session.items.push(this.make[level.items[init].func](level.items[init].spec));
+			if (level.items[init].isPlayer) {this.session.player = this.session.items[this.session.items.length-1]};
 		};			
 		this.session.effect = []
-		for (init = 0; init < this.level[level].effects.length; init++) {
-			this.session.effect.push( this.makeEffect[this.level[level].effects[init].func](this.level[level].effects[init].spec) );
+		for (init = 0; init < level.effects.length; init++) {
+			this.session.effect.push( this.makeEffect[level.effects[init].func](level.effects[init].spec) );
 		};
 		game.keyMap ={};
 		game.cycleCount = 0;
