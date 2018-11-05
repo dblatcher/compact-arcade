@@ -124,19 +124,6 @@ console.log('running spaceShooter')
 		}
 	};
 
-	game.behaviourData = {
-		dumb: function (trigger) {
-			switch (trigger.type) {
-				case 'hitWall':
-					this.setAction('walk','reverse');
-					break;
-				case 'hitMonster':
-					
-			};
-		}
-
-	};
-
 
 	game.make.ship = function(spec) {
 		var that = game.make.item(spec);
