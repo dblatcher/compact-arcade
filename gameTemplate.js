@@ -242,7 +242,7 @@ function createGameTemplate (disks, options) {
 			plotOffset.y = 
 				Math.min(
 					game.level[game.session.currentLevel].height-1000,
-					Math.max(this.session.player.plotY()-500,0)
+					Math.max(this.session.player.renderY-500,0)
 				) || 0 ;				
 		};
 		
@@ -374,15 +374,6 @@ function createGameTemplate (disks, options) {
 		that.dead = false;
 		that.type= 'none';
 		
-		var plotY = options.bottomOfScreenIsZeroY ?
-		function() {
-			return game.level[game.session.currentLevel].height - this.y - this.height;
-		} : 
-		function() {
-			return this.y;
-		} ;		
-		that.plotY = plotY
-		
 		Object.defineProperties(that, {
 			renderY:{
 				get:function(){
@@ -430,7 +421,7 @@ function createGameTemplate (disks, options) {
 		var render = function (ctx,plotOffset){
 			ctx.beginPath();
 			ctx.fillStyle = this.color;
-			ctx.rect(this.x - plotOffset.x,this.plotY() - plotOffset.y,this.width,this.height);
+			ctx.rect(this.x - plotOffset.x,this.renderY - plotOffset.y,this.width,this.height);
 			ctx.fill();	
 		}
 		that.render = render;
@@ -447,14 +438,18 @@ function createGameTemplate (disks, options) {
 		that.width = spec.width || 0;
 		that.x = spec.x || 0;
 		that.y = spec.y || 0;
-		var plotY = options.bottomOfScreenIsZeroY ?
-		function() {
-			return game.level[game.session.currentLevel].height - this.y - this.height;
-		} : 
-		function() {
-			return this.height;
-		} ;		
-		that.plotY = plotY
+		
+		Object.defineProperties(that, {
+			renderY:{
+				get:function(){
+					return options.bottomOfScreenIsZeroY ?
+						game.level[game.session.currentLevel].height - this.y - this.height :
+						this.y;
+				}
+			}
+		})
+		
+		
 		var render = function (ctx,plotOffset){
 		}
 		that.render = render;
@@ -487,7 +482,7 @@ function createGameTemplate (disks, options) {
 		
 		var render = function (ctx,plotOffset,c){
 			ctx.beginPath();
-			ctx.arc(this.x- plotOffset.x,this.plotY()- plotOffset.y,1+this.animateFrame,0,2*Math.PI);
+			ctx.arc(this.x- plotOffset.x,this.renderY- plotOffset.y,1+this.animateFrame,0,2*Math.PI);
 			var rgbString = 'rgb(' + (250-(this.animateFrame*4.5)) + ',' + (250-(this.animateFrame*4.5)) + ',' + (250-(this.animateFrame*4.5)) + ')';
 			ctx.strokeStyle = rgbString;
 			ctx.lineWidth = 2;

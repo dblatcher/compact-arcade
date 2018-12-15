@@ -84,10 +84,6 @@ function platformGame(game) {
 		400-(plotOffset.x/3),floor-200-plotOffset.y,
 		100,100);
 		
-		function plotY() {
-			return game.level[game.session.currentLevel].height - this.y - this.height;
-		}
-		
 	} 
 
 	game.reactToControls = function() {

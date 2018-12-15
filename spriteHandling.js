@@ -26,12 +26,12 @@ function spriteHandling (game) {
 		ctx.beginPath();
 		ctx.drawImage(game.sprite[frame.source],
 			frame.x,frame.y,item.spriteData.frameWidth,item.spriteData.frameHeight,
-			item.x-plotOffset.x-leftOff, item.plotY()-plotOffset.y-topOff,
+			item.x-plotOffset.x-leftOff, item.renderY-plotOffset.y-topOff,
 			item.width+leftOff+rightOff,item.height+topOff);	
 		
 		/* for debugging - render the collision area as a rectangle
 		ctx.beginPath();
-		ctx.rect(item.x-plotOffset.x, item.plotY()-plotOffset.y,item.width,item.height);
+		ctx.rect(item.x-plotOffset.x, item.renderY-plotOffset.y,item.width,item.height);
 		ctx.stroke();
 		*/
 	};
