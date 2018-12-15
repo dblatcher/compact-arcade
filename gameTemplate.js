@@ -383,13 +383,54 @@ function createGameTemplate (disks, options) {
 		} ;		
 		that.plotY = plotY
 		
+		Object.defineProperties(that, {
+			renderY:{
+				get:function(){
+					return options.bottomOfScreenIsZeroY ?
+						game.level[game.session.currentLevel].height - this.y - this.height :
+						this.y;
+				}
+			},
+			top:{
+				get: function(){
+					return options.bottomOfScreenIsZeroY ?
+						this.y + this.height : this.y;
+				},
+				set: function(value) {
+					this.y = options.bottomOfScreenIsZeroY ?
+						value - this.height : value;
+					return value;
+				}	
+			},
+			bottom:{
+				get: function(){
+					return options.bottomOfScreenIsZeroY ?
+						this.y : this.y+ this.height;
+				},
+				set: function(value) {
+					this.y = options.bottomOfScreenIsZeroY ?
+						value : value - this.height ;
+					return value;
+				}	
+			},
+			left:{
+				get: function() {return this.x},
+				set: function(value) {this.x = value; return value}
+			},
+			right:{
+				get: function() {return this.x + this.width},
+				set: function(value) {this.x = value - this.width; return value}				
+			}
+		})
+		
+		
 		that.hit={};
 		that.automaticActions = [];
 		
 		var render = function (ctx,plotOffset){
 			ctx.beginPath();
 			ctx.fillStyle = this.color;
-			ctx.rect(this.x- plotOffset.x,this.plotY() - plotOffset.y,this.width,this.height);
+			ctx.rect(this.x - plotOffset.x,this.plotY() - plotOffset.y,this.width,this.height);
 			ctx.fill();	
 		}
 		that.render = render;
