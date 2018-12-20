@@ -373,6 +373,7 @@ function createGameTemplate (disks, options) {
 		that.color = spec.color || 'gray';		
 		that.dead = false;
 		that.type= 'none';
+		that.circular = false;
 		
 		Object.defineProperties(that, {
 			renderY:{
@@ -427,6 +428,71 @@ function createGameTemplate (disks, options) {
 		that.render = render;
 		
 	
+		return that;
+	};
+	
+	game.make.roundItem = function(spec) {
+		var that = {};
+		that.x = spec.x || 0 ;
+		that.y = spec.y || 0;
+		that.radius = spec.radius || 10;
+		that.color = spec.color || 'gray';		
+		that.dead = false;
+		that.type= 'none';
+		that.circular = true;
+
+		that.hit={};
+		that.automaticActions = [];
+		
+		Object.defineProperties(that, {
+			renderY:{
+				get:function(){
+					return options.bottomOfScreenIsZeroY ?
+						game.level[game.session.currentLevel].height - this.y:
+						this.y;
+				}
+			},
+			top:{
+				get: function(){
+					return options.bottomOfScreenIsZeroY ?
+						this.y + this.radius : this.y - this.radius;
+				},
+				set: function(value) {
+					this.y = options.bottomOfScreenIsZeroY ?
+						this.y - this.radius : this.y + this.radius;
+					return value;
+				}	
+			},
+			bottom:{
+				get: function(){
+					return options.bottomOfScreenIsZeroY ?
+						this.y - this.radius : this.y + this.radius;
+				},
+				set: function(value) {
+					this.y = options.bottomOfScreenIsZeroY ?
+						value + this.radius : value - this.radius;
+					return value;
+				}	
+			},
+			left:{
+				get: function() {return this.x - this.radius},
+				set: function(value) {this.x = value + this.radius; return value}
+			},
+			right:{
+				get: function() {return this.x + this.radius},
+				set: function(value) {this.x = value - this.radius; return value}				
+			}
+		})
+		
+		var render = function (ctx,plotOffset){
+			ctx.beginPath();
+			ctx.fillStyle = this.color;
+			ctx.arc(this.x-plotOffset.x, this.renderY-plotOffset.y, this.radius, 0,2*Math.PI);
+			ctx.fill();	
+		}
+		that.render = render;
+		
+		
 		return that;
 	};
 	
