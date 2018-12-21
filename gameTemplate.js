@@ -543,9 +543,7 @@ function createGameTemplate (disks, options) {
 	};
 	
 	game.makeEffect.expandingRing = function(spec) {
-		var that = game.makeEffect.effect(spec);
-
-		
+		var that = game.makeEffect.effect(spec);		
 		var render = function (ctx,plotOffset,c){
 			ctx.beginPath();
 			ctx.arc(this.x- plotOffset.x,this.renderY- plotOffset.y,1+this.animateFrame,0,2*Math.PI);
@@ -559,11 +557,31 @@ function createGameTemplate (disks, options) {
 		return that;
 	}
 	
-	game.calc.areIntersecting = function (bk, ds) {
-		return !(ds.x > bk.x+bk.width || 
-				 ds.x+ds.width < bk.x || 
-				 ds.y+ds.height <= bk.y ||
-				 ds.y >= bk.y+bk.height);
+	game.calc.areIntersecting = function (item1, item2) {
+		if (item1.circular && item2.circular) {
+			return Math.sqrt(  (item1.x-item2.x)*(item1.x-item2.x) +  (item1.y-item2.y)*(item1.y-item2.y)) < (item1.radius + item2.radius );
+		};
+		
+		if (item1.circular && !item2.circular) {return rectangleAndCircleTest(item2,item1)};
+		if (!item1.circular && item2.circular) {return rectangleAndCircleTest(item1,item2)};
+		
+		return !(item2.x > item1.x+item1.width || 
+				 item2.x+item2.width < item1.x || 
+				 item2.y+item2.height <= item1.y ||
+				 item2.y >= item1.y+item1.height);
+				 
+		function rectangleAndCircleTest (rect, circle) {
+			var circleDistanceX = Math.abs(circle.x - (rect.x + rect.width/2)  );
+			var circleDistanceY = Math.abs(circle.y - (rect.y + rect.height/2) ) ;
+			if (circleDistanceX > (rect.width/2 + circle.radius)) { return false; }
+			if (circleDistanceY > (rect.height/2 + circle.radius)) { return false; }
+			if (circleDistanceX <= (rect.width/2)) { return true; } 
+			if (circleDistanceY <= (rect.height/2)) { return true; }
+			var cornerDistance_sq = (circleDistanceX - rect.width/2)*(circleDistanceX - rect.width/2) +
+                         (circleDistanceY - rect.height/2)*(circleDistanceY - rect.height/2);
+			return (cornerDistance_sq <= (circle.radius*circle.radius));
+		};
+		
 	}; 
 	
 	game.calc.distance = function(p1,p2) {
