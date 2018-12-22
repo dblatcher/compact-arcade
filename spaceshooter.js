@@ -48,6 +48,23 @@ console.log('running spaceShooter')
 
 	
 	game.library.spaceShooter = {
+		defineStars : function(level) {
+			var currentLevel = game.level[level];
+			var number =  200;
+			var depth = 3;
+			var colorRange =  ['white', 'white', 'red'];
+			var star = [];
+			
+			for (var i = 0; i< number; i++) {
+				star[i] = {
+					x : Math.floor(Math.random() * currentLevel.width),
+					y : Math.floor(Math.random() * currentLevel.height),
+					color : colorRange[Math.floor(Math.random() * colorRange.length)],
+					parallax : 1 + Math.floor(Math.random() * depth)
+				};
+			}
+			game.session.starfield = star;
+		},	
 		plotStars : function(c,ctx,plotOffset){
 			var star;
 			ctx.fillStyle = "black";
@@ -62,21 +79,7 @@ console.log('running spaceShooter')
 	};
 	
 	game.customNewLevelAction = function(level) {
-		var currentLevel = game.level[level];
-		var number =  200;
-		var depth = 3;
-		var colorRange =  ['white', 'white', 'red'];
-		var star = [];
-		
-		for (var i = 0; i< number; i++) {
-			star[i] = {
-				x : Math.floor(Math.random() * currentLevel.width),
-				y : Math.floor(Math.random() * currentLevel.height),
-				color : colorRange[Math.floor(Math.random() * colorRange.length)],
-				parallax : 1 + Math.floor(Math.random() * depth)
-			};
-		}
-		game.session.starfield = star;
+		game.library.spaceShooter.defineStars(level);
 	};
 
 	game.renderBackground = function(c,ctx,plotOffset) {
