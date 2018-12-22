@@ -7,17 +7,21 @@ console.log('running spaceShooter')
 
 	game.level = [
 
-		{width:1000, height:1000,
+		{width:3000, height:1000,
 			items :[
-				
+				{func:"alien", spec:{x:2000,y:400,color:"yellow",behaviour:"loop"}},
+				{func:"alien", spec:{x:2600,y:600,color:"yellow",behaviour:"loop"}},							
+				{func:"alien", spec:{x:1100,y:600,color:"blue"}},
+				{func:"ship", spec:{x:200,y:500}, isPlayer:true}
 			],
 			effects : [
-				{func:"message", spec:{message:"Title Page",color:"white"}}
+	
 			],
 			victoryCondition : function() {
-				return game.keyMap[" "];
+				return game.session.player.x>2750;
 			}
 		},
+		
 		{width:3000, height:1000,
 			items :[
 				{func:"alien", spec:{x:2000,y:400,color:"yellow",behaviour:"loop"}},
@@ -40,10 +44,22 @@ console.log('running spaceShooter')
 			}
 		}
 	
-		
-
 	];
 
+	
+	game.library.spaceShooter = {
+		plotStars : function(c,ctx,plotOffset){
+			var star;
+			ctx.fillStyle = "black";
+			ctx.fillRect(0,0,c.width,c.height);
+			for (var p = 0; p < game.session.starfield.length; p++) {
+				star  = game.session.starfield[p]	
+				ctx.beginPath();
+				ctx.fillStyle = star.color;
+				ctx.fillRect(star.x-(plotOffset.x/star.parallax),star.y-(plotOffset.y/star.parallax),2,2);
+			};
+		}
+	};
 	
 	game.customNewLevelAction = function(level) {
 		var currentLevel = game.level[level];
@@ -63,22 +79,21 @@ console.log('running spaceShooter')
 		game.session.starfield = star;
 	};
 
-	game.renderBackground = function(plotOffset) {
-		var c = this.canvasElement;
-		var ctx = c.getContext("2d")	
-		var floor = game.level[game.session.currentLevel].height;
-
-		ctx.fillStyle = "black";
-		ctx.fillRect(0,0,c.width,c.height);
-		var star;
-		for (var p = 0; p < game.session.starfield.length; p++) {
-			star  = game.session.starfield[p]	
-			ctx.beginPath();
-			ctx.fillStyle = star.color;
-			ctx.fillRect(star.x-(plotOffset.x/star.parallax),star.y-(plotOffset.y/star.parallax),2,2);
-		};
-		
+	game.renderBackground = function(c,ctx,plotOffset) {
+		game.library.spaceShooter.plotStars(c,ctx,plotOffset);
 	}; 
+	
+	game.renderLevelScreen = function(c,ctx,plotOffset) {
+		game.library.spaceShooter.plotStars(c,ctx,plotOffset);	
+		if (this.cycleCount%12 >= 4) {
+			ctx.beginPath();
+			ctx.font = "6vh serif";
+			ctx.fillStyle = "yellow";
+			ctx.textAlign = "left";
+			ctx.textBaseline="top";
+			ctx.fillText('level ' + (this.session.currentLevel+1), c.width/4, c.height/4);
+		}
+	}
 
 	game.reactToControls = function() {
 		var player = this.session.player;
@@ -152,6 +167,7 @@ console.log('running spaceShooter')
 		that.render = render;
 		
 		var move = function() {
+			if (this.action === 'die') {return};
 			this.x += 3;
 			this.x += this.forwardSpeed;
 			this.y += this.upSpeed;
@@ -170,12 +186,11 @@ console.log('running spaceShooter')
 	};
 
 	game.make.bullet = function(spec) {
-		var that = game.make.item(spec);
+		var that = game.make.roundItem(spec);
 		that.type = "missle";
 		that.forwardSpeed = spec.forwardSpeed || 10;
 		that.upSpeed = spec.upSpeed || 0;
-		that.width = spec.width || 12;
-		that.height = spec.height || 6;
+		that.radius = 4;
 		that.color = spec.color || "red";
 		
 		var move = function() {
@@ -199,7 +214,7 @@ console.log('running spaceShooter')
 		that.upSpeed = spec.upSpeed || 0;
 		that.width = spec.width || 50;
 		that.height = spec.height || 50;
-		that.radius = spec.radius || 75;
+		that.radius = spec.radius || 15;
 		that.brain = {};
 		that.behaviour = spec.behaviour ?
 			game.enemyBehaviour[spec.behaviour] :

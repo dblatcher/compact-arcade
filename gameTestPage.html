@@ -54,10 +54,11 @@ var platformGameInstance = createGameTemplate([spriteHandling,platformGame],{
 	startingLives:3,
 	runCollisionTestInMainLoop:true,
 	bottomOfScreenIsZeroY : true,
+	gameCycleTime : 25
 });	
 
 // select which game is run
-var gameInstance = spaceGameInstance;
+var gameInstance = platformGameInstance;
 
 gameInstance.initialise({
 	canvasElement:document.getElementById("gameSpace"),

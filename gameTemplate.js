@@ -5,6 +5,7 @@ function createGameTemplate (disks, options) {
 	options.startingLives = options.startingLives || 2;
 	options.gameCycleTime = options.gameCycleTime || 25
 	options.resetDelayAfterDeath = options.resetDelayAfterDeath || 1000;
+	options.cyclesForLevelScreen = options.cyclesForLevelScreen || 50;
 
 	if (typeof(options.bottomOfScreenIsZeroY) === 'undefined' ) {
 		options.bottomOfScreenIsZeroY = true;
@@ -50,7 +51,9 @@ function createGameTemplate (disks, options) {
 		session: {},
 		
 		customNewLevelAction : function(){},
-		renderBackground : function(){},
+		renderBackground : function(c,ctx,plotOffset){},
+		renderLevelScreen : function(){},
+		renderTitleScreen : function(){},
 		initialise : function(){},
 		setUpLevel : function(){},
 		refresh : function(){},
@@ -78,9 +81,10 @@ function createGameTemplate (disks, options) {
 			this.score = 0;
 			this.lives = game.startingLives;
 			this.highscoreName = '';
-			this.gameStatus = 'play';
+			this.gameStatus = 'titleScreen';
 			this.player ={};
-			game.setUpLevel(0);
+			this.currentLevel = 0;
+			//game.setUpLevel(0);
 		}
 	};
 	
@@ -164,6 +168,7 @@ function createGameTemplate (disks, options) {
 		};
 		game.keyMap ={};
 		game.cycleCount = 0;
+		game.session.gameStatus = options.cyclesForLevelScreen? 'levelScreen' : 'play';
 	};
 	
 	game.refresh = function() {
@@ -180,13 +185,25 @@ function createGameTemplate (disks, options) {
 					this.handleDeadPlayer();
 				};			
 			};
-			game.cycleCount++;	
 		} 			
 		
 		if (this.session.gameStatus === 'highscoreEntry') {
 			this.reactToHighscoreEntry();
 		}
 
+		if (this.session.gameStatus === 'levelScreen') {
+			if (this.cycleCount > options.cyclesForLevelScreen || this.keyMap[" "]) {
+				this.session.gameStatus = 'play';
+			}
+		}
+		
+		if (this.session.gameStatus === 'titleScreen') {
+			if (this.keyMap[" "]) {
+				game.setUpLevel(0);
+			}
+		}
+		
+		game.cycleCount++;	
 		this.renderScreen();
 		
 		timeStamp = new Date() - timeStamp; 
@@ -216,13 +233,34 @@ function createGameTemplate (disks, options) {
 			game.session.reset();
 		}
 	};
-		
+	
+	game.renderTitleScreen = function (c,ctx,plotOffset) {
+		ctx.beginPath();
+		ctx.font = "8vh sans-serif";
+		ctx.fillStyle = "red";
+		ctx.textAlign = "center";
+		ctx.textBaseline="top";
+
+		ctx.fillText('Default Title Screen' , c.width/2, c.height/4);
+		ctx.fillText('Press space to start' , c.width/2, c.height/2);
+	};
+	
+	game.renderLevelScreen = function (c,ctx,plotOffset) {
+		ctx.beginPath();
+		ctx.font = "4vh sans-serif";
+		ctx.fillStyle = "white";
+		ctx.textAlign = "center";
+		ctx.textBaseline="top";
+
+		ctx.fillText('level ' + this.session.currentLevel + ' - ' + (options.cyclesForLevelScreen-this.cycleCount+1) , c.width/2, c.height/4);
+	};
+	
 	game.renderScreen = function() {
 		var c = this.canvasElement;	var ctx = c.getContext("2d");
 		var plotOffset = {x:0,y:0}, statusLineText='', highscoreNameText='';
 		
 		if (this.scoreElement) {
-			if (this.session.currentLevel === 0) {
+			if (this.session.gameStatus === 'titleScreen') {
 				this.scoreElement.style.display = 'block';
 			} else {
 				this.scoreElement.style.display = 'none';
@@ -246,15 +284,14 @@ function createGameTemplate (disks, options) {
 				) || 0 ;				
 		};
 		
-		this.renderBackground(plotOffset);
 		
-		if (this.session.gameStatus === 'play') {
+		if (this.session.gameStatus === 'play' || this.session.gameStatus === 'cutScene') {
+			this.renderBackground(c,ctx,plotOffset);
 			for (p=0;p<this.session.items.length;p++) {
 				if (this.session.items[p].dead == false) {
 					this.session.items[p].render(ctx,plotOffset)
 				}
 			}			
-
 			for (p=0;p<this.session.effect.length;p++) {
 				this.session.effect[p].render(ctx,plotOffset,c);
 				this.session.effect[p].animateFrame++;			
@@ -278,6 +315,14 @@ function createGameTemplate (disks, options) {
 			ctx.textBaseline="top";			
 			ctx.fillText(this.session.highscoreName, c.width/2, c.height*(0.50));
 		}
+
+		if (this.session.gameStatus === 'levelScreen') {
+			this.renderLevelScreen(c,ctx,plotOffset);
+		};
+		
+		if (this.session.gameStatus === 'titleScreen') {
+			this.renderTitleScreen(c,ctx,plotOffset);
+		};
 		
 		statusLineText = 'Lives: ' + game.session.lives + ' Score: ' + game.session.score;
 		ctx.beginPath();

@@ -58,10 +58,7 @@ function platformGame(game) {
 
 
 
-	game.renderBackground = function(plotOffset) {
-		var c = this.canvasElement;
-		var ctx = c.getContext("2d")	
-
+	game.renderBackground = function(c,ctx,plotOffset) {
 		ctx.fillStyle = "lightskyblue";
 		ctx.fillRect(0,0,c.width,c.height);
 		
