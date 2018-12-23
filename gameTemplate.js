@@ -371,8 +371,7 @@ function createGameTemplate (disks, options) {
 		return true;
 	};
 	
-	game.runItemActions = options.runCollisionTestInMainLoop ?
-	function() {
+	game.runItemActions = function() {
 		var items = this.session.items;
 		for (var m=0;m<items.length;m++) {
 			for (var a=0;a<items[m].automaticActions.length;a++) {
@@ -382,28 +381,16 @@ function createGameTemplate (disks, options) {
 			};
 			if (items[m].dead === false && typeof(items[m].move) === 'function') {
 				items[m].move();
-				for (var t = 0; t<items.length; t++) {
-					if (t !== m) {
-						if (this.calc.areIntersecting(items[m],items[t])) {	
-							if (typeof(items[m].hit[items[t].type]) === 'function') {items[m].hit[items[t].type].apply(items[m],[items[t]])}
-							if (typeof(items[t].hit[items[m].type]) === 'function') {items[t].hit[items[m].type].apply(items[t],[items[m],true])}
-						}
-					}
-				}
-			};
-		};	
-		this.session.items = items.filter(function(item){return item.dead==false});	
-	} :
-	function() {
-		var items = this.session.items;
-		for (var m=0;m<items.length;m++) {
-			for (var a=0;a<items[m].automaticActions.length;a++) {
-				if (typeof(items[m].automaticActions[a]) === 'function') {
-					items[m].automaticActions[a].apply(items[m],[]);
-				}
-			};
-			if (items[m].dead === false && typeof(items[m].move) === 'function') {
-				items[m].move();
+				if (options.runCollisionTestInMainLoop) {
+					for (var t = 0; t<items.length; t++) {
+						if (t !== m) {
+							if (this.calc.areIntersecting(items[m],items[t])) {	
+								if (typeof(items[m].hit[items[t].type]) === 'function') {items[m].hit[items[t].type].apply(items[m],[items[t]])}
+								if (typeof(items[t].hit[items[m].type]) === 'function') {items[t].hit[items[m].type].apply(items[t],[items[m],true])}
+							};
+						};
+					};
+				};
 			};
 		};	
 		this.session.items = items.filter(function(item){return item.dead==false});	
