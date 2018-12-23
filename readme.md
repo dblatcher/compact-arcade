@@ -35,11 +35,11 @@ Note that with the example above, the gameInstance object remains accessible in 
     createGame([myDisk1, myDisk2]).initialise({
 	  canvasElement: document.getElementById("gameSpace"),
     });
-##Writing your own games
+## Writing your own games
 You can write your own games by defining disk functions and using them when calling createGame. I haven't written documentation on this yet. If interested, please take a look at the disks for the sample games post any questions on the repo.
 At a high level, the essential tasks for a disk (or set of disks) to do to make a functioning game are:
-*add the methods for creating items to the gameInstance's 'make' object (this is the biggest job - items are the core of the game)
-*write the gameInstance's reactToControls method to set what the user's input does
-*populate the gameInstance's 'level' array - each member is an object describing a level of the game; what items arein it, its size, what condition has to be true for the level to be won etc.
+* add the methods for creating items to the gameInstance's 'make' object (this is the biggest job - items are the core of the game)
+* write the gameInstance's reactToControls method to set what the user's input does
+* populate the gameInstance's 'level' array - each member is an object describing a level of the game; what items arein it, its size, what condition has to be true for the level to be won etc.
 
 	    
