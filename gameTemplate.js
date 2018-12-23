@@ -1,6 +1,8 @@
-function createGameTemplate (disks, options) {
+function createGame (disks, options) {
 	
 	if (typeof(options) !==  "object") {options = {} };
+	options.soundPath = options.soundPath || './';
+	options.spritePath = options.spritePath || './';
 	options.leftOffset = options.leftOffset || 500;
 	options.startingLives = options.startingLives || 2;
 	options.gameCycleTime = options.gameCycleTime || 25
@@ -32,7 +34,7 @@ function createGameTemplate (disks, options) {
 		],
 		
 		sound : {
-			path : "./sounds/",
+			path : options.soundPath,
 			play: function(choosenSound) {
 				this[choosenSound].play();
 			},
@@ -42,7 +44,7 @@ function createGameTemplate (disks, options) {
 		},
 		
 		sprite : {
-			path : "./sprites/",
+			path : options.spritePath,
 		},
 		
 		make : {},

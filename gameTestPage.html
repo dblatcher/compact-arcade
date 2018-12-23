@@ -18,7 +18,7 @@
 
 <div class = 'squareResponsive outer'>
 	<div class = 'squareResponsive inner'>
-		<canvas id='gameSpace' class = 'centeredSquare' height='1000' width='1000'>NOT SUPPORTED</canvas>
+		<canvas id='gameSpace' class = 'centeredSquare' height='1000' width='1000'/>
 		<div id = 'scoreOverlay' class = 'centeredSquare' style = 'color:red'></div>
 	</div>
 </div>
@@ -40,17 +40,19 @@ console.log('running in game debug mode.');
 /* Declaring gameInstance gives access to it and its properties in the console.
    This is useful for debugging and playtesting but allows players to cheat.
 	 Call initialise on an anonymous instance to 'hide' the instance Object:
-		createGameTemplate([disks],{Options}).initialise( ... );	
+		createGame([disks],{Options}).initialise( ... );	
 */
 
-var spaceGameInstance = createGameTemplate([spriteHandling,spaceShooter],{
+var spaceGameInstance = createGame([spriteHandling,spaceShooter],{
 	leftOffset:150,
 	startingLives:3,
+	soundPath :'./sounds/',
+	spritePath :'./sprites/',
 	runCollisionTestInMainLoop:true,
 	bottomOfScreenIsZeroY : true,
 });	
 
-var platformGameInstance = createGameTemplate([spriteHandling,platformGame],{
+var platformGameInstance = createGame([spriteHandling,platformGame],{
 	startingLives:3,
 	runCollisionTestInMainLoop:true,
 	bottomOfScreenIsZeroY : true,
@@ -58,7 +60,7 @@ var platformGameInstance = createGameTemplate([spriteHandling,platformGame],{
 });	
 
 // select which game is run
-var gameInstance = platformGameInstance;
+var gameInstance = spaceGameInstance;
 
 gameInstance.initialise({
 	canvasElement:document.getElementById("gameSpace"),
