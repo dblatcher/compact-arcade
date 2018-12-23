@@ -3,7 +3,7 @@
 function spaceShooter(game) {
 console.log('running spaceShooter')
 	game.soundFiles.push ('jump.mp3','land.mp3','bounce.mp3');	
-	game.spriteFiles.push ('bat.png');	
+	game.spriteFiles.push ('bat.png','spaceship.png');	
 
 	game.level = [
 
@@ -96,15 +96,31 @@ console.log('running spaceShooter')
 			ctx.textBaseline="top";
 			ctx.fillText('level ' + (this.session.currentLevel+1), c.width/4, c.height/4);
 		}
+		
+		ctx.beginPath();
+		
+		var sprite = this.spriteData.spaceship;
+		var frame = sprite.frameMap[0];
+		
+		
+		ctx.drawImage(this.sprite[frame.source],
+		frame.x,frame.y,
+		sprite.frameWidth,sprite.frameHeight,
+		(c.width/2 - 100), (c.height/2 -100),
+		200,200);
+		
 	}
 
 	game.reactToControls = function() {
 		var player = this.session.player;
 
 		if (player.action === "die") {return false};
-		
+		player.setAction('slow');
 		if (this.keyMap["ArrowLeft"]) {player.forwardSpeed = -2};
-		if (this.keyMap["ArrowRight"]) {player.forwardSpeed = 2};	
+		if (this.keyMap["ArrowRight"]) {
+			player.forwardSpeed = 2;
+			player.setAction('fast');
+		};	
 		if (this.keyMap["ArrowUp"]) {player.upSpeed = 4};
 		if (this.keyMap["ArrowDown"]) {player.upSpeed = -4};
 
@@ -139,6 +155,24 @@ console.log('running spaceShooter')
 				jump:{right:[2,3],left:[0,1]},
 				die:{right:[4,5,4,5],left:[4,5,4,5],end:function() {this.dead = true;}},
 			}
+		},
+		spaceship :{
+			frameHeight:199, frameWidth:190,
+			frameMap : [
+				{source:'spaceship.png',x:0,y:0},
+				{source:'spaceship.png',x:192,y:0},
+				{source:'spaceship.png',x:384,y:0},
+				{source:'spaceship.png',x:575,y:0},
+				{source:'spaceship.png',x:0,y:193},
+				{source:'spaceship.png',x:192,y:193},
+				{source:'spaceship.png',x:384,y:193},
+				{source:'spaceship.png',x:575,y:193}
+			],
+			animateCycle : {
+				slow:{right:[0,1],left:[0,1]},
+				fast:{right:[1,2,3,2],left:[1,2,3,2]},
+				die:{right:[4,5,6,7],left:[4,5,6,7],end:function() {this.dead = true;}},
+			}
 		}
 	};
 
@@ -146,10 +180,10 @@ console.log('running spaceShooter')
 	game.make.ship = function(spec) {
 		var that = game.make.item(spec);
 		that.isGod = spec.isGod || false;
-		that.spriteData = game.spriteData['bat'];
+		that.spriteData = game.spriteData['spaceship'];
 		that.frame = 0;
 		that.direction = spec.direction || 'right';
-		that.action = spec.action || 'stand';
+		that.action = spec.action || 'slow';
 		that.forwardSpeed = spec.forwardSpeed || 0;
 		that.upSpeed = spec.upSpeed || 0;
 		that.width=50;that.height=50;
