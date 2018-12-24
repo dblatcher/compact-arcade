@@ -57,11 +57,41 @@ function spriteHandling (game) {
 		return(true);
 	};	
 	
+	var assignSpriteToItem = function(item,spriteName,initialAction,initialDirection,unstoppableActions) {
+		unstoppableActions = unstoppableActions || [];
+		
+		//note - should game.spriteData be at game.library.spriteHandling.spriteData?
+		item.spriteData = game.spriteData[spriteName];
+		item.direction = initialDirection;
+		item.action = initialAction;
+		item.frame = item.spriteData.animateCycle[item.action][item.direction][0];
+		item.automaticActions.push(game.library.spriteHandling.updateSpriteFrame);
+
+		
+	
+		item.render = function(ctx,plotOffset) {
+			game.library.spriteHandling.renderSprite(this,ctx,plotOffset);
+		};
+		
+		
+		if (typeof(unstoppableActions) === 'string') {unstoppableActions = [unstoppableActions]};
+		if (!unstoppableActions.length) {item.setAction = game.library.spriteHandling.setAction}
+	
+		item.setAction = function(newAction,newDirection) {
+			for (var i = 0; i < unstoppableActions.length; i++) {
+				if (this.action === unstoppableActions[i]) {return false;};
+			};
+			game.library.spriteHandling.setAction.apply(this,[newAction,newDirection]);
+		}
+		
+	}
+	
 	game.library.spriteHandling = {
 		gameCyclesBetweenFrameUpdates:10,
 		updateSpriteFrame:updateSpriteFrame,
 		renderSprite:renderSprite,
-		setAction:setAction
+		setAction:setAction,
+		assignSpriteToItem:assignSpriteToItem
 	};
 	
 

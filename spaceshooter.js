@@ -179,25 +179,11 @@ console.log('running spaceShooter')
 		var that = game.make.item(spec);
 		that.isGod = spec.isGod || false;
 		that.upSpeed = spec.upSpeed || 0;
+		that.forwardSpeed = spec.forwardSpeed || 0;
 		that.width=50;that.height=50;
 		that.type = "player";
-
-		that.spriteData = game.spriteData['spaceship'];
-		that.direction = spec.direction || 'right';
-		that.action = spec.action || 'slow';
-		that.frame = that.spriteData.animateCycle[that.action][that.direction][0];
-		that.forwardSpeed = spec.forwardSpeed || 0;
-		that.automaticActions.push(game.library.spriteHandling.updateSpriteFrame);
-		var setAction = function(newAction,newDirection) {
-			if (this.action === 'die') {return false;}; // if the character is dying, don't stop dying
-			game.library.spriteHandling.setAction.apply(this,[newAction,newDirection]);
-		}
-		that.setAction = setAction;
 		
-		var render = function(ctx,plotOffset) {
-			game.library.spriteHandling.renderSprite(this,ctx,plotOffset);
-		};
-		that.render = render;
+		game.library.spriteHandling.assignSpriteToItem(that,'spaceship','slow','right',['die'])
 		
 		var move = function() {
 			if (this.action === 'die') {return};
@@ -244,8 +230,6 @@ console.log('running spaceShooter')
 		that.type = "enemy";
 		that.forwardSpeed = spec.forwardSpeed || -2;
 		that.upSpeed = spec.upSpeed || 0;
-		that.width = spec.width || 50;
-		that.height = spec.height || 50;
 		that.radius = spec.radius || 40;
 		that.brain = {};
 		that.behaviour = spec.behaviour ?
@@ -253,23 +237,7 @@ console.log('running spaceShooter')
 			function(){};
 		that.score = spec.score || 10;
 		
-		
-		that.spriteData = game.spriteData['alien'];
-		that.frame = 0;
-		that.automaticActions.push(game.library.spriteHandling.updateSpriteFrame);
-		var setAction = function(newAction,newDirection) {
-			if (this.action === 'die') {return false;}; // if the character is dying, don't stop dying
-			game.library.spriteHandling.setAction.apply(this,[newAction,newDirection]);
-		}
-		that.setAction = setAction;
-		that.direction = spec.direction || 'left';
-		that.action = spec.action || 'slow';
-		
-		
-		var render = function(ctx,plotOffset) {
-			game.library.spriteHandling.renderSprite(this,ctx,plotOffset);
-		};
-		that.render = render;
+		game.library.spriteHandling.assignSpriteToItem(that,'alien','slow','right',['die']);
 		
 		var move = function() {
 			this.behaviour();
