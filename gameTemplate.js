@@ -6,7 +6,7 @@ function createGame (disks, options) {
 	options.leftOffset = options.leftOffset || 500;
 	options.startingLives = options.startingLives || 1;
 	options.msPerGameCycle = options.msPerGameCycle || 25
-	options.cyclesBetweenDeathAndReset = options.cyclesBetweenDeathAndReset || 20;
+	options.cyclesBetweenDeathAndReset = options.cyclesBetweenDeathAndReset || 40;
 	options.cyclesBetweenLevelEndAndReset = options.cyclesBetweenLevelEndAndReset || 40;
 	options.cyclesForLevelScreen = options.cyclesForLevelScreen || 50;
 
@@ -55,8 +55,10 @@ function createGame (disks, options) {
 		
 		customNewLevelAction : function(){},
 		renderBackground : function(c,ctx,plotOffset){},
-		renderLevelScreen : function(){},
-		renderTitleScreen : function(){},
+		renderLevelScreen : function(c,ctx,plotOffset){},
+		renderTitleScreen : function(c,ctx,plotOffset){},
+		renderGameOverMessage: function(c,ctx,plotOffset){},
+		renderGameWonMessage: function(c,ctx,plotOffset){},
 		initialise : function(){},
 		setUpLevel : function(){},
 		refresh : function(){},
@@ -178,56 +180,55 @@ function createGame (disks, options) {
 	game.refresh = function() {
 		var timeStamp = new Date();
 		
-		if (this.session.gameStatus === 'play') {
-			if (this.session.player.dead === false) {this.reactToControls()};
-			this.runItemActions();		
-			if (game.cycleCount % game.numberOfCyclesBetweenCheckingLevelEnds === 0 ) {		
-				if (this.level[this.session.currentLevel].victoryCondition() === true && !game.session.waitingToReset) {
-					this.handleEndOfLevel()
-				};
-				if (game.session.player.dead == true && game.session.waitingToReset === false) {
-					this.handleDeadPlayer();
+		switch(this.session.gameStatus) {
+			case 'play' :
+				if (this.session.player.dead === false) {this.reactToControls()};
+				this.runItemActions();		
+				if (game.cycleCount % game.numberOfCyclesBetweenCheckingLevelEnds === 0 ) {		
+					if (this.level[this.session.currentLevel].victoryCondition() === true && !game.session.waitingToReset) {
+						this.handleEndOfLevel()
+					};
+					if (game.session.player.dead == true && game.session.waitingToReset === false) {
+						this.handleDeadPlayer();
+					};			
 				};			
-			};
-		} 			
-		
-		if (this.session.gameStatus === 'highscoreEntry') {
-			this.reactToHighscoreEntry();
-		}
-
-		if (this.session.gameStatus === 'levelScreen') {
-			if (this.cycleCount > options.cyclesForLevelScreen || this.keyMap[" "]) {
-				this.session.gameStatus = 'play';
-			}
-		}
-		
-		if (this.session.gameStatus === 'titleScreen') {
-			if (this.keyMap[" "]) {
-				game.setUpLevel(0);
-			}
-		}
-		
-		if (game.cycleCount === game.session.resetTime) {
+				break;
 			
+			case 'highscoreEntry' :
+				this.reactToHighscoreEntry();
+				break;
+			
+			case 'levelScreen' :
+				if (this.cycleCount > options.cyclesForLevelScreen || this.keyMap[" "]) {
+					this.session.gameStatus = 'play';
+				}			
+				break;
+			
+			case 'titleScreen' :
+				if (this.keyMap[" "]) {	game.setUpLevel(0);	}
+				break
+		};
+				
+		if (game.cycleCount === game.session.resetTime) {	
 			switch (game.session.waitingToReset) {
 				case 'restartLevel' :
 					game.setUpLevel(game.session.currentLevel);	break;
 				case 'gameOver' :
 					game.session.gameStatus = 'highscoreEntry';	break;
+				case 'gameWon' :
+					game.session.gameStatus = 'highscoreEntry';	break;
 				case 'nextLevel' :
 					this.setUpLevel(this.session.currentLevel+1);break;
 			};			
 			game.session.waitingToReset = false;
-			game.session.resetTime = false;
-			
+			game.session.resetTime = false;	
 		};
 		
 		game.cycleCount++;	
 		this.renderScreen();
 		
 		timeStamp = new Date() - timeStamp; 
-		//	if (timeStamp > 24) console.log('long cycle:' + timeStamp);
-
+		//	if (timeStamp > 24) console.log('long cycle:' + timeStamp)
 		if (game.session.paused === false) {
 			game.timer = setTimeout(function(){game.refresh()},(options.msPerGameCycle-timeStamp > 0 ? options.msPerGameCycle-timeStamp : 1) );
 		}
@@ -262,6 +263,9 @@ function createGame (disks, options) {
 
 		ctx.fillText('Default Title Screen' , c.width/2, c.height/4);
 		ctx.fillText('Press space to start' , c.width/2, c.height/2);
+		ctx.strokeStyle = "red";
+		ctx.strokeRect(40, 80, c.width-80, c.height-160);
+
 	};
 	
 	game.renderLevelScreen = function (c,ctx,plotOffset) {
@@ -270,8 +274,29 @@ function createGame (disks, options) {
 		ctx.fillStyle = "white";
 		ctx.textAlign = "center";
 		ctx.textBaseline="top";
-
 		ctx.fillText('level ' + this.session.currentLevel + ' - ' + (options.cyclesForLevelScreen-this.cycleCount+1) , c.width/2, c.height/4);
+	};
+	
+	game.renderGameOverMessage = function(c,ctx,plotOffset) {
+		ctx.beginPath();
+		ctx.font = "8vh sans-serif";
+		ctx.fillStyle = "white";
+		ctx.textAlign = "center";
+		ctx.textBaseline="top";
+
+		ctx.fillText('GAME OVER!' , c.width/2, c.height/2);
+
+	};
+	
+	game.renderGameWonMessage = function(c,ctx,plotOffset) {
+		ctx.beginPath();
+		ctx.font = "8vh sans-serif";
+		ctx.fillStyle = "white";
+		ctx.textAlign = "center";
+		ctx.textBaseline="top";
+
+		ctx.fillText('YOU WIN THE GAME!' , c.width/2, c.height/2);
+
 	};
 	
 	game.renderScreen = function() {
@@ -317,6 +342,9 @@ function createGame (disks, options) {
 			}
 			function checkEffectNotFinished(effect) {return (effect.animateFrame <= effect.lastFrame || effect.lastFrame === -1)}
 			this.session.effect = this.session.effect.filter(checkEffectNotFinished);
+			
+			if (this.session.waitingToReset == 'gameOver') {this.renderGameOverMessage(c,ctx,plotOffset)}
+			if (this.session.waitingToReset == 'gameWon') {this.renderGameWonMessage(c,ctx,plotOffset)}
 		}
 		
 		if (this.session.gameStatus === 'highscoreEntry') {
@@ -360,9 +388,8 @@ function createGame (disks, options) {
 			game.session.waitingToReset = 'nextLevel';
 			game.session.resetTime = game.cycleCount + options.cyclesBetweenLevelEndAndReset;
 		} else {
-			game.session.waitingToReset = 'gameOver';
+			game.session.waitingToReset = 'gameWon';
 			game.session.resetTime = game.cycleCount + options.cyclesBetweenLevelEndAndReset;
-			game.session.effect.push (game.makeEffect.message({message:'You win!', lastFrame:-1,color:'red'}));
 		};
 	};
 		
@@ -371,10 +398,6 @@ function createGame (disks, options) {
 			game.session.waitingToReset = 'restartLevel';
 			game.session.resetTime = game.cycleCount + options.cyclesBetweenDeathAndReset;
 		} else {
-			game.session.effect.push (game.makeEffect.message({
-				message:'game over!', 
-				lastFrame:options.cyclesBetweenDeathAndReset/options.msPerGameCycle
-			}));
 			game.session.waitingToReset = 'gameOver';
 			game.session.resetTime = game.cycleCount + options.cyclesBetweenDeathAndReset;
 		};	
