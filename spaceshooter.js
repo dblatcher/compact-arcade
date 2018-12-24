@@ -9,9 +9,9 @@ console.log('running spaceShooter')
 
 		{width:3000, height:1000,
 			items :[
-				{func:"alien", spec:{x:2000,y:400,color:"yellow",behaviour:"loop"}},
-				{func:"alien", spec:{x:2600,y:600,color:"yellow",behaviour:"loop"}},							
-				{func:"alien", spec:{x:1100,y:600,color:"blue"}},
+				{func:"alien", spec:{x:2000,y:400,behaviour:"loop"}},
+				{func:"alien", spec:{x:2600,y:600,behaviour:"loop"}},							
+				{func:"alien", spec:{x:1100,y:600}},
 				{func:"ship", spec:{x:200,y:500}, isPlayer:true}
 			],
 			effects : [
@@ -24,16 +24,16 @@ console.log('running spaceShooter')
 		
 		{width:3000, height:1000,
 			items :[
-				{func:"alien", spec:{x:2000,y:400,color:"yellow",behaviour:"loop"}},
-				{func:"alien", spec:{x:2600,y:600,color:"yellow",behaviour:"loop"}},				
-				{func:"alien", spec:{x:2100,y:320,color:"blue",behaviour:"upAndDown"}},
-				{func:"alien", spec:{x:2200,y:340,color:"blue",behaviour:"upAndDown"}},
-				{func:"alien", spec:{x:2300,y:360,color:"blue",behaviour:"upAndDown"}},
-				{func:"alien", spec:{x:2200,y:800,color:"blue",behaviour:"upAndDown"}},
-				{func:"alien", spec:{x:2300,y:820,color:"blue",behaviour:"upAndDown"}},
-				{func:"alien", spec:{x:2400,y:840,color:"blue",behaviour:"upAndDown"}},
-				{func:"alien", spec:{x:2500,y:860,color:"blue",behaviour:"upAndDown"}},				
-				{func:"alien", spec:{x:1100,y:600,color:"blue"}},
+				{func:"alien", spec:{x:2000,y:400,behaviour:"loop"}},
+				{func:"alien", spec:{x:2600,y:600,behaviour:"loop"}},				
+				{func:"alien", spec:{x:2100,y:320,behaviour:"upAndDown"}},
+				{func:"alien", spec:{x:2200,y:340,behaviour:"upAndDown"}},
+				{func:"alien", spec:{x:2300,y:360,behaviour:"upAndDown"}},
+				{func:"alien", spec:{x:2200,y:800,behaviour:"upAndDown"}},
+				{func:"alien", spec:{x:2300,y:820,behaviour:"upAndDown"}},
+				{func:"alien", spec:{x:2400,y:840,behaviour:"upAndDown"}},
+				{func:"alien", spec:{x:2500,y:860,behaviour:"upAndDown"}},				
+				{func:"alien", spec:{x:1100,y:600}},
 				{func:"ship", spec:{x:200,y:500}, isPlayer:true}
 			],
 			effects : [
