@@ -3,7 +3,7 @@
 function spaceShooter(game) {
 console.log('running spaceShooter')
 	game.soundFiles.push ('jump.mp3','land.mp3','bounce.mp3');	
-	game.spriteFiles.push ('bat.png','spaceship.png');	
+	game.spriteFiles.push ('alien.png','spaceship.png');	
 
 	game.level = [
 
@@ -139,21 +139,19 @@ console.log('running spaceShooter')
 	};
 
 	game.spriteData = {
-		bat :{
-			frameHeight:10, frameWidth:10,
+		alien :{
+			frameHeight:100, frameWidth:100,
 			frameMap : [
-				{source:'bat.png',x:0,y:0},
-				{source:'bat.png',x:10,y:0},
-				{source:'bat.png',x:0,y:10},
-				{source:'bat.png',x:10,y:10},
-				{source:'bat.png',x:20,y:0},
-				{source:'bat.png',x:20,y:10},
+				{source:'alien.png',x:0,y:0},
+				{source:'alien.png',x:100,y:0},
+				{source:'alien.png',x:200,y:0},
+				{source:'alien.png',x:300,y:0},
+				{source:'alien.png',x:400,y:0},
+				{source:'alien.png',x:500,y:0},
 			],
 			animateCycle : {
-				stand:{right:[2,3],left:[0,1]},
-				walk:{right:[2,3],left:[0,1]},
-				jump:{right:[2,3],left:[0,1]},
-				die:{right:[4,5,4,5],left:[4,5,4,5],end:function() {this.dead = true;}},
+				slow:{right:[0,1,2],left:[0,1,2]},
+				die:{right:[3,4,5],left:[3,4,5],end:function() {this.dead = true;}},
 			}
 		},
 		spaceship :{
@@ -180,18 +178,16 @@ console.log('running spaceShooter')
 	game.make.ship = function(spec) {
 		var that = game.make.item(spec);
 		that.isGod = spec.isGod || false;
-		that.spriteData = game.spriteData['spaceship'];
-		that.frame = 0;
-		that.direction = spec.direction || 'right';
-		that.action = spec.action || 'slow';
-		that.forwardSpeed = spec.forwardSpeed || 0;
 		that.upSpeed = spec.upSpeed || 0;
 		that.width=50;that.height=50;
 		that.type = "player";
 
+		that.spriteData = game.spriteData['spaceship'];
+		that.direction = spec.direction || 'right';
+		that.action = spec.action || 'slow';
+		that.frame = that.spriteData.animateCycle[that.action][that.direction][0];
+		that.forwardSpeed = spec.forwardSpeed || 0;
 		that.automaticActions.push(game.library.spriteHandling.updateSpriteFrame);
-		
-		
 		var setAction = function(newAction,newDirection) {
 			if (this.action === 'die') {return false;}; // if the character is dying, don't stop dying
 			game.library.spriteHandling.setAction.apply(this,[newAction,newDirection]);
@@ -243,7 +239,6 @@ console.log('running spaceShooter')
 		return that;
 	}
 	
-	
 	game.make.alien = function(spec) {
 		var that = game.make.roundItem(spec);
 		that.type = "enemy";
@@ -251,12 +246,30 @@ console.log('running spaceShooter')
 		that.upSpeed = spec.upSpeed || 0;
 		that.width = spec.width || 50;
 		that.height = spec.height || 50;
-		that.radius = spec.radius || 15;
+		that.radius = spec.radius || 40;
 		that.brain = {};
 		that.behaviour = spec.behaviour ?
 			game.enemyBehaviour[spec.behaviour] :
 			function(){};
 		that.score = spec.score || 10;
+		
+		
+		that.spriteData = game.spriteData['alien'];
+		that.frame = 0;
+		that.automaticActions.push(game.library.spriteHandling.updateSpriteFrame);
+		var setAction = function(newAction,newDirection) {
+			if (this.action === 'die') {return false;}; // if the character is dying, don't stop dying
+			game.library.spriteHandling.setAction.apply(this,[newAction,newDirection]);
+		}
+		that.setAction = setAction;
+		that.direction = spec.direction || 'left';
+		that.action = spec.action || 'slow';
+		
+		
+		var render = function(ctx,plotOffset) {
+			game.library.spriteHandling.renderSprite(this,ctx,plotOffset);
+		};
+		that.render = render;
 		
 		var move = function() {
 			this.behaviour();
@@ -266,7 +279,7 @@ console.log('running spaceShooter')
 		that.move = move;
 		
 		that.hit.missle = function(missle) {
-			this.dead = true;
+			this.setAction('die');
 			game.session.score += this.score;
 			game.session.effect.push(
 				game.makeEffect.expandingRing({x:missle.x, y:missle.y, lastFrame:20})
@@ -275,6 +288,7 @@ console.log('running spaceShooter')
 		
 		return that;
 	}
+
 	
 	game.enemyBehaviour = {};
 	game.enemyBehaviour.upAndDown = function() {
