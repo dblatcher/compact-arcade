@@ -4,9 +4,10 @@ function createGame (disks, options) {
 	options.soundPath = options.soundPath || './';
 	options.spritePath = options.spritePath || './';
 	options.leftOffset = options.leftOffset || 500;
-	options.startingLives = options.startingLives || 2;
-	options.gameCycleTime = options.gameCycleTime || 25
-	options.resetDelayAfterDeath = options.resetDelayAfterDeath || 1000;
+	options.startingLives = options.startingLives || 1;
+	options.msPerGameCycle = options.msPerGameCycle || 25
+	options.cyclesBetweenDeathAndReset = options.cyclesBetweenDeathAndReset || 20;
+	options.cyclesBetweenLevelEndAndReset = options.cyclesBetweenLevelEndAndReset || 40;
 	options.cyclesForLevelScreen = options.cyclesForLevelScreen || 50;
 
 	if (typeof(options.bottomOfScreenIsZeroY) === 'undefined' ) {
@@ -77,6 +78,7 @@ function createGame (disks, options) {
 		score:0,
 		lives:2,
 		waitingToReset:false,
+		resetTime:false,
 		gameStatus:'none',
 		highscoreName:'',
 		reset:function() {
@@ -117,7 +119,7 @@ function createGame (disks, options) {
 		};
 		window.onfocus = function() {
 			game.session.paused = false;
-			game.timer = setTimeout(function(){game.refresh()},options.gameCycleTime);
+			game.timer = setTimeout(function(){game.refresh()},options.msPerGameCycle);
 		};
 
 		for(var loop=0; loop < this.soundFiles.length; loop++) {
@@ -128,7 +130,7 @@ function createGame (disks, options) {
 		};
 					
 		this.session.reset();			
-		this.timer = setTimeout(function(){game.refresh()},options.gameCycleTime);
+		this.timer = setTimeout(function(){game.refresh()},options.msPerGameCycle);
 		
 		function addSound(src) {
 			var soundElement;
@@ -179,8 +181,8 @@ function createGame (disks, options) {
 		if (this.session.gameStatus === 'play') {
 			if (this.session.player.dead === false) {this.reactToControls()};
 			this.runItemActions();		
-			if (game.cycleCount % game.numberOfCyclesBetweenCheckingLevelEnds === 0 || game.session.currentLevel === 0 ) {		
-				if (this.level[this.session.currentLevel].victoryCondition() === true) {
+			if (game.cycleCount % game.numberOfCyclesBetweenCheckingLevelEnds === 0 ) {		
+				if (this.level[this.session.currentLevel].victoryCondition() === true && !game.session.waitingToReset) {
 					this.handleEndOfLevel()
 				};
 				if (game.session.player.dead == true && game.session.waitingToReset === false) {
@@ -205,6 +207,21 @@ function createGame (disks, options) {
 			}
 		}
 		
+		if (game.cycleCount === game.session.resetTime) {
+			
+			switch (game.session.waitingToReset) {
+				case 'restartLevel' :
+					game.setUpLevel(game.session.currentLevel);	break;
+				case 'gameOver' :
+					game.session.gameStatus = 'highscoreEntry';	break;
+				case 'nextLevel' :
+					this.setUpLevel(this.session.currentLevel+1);break;
+			};			
+			game.session.waitingToReset = false;
+			game.session.resetTime = false;
+			
+		};
+		
 		game.cycleCount++;	
 		this.renderScreen();
 		
@@ -212,7 +229,7 @@ function createGame (disks, options) {
 		//	if (timeStamp > 24) console.log('long cycle:' + timeStamp);
 
 		if (game.session.paused === false) {
-			game.timer = setTimeout(function(){game.refresh()},(options.gameCycleTime-timeStamp > 0 ? options.gameCycleTime-timeStamp : 1) );
+			game.timer = setTimeout(function(){game.refresh()},(options.msPerGameCycle-timeStamp > 0 ? options.msPerGameCycle-timeStamp : 1) );
 		}
 	};
 		
@@ -339,36 +356,27 @@ function createGame (disks, options) {
 			
 	game.handleEndOfLevel = function () {	
 		if (this.level[this.session.currentLevel].score) {this.session.score += this.level[this.session.currentLevel].score}
-		if (this.session.currentLevel+1 < this.level.length) { this.setUpLevel(this.session.currentLevel+1)}
-		else {
-			game.session.effect.push (game.makeEffect.message({message:'You win!', lastFrame:3000/options.gameCycleTime}));
-			game.session.waitingToReset = true;
-			game.session.player={};
-			setTimeout(function() {
-				game.session.waitingToReset = false;
-				game.session.gameStatus = 'highscoreEntry';
-			},3000);
+		if (this.session.currentLevel+1 < this.level.length) {
+			game.session.waitingToReset = 'nextLevel';
+			game.session.resetTime = game.cycleCount + options.cyclesBetweenLevelEndAndReset;
+		} else {
+			game.session.waitingToReset = 'gameOver';
+			game.session.resetTime = game.cycleCount + options.cyclesBetweenLevelEndAndReset;
+			game.session.effect.push (game.makeEffect.message({message:'You win!', lastFrame:-1,color:'red'}));
 		};
 	};
 		
 	game.handleDeadPlayer = function () {
 		if (game.session.lives-- > 0) {
-			game.session.waitingToReset = true;
-			setTimeout(function() {
-				game.session.waitingToReset = false;
-				game.setUpLevel(game.session.currentLevel);
-			},options.resetDelayAfterDeath);
+			game.session.waitingToReset = 'restartLevel';
+			game.session.resetTime = game.cycleCount + options.cyclesBetweenDeathAndReset;
 		} else {
 			game.session.effect.push (game.makeEffect.message({
 				message:'game over!', 
-				lastFrame:options.resetDelayAfterDeath/options.gameCycleTime
+				lastFrame:options.cyclesBetweenDeathAndReset/options.msPerGameCycle
 			}));
-			game.session.waitingToReset = true;
-			game.session.player={};
-			setTimeout(function() {
-				game.session.waitingToReset = false;
-				game.session.gameStatus = 'highscoreEntry';
-			},options.resetDelayAfterDeath);
+			game.session.waitingToReset = 'gameOver';
+			game.session.resetTime = game.cycleCount + options.cyclesBetweenDeathAndReset;
 		};	
 		return true;
 	};
@@ -397,6 +405,7 @@ function createGame (disks, options) {
 		};	
 		this.session.items = items.filter(function(item){return item.dead==false});	
 	};
+
 	
 	game.make.item = function(spec) {
 		var that = {}
