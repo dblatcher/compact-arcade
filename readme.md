@@ -23,17 +23,17 @@ Write a HTML page with a canvas element, height and width set to 1000 (most brow
 	</html>
 
 Note the file names used for the disk scripts are just examples - don't look for those files on the repo. The next example assumes they each contained disk functions called 'myDisk1' and 'myDisk2'.
-If this game used any sound or image files, you'd need to save those files in the same folder as the HTML file (by default - the path can be changed by setting the spritePath and soundPath options).
 Add code to call the createGame function with an array containing the disk functions as the first argument. We'll assume this game will use the default options, so we don't need the options object as the second argument. This will return a gameInstance object. Call the gameInstance's initialise method - it takes an options object as its only argument. Setting the object's 'canvasElement' property to  your canvas element as the first argument will make the game run in that element.
 
     var gameInstance = createGame([myDisk1, myDisk2]);
     gameInstance.initialise({
-	  canvasElement: document.getElementById("gameSpace"),
+			canvasElement: document.getElementById("gameSpace"),
     });
+If this game used any sound or image files, by default, the initialise method looks for them in the same folder as your HTML file and appends them to the document (as <audio> and <img> elements with style.display set to none) so they can be accessed by the game. You can change the paths for the sound and image files by setting the 'soundPath' and 'spritePath' values in the options object for the call to initialise. If you don't want the hidden <audio> and <img> elements appended to the end of your document, you can nominate an element to hold them by passing it as the 'assetHolderElement' value.
 Note that with the example above, the gameInstance object remains accessible in the browser's console, which handy for testing and debugging, but does make it easy for players to cheat! (try gameInstance.session.lives=100). You can prevent this by calling initialise on an anonymous gameInstance:
 
     createGame([myDisk1, myDisk2]).initialise({
-	  canvasElement: document.getElementById("gameSpace"),
+			canvasElement: document.getElementById("gameSpace"),
     });
 ## Writing your own games
 You can write your own games by defining disk functions and using them when calling createGame. I haven't written documentation on this yet. If interested, please take a look at the disks for the sample games post any questions on the repo.

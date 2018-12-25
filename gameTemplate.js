@@ -1,8 +1,6 @@
 function createGame (disks, options) {
 	
 	if (typeof(options) !==  "object") {options = {} };
-	options.soundPath = options.soundPath || './';
-	options.spritePath = options.spritePath || './';
 	options.leftOffset = options.leftOffset || 500;
 	options.startingLives = options.startingLives || 1;
 	options.msPerGameCycle = options.msPerGameCycle || 25
@@ -35,7 +33,6 @@ function createGame (disks, options) {
 		],
 		
 		sound : {
-			path : options.soundPath,
 			play: function(choosenSound) {
 				this[choosenSound].play();
 			},
@@ -45,7 +42,6 @@ function createGame (disks, options) {
 		},
 		
 		sprite : {
-			path : options.spritePath,
 		},
 		
 		make : {},
@@ -67,6 +63,11 @@ function createGame (disks, options) {
 		renderScreen : function(){},
 		handleEndOfLevel : function(){},
 		handleDeadPlayer : function(){},
+		
+		canvasElement : null,
+		assetHolderElement : null,
+		scoreElement : null,
+		sendScore : function(){},
 		
 		library : {}
 	};
@@ -97,9 +98,13 @@ function createGame (disks, options) {
 	game.initialise = function(outputs) {
 		this.canvasElement = outputs.canvasElement;
 		this.scoreElement = outputs.scoreElement || 0;
+		this.assetHolderElement = outputs.assetHolderElement || document.body;
 		this.sendScore = outputs.sendScoreFunction 
 			|| function(){console.log('No sendScoreFunction was defined in call to initialise - can\'t send highscore. ')};
-		
+
+		var soundPath  = outputs.soundPath || './'
+		var spritePath = outputs.spritePath ||'./'
+			
 		document.onkeydown = document.onkeyup = function(e){
 			e = e || event; // to deal with IE
 			game.keyMap[standardiseKey(e.key)] = e.type == 'keydown';
@@ -137,19 +142,19 @@ function createGame (disks, options) {
 		function addSound(src) {
 			var soundElement;
 			soundElement = document.createElement("audio");
-			soundElement.src = game.sound.path+src;
+			soundElement.src = soundPath+src;
 			soundElement.setAttribute("preload", "auto");
 			soundElement.setAttribute("controls", "none");
 			soundElement.style.display = "none";
-			document.body.appendChild(soundElement);
+			game.assetHolderElement.appendChild(soundElement);
 			game.sound[src] = soundElement;
 		};
 		function addSprite(src) {
 			var spriteElement;
 			SpriteElement = document.createElement("img");
-			SpriteElement.src = game.sprite.path+src;
+			SpriteElement.src = spritePath+src;
 			SpriteElement.style.display = "none";
-			document.body.appendChild(SpriteElement);
+			game.assetHolderElement.appendChild(SpriteElement);
 			game.sprite[src] = SpriteElement;
 		};
 		

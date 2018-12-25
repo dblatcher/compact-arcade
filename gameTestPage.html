@@ -18,8 +18,9 @@
 
 <div class = 'squareResponsive outer'>
 	<div class = 'squareResponsive inner'>
-		<canvas id='gameSpace' class = 'centeredSquare' height='1000' width='1000'/>
+		<canvas id='gameSpace' class = 'centeredSquare' height='1000' width='1000'></canvas>
 		<div id = 'scoreOverlay' class = 'centeredSquare' style = 'color:red'></div>
+		<div id = 'assetStore'></div>
 	</div>
 </div>
 
@@ -45,15 +46,13 @@ console.log('running in game debug mode.');
 
 var spaceGameInstance = createGame([spriteHandling,spaceShooter],{
 	leftOffset:150,
-	startingLives:3,
-	soundPath :'./sounds/',
-	spritePath :'./sprites/',
+	startingLives:1,
 	runCollisionTestInMainLoop:true,
 	bottomOfScreenIsZeroY : true,
 });	
 
 var platformGameInstance = createGame([spriteHandling,platformGame],{
-	startingLives:3,
+	startingLives:1,
 	runCollisionTestInMainLoop:true,
 	bottomOfScreenIsZeroY : true,
 	gameCycleTime : 25
@@ -64,9 +63,11 @@ var gameInstance = spaceGameInstance;
 
 gameInstance.initialise({
 	canvasElement:document.getElementById("gameSpace"),
+	assetHolderElement:document.getElementById("assetStore"),
 	scoreElement:document.getElementById("scoreOverlay"),
-	sendScoreFunction:function(name, score){
-	}
+	soundPath :'./sounds/',
+	spritePath :'./sprites/',
+	sendScoreFunction:function(name, score){},
 });
 	
 	
