@@ -59,6 +59,7 @@ function createGame (disks, options) {
 		setUpLevel : function(){},
 		refresh : function(){},
 		runItemActions : function(){},
+		reactToControls : function(){},
 		reactToHighscoreEntry : function(){},
 		renderScreen : function(){},
 		handleEndOfLevel : function(){},
