@@ -118,7 +118,7 @@ console.log('running spaceShooter')
 		player.setAction('slow');
 		if (this.keyMap["ArrowLeft"]) {player.forwardSpeed = -2};
 		if (this.keyMap["ArrowRight"]) {
-			player.forwardSpeed = 2;
+			player.forwardSpeed = 8;
 			player.setAction('fast');
 		};	
 		if (this.keyMap["ArrowUp"]) {player.upSpeed = 4};
@@ -207,7 +207,7 @@ console.log('running spaceShooter')
 	game.make.bullet = function(spec) {
 		var that = game.make.roundItem(spec);
 		that.type = "missle";
-		that.forwardSpeed = spec.forwardSpeed || 10;
+		that.forwardSpeed = spec.forwardSpeed || 16;
 		that.upSpeed = spec.upSpeed || 0;
 		that.radius = 4;
 		that.color = spec.color || "red";
@@ -247,8 +247,13 @@ console.log('running spaceShooter')
 		that.move = move;
 		
 		that.hit.missle = function(missle) {
-			this.setAction('die');
-			game.session.score += this.score;
+			if (this.action !== 'die') {
+				this.forwardSpeed = 0;
+				this.upSpeed = 0;
+				this.behaviour = function(){};
+				game.session.score += this.score;
+				this.setAction('die');
+			}
 			game.session.effect.push(
 				game.makeEffect.expandingRing({x:missle.x, y:missle.y, lastFrame:20})
 			);
