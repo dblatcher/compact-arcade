@@ -671,7 +671,7 @@ function createGame (disks, options) {
 	
 	
 	for (var loadingDisk = 0; loadingDisk < disks.length; loadingDisk++) {
-		game = disks[loadingDisk](game);
+		game = disks[loadingDisk](game,options);
 	};
 	
 	

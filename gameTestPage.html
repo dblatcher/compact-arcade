@@ -33,6 +33,10 @@
 <script src = './spriteHandling.js' ></script>
 <script src = './platforms.js' ></script>
 <script src = './spaceshooter.js' ></script>
+<script src = './vectorGraphics.js' ></script>
+<script src = './vectorPhysics.js' ></script>
+<script src = './vectorGame.js' ></script>
+<script src = './vectorCalculations.js' ></script>
 
 <script>
 
@@ -58,8 +62,15 @@ var platformGameInstance = createGame([spriteHandling,platformGame],{
 	gameCycleTime : 25
 });	
 
+var vectorGameInstance = createGame([vectorGraphics,vectorCalculations,vectorPhysics,vectorGame],{
+	startingLives:1,
+	runCollisionTestInMainLoop:false,
+	bottomOfScreenIsZeroY : false,
+	gameCycleTime : 10
+});	
+
 // select which game is run
-var gameInstance = spaceGameInstance;
+var gameInstance = vectorGameInstance;
 
 gameInstance.initialise({
 	canvasElement:document.getElementById("gameSpace"),
