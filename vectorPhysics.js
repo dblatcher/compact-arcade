@@ -8,6 +8,11 @@ function vectorPhysics(game) {
 	game.library.vectorPhysics = {};
 	var VP = game.library.vectorPhysics;
 
+	VP.environment = {
+		gravitationalConstant :0.2,
+		airDensity : 0.001
+	};
+	
 	var runItemActions = function(){
 		var collisions = [];
 		var items = game.session.items;
@@ -465,6 +470,29 @@ function vectorPhysics(game) {
 			body2.momentum.m = Math.min(body2.momentum.m,body2.maxSpeed);
 		}	
 	}
+	
+	
+	VP.airResistForce = function(){	
+		if(!this.momentum.m) {return false}
+		var F;
+		var airDensity = VP.environment.airDensity;
+		var dragCoef = 0.01;
+		var area = this.radius * Math.PI;
+				
+		F = (airDensity * dragCoef * area / 2) * (this.momentum.m * this.momentum.m);
+		F = Math.min(F,this.momentum.m)
+		this.queuedForces.push({
+			m:F,
+			h:game.calc.reverseHeading(this.momentum.h)
+		});
+	};
+	
+	VP.globalGravityForce = function() {
+		this.queuedForces.push({
+			m:VP.environment.gravitationalConstant,
+			h:Math.PI*1
+		});
+	};
 	
 	return game;
 };

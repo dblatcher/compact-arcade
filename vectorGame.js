@@ -1,4 +1,5 @@
 function vectorGame(game) {
+	var VP = game.library.vectorPhysics;
 
 	var reportImpact = function(impactPoint,isReversed) {
 		if (isReversed) return false;
@@ -23,29 +24,6 @@ function vectorGame(game) {
 		);			
 	}
 	
-	var airResistForce = function(){	
-		if(!this.momentum.m) {return false}
-		var F;
-		var airDensity = 0.01;
-		var dragCoef = 0.01;
-		var area = this.radius * Math.PI;
-				
-		F = (airDensity * dragCoef * area / 2) * (this.momentum.m * this.momentum.m);
-		F = Math.min(F,this.momentum.m)
-		this.queuedForces.push({
-			m:F,
-			h:game.calc.reverseHeading(this.momentum.h)
-		});
-	};
-	
-	var globalGravityForce = function() {
-		var G = 0.1;
-		this.queuedForces.push({
-			m:G,
-			h:Math.PI*1
-		});
-	};
-
 
 	game.level = [
 		{width:1000, height:1000,
@@ -103,10 +81,10 @@ function vectorGame(game) {
 				
 		that.hit.ball = function(impactPoint,isReversed){
 //			reportImpact(impactPoint,isReversed);
-//			game.library.vectorPhysics.queRoundBounce(impactPoint,isReversed);	
+			VP.queRoundBounce(impactPoint,isReversed);	
 		};
 				
-		that.automaticActions.push(airResistForce,globalGravityForce);
+		that.automaticActions.push(VP.airResistForce,VP.globalGravityForce);
 		//that.hit.planet = stopDead;
 		that.hit.ground = game.library.vectorPhysics.reflectForceOffFlatSurface;
 		
@@ -179,8 +157,8 @@ function vectorGame(game) {
 		game.library.vectorGraphics.assignVectorRender(that,spec);
 		game.library.vectorPhysics.assignVectorPhysics(that,spec);
 				
-		that.hit.ball = game.library.vectorPhysics.queRoundBounce;
-		that.hit.ground = game.library.vectorPhysics.reflectForceOffFlatSurface;
+		that.hit.ball = VP.queRoundBounce;
+		that.hit.ground = VP.reflectForceOffFlatSurface;
 		that.hit.ship = function(impactPoint,isReversed){
 //			reportImpact(impactPoint,isReversed);
 //			game.library.vectorPhysics.queRoundBounce(impactPoint,isReversed);	
