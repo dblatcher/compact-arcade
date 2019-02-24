@@ -91,7 +91,8 @@ function vectorPhysics(game) {
 		if(!item.h) {item.h = spec.h || 0;}
 		item.momentum = spec.momentum || {h:0,m:0};
 		item.thrust = spec.thrust || 0;
-		item.mass = spec.mass || 20;
+		item.unmovedByGravity  = spec.unmovedByGravity || false;
+		item.mass = spec.mass || 10;
 		item.maxSpeed = spec.maxSpeed;
 		item.queuedMove = {x:0,y:0,m:0,h:0};
 		item.queuedForces = [];
@@ -516,6 +517,38 @@ function vectorPhysics(game) {
 			m:VP.environment.gravitationalConstant,
 			h:Math.PI*1
 		});
+	};
+	
+	VP.exertGravity = function() {
+		var gravitySource = this;
+		
+		function areEffectedByGravity(item) {
+			if (item === gravitySource) {return false;} // don't exert on self
+			if (!item.momentum) {return false;} // only exhert on items that have VP movement
+			if (!item.mass) {return false;} // gravity only effects bodies with mass
+			if (item.unmovedByGravity) {return false;} 
+			return true;
+		};
+		function findGravityForce(body1,body2) {
+			var r = game.calc.distance(body1,body2);
+			var m = (VP.environment.gravitationalConstant * ((body1.mass * body2.mass) / Math.pow(r,2)) );
+			
+			var h = game.calc.headingFromVector(body1.x - body2.x , body2.y - body1.y);
+			
+			return {m:m,h:h}
+		};
+		
+		var effectedItems = game.session.items.filter(areEffectedByGravity);
+		//console.log(effectedItems);
+		
+		for (var i = 0; i < effectedItems.length; i++) {
+			
+			effectedItems[i].queuedForces.push(findGravityForce(gravitySource, effectedItems[i]));
+
+	
+			
+		};
+		
 	};
 	
 	return game;
