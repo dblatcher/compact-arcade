@@ -29,15 +29,15 @@ function vectorGame(game) {
 		{width:1000, height:1000,
 			items :[
 			//	{func:"planet", spec:{x:200,y:800,radius:50,color:'white'}},
-				{func:"fancyShip", spec:{x:500,y:40,h:0.0*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
-				{func:"ground", spec:{x:0,y:950,width:1000,height:50}},
-				{func:"ground", spec:{x:100,y:700,width:40,height:250}},
-				{func:'ball', spec:{x:80,y:500,h:0,v:0,radius:50, mass:150,color:'blue',momentum:{h:(Math.PI*Math.random()*2), m:Math.random()*5} }},
-			//	{func:'ball', spec:{x:850,y:220,h:0,v:0,radius:40, mass:100,color:'red', momentum:{h:(Math.PI*1.5), m:6} }},
-				{func:'ball', spec:{x:200,y:700,h:0,v:0,radius:50, mass:150,color:'blue',momentum:{h:(Math.PI*Math.random()*2), m:Math.random()*5} }},
+				{func:"ship", spec:{x:500,y:40,h:0.0*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
+				{func:'ball', spec:{x:500,y:500,h:0,v:0,radius:50, mass:150,color:'blue',momentum:{h:(Math.PI*0.5), m:5} }},
+				{func:'ball', spec:{x:850,y:520,h:0,v:0,radius:40, mass:100,color:'red', momentum:{h:(Math.PI*1.5), m:5} }},
+			//	{func:"ground", spec:{x:0,y:950,width:1000,height:50}},
+			//	{func:"ground", spec:{x:100,y:700,width:40,height:250}},
+			//	{func:'ball', spec:{x:80,y:500,h:0,v:0,radius:50, mass:150,color:'blue',momentum:{h:(Math.PI*Math.random()*2), m:Math.random()*5} }},
+			//	{func:'ball', spec:{x:200,y:700,h:0,v:0,radius:50, mass:150,color:'blue',momentum:{h:(Math.PI*Math.random()*2), m:Math.random()*5} }},
 			//	{func:'ball', spec:{x:500,y:500,h:0,v:0,radius:100, mass:1000,color:'purple', momentum:{h:(Math.PI*0.5), m:2} }},
 			// {func:'ball', spec:{x:800,y:500,h:0,v:0,radius:50, mass:150,color:'blue',momentum:{h:(Math.PI*1.5), m:2} }},
-				{func:'ball', spec:{x:500,y:800,h:0,v:0,radius:50, mass:150,color:'blue',momentum:{h:(Math.PI*0), m:0} }},
 			//	{func:'ball', spec:{x:800,y:400,h:0,v:0,radius:50, mass:150,color:'blue',momentum:{h:(Math.PI*0), m:5} }},
 			//	{func:'ball', spec:{x:800,y:300,h:0,v:0,radius:50, mass:150,color:'blue',momentum:{h:(Math.PI*1.2), m:2} }},
 			//	{func:'ball', spec:{x:800,y:300,h:0,v:0,radius:50, mass:550,color:'green',momentum:{h:(Math.PI*0.4), m:3} }},
@@ -60,7 +60,7 @@ function vectorGame(game) {
 			if (this.keyMap["x"]) {ship.h = ship.momentum.h;};
 			if (this.keyMap["c"]) {ship.h = game.calc.reverseHeading(ship.momentum.h);};		
 			if (this.keyMap[" "]) {		
-			//	ship.launchProjectile();
+				ship.launchProjectile();
 				this.keyMap[" "] = false;
 			};			
 			ship.thrust = Math.min(ship.thrust,10);
@@ -73,6 +73,31 @@ function vectorGame(game) {
 		return that;
 	}
 	
+	game.make.bullet = function(spec) {
+		var that = game.make.roundItem(spec);
+		that.type = 'missile';
+		game.library.vectorGraphics.assignVectorRender(that,spec);
+		game.library.vectorPhysics.assignVectorPhysics(that,spec);
+		
+		that.automaticActions.push(function() {
+			this.h = this.momentum.h;
+		});
+		
+		that.hit.ground = function(impactPoint,isReversed){
+			VP.reflectForceOffFlatSurface(impactPoint,isReversed);
+		}
+		
+		that.hit.ball = function(impactPoint,isReversed){	
+			VP.mutualRoundBounce(impactPoint,isReversed);
+			that.dead = true;
+		};
+		
+		that.radius = 10;
+		that.mass = 500;
+		
+		return that;
+	}
+	
 	game.make.ship = function (spec) {
 		var that = game.make.roundItem(spec);
 		that.type = 'ship';
@@ -80,11 +105,12 @@ function vectorGame(game) {
 		game.library.vectorPhysics.assignVectorPhysics(that,spec);
 				
 		that.hit.ball = function(impactPoint,isReversed){
-//			reportImpact(impactPoint,isReversed);
-			VP.queRoundBounce(impactPoint,isReversed);	
+			VP.mutualRoundBounce(impactPoint,isReversed);	
+			reportImpact(impactPoint,isReversed);
 		};
 				
-		that.automaticActions.push(VP.airResistForce,VP.globalGravityForce);
+		//that.automaticActions.push(VP.globalGravityForce);
+		that.automaticActions.push(VP.airResistForce);
 		//that.hit.planet = stopDead;
 		that.hit.ground = game.library.vectorPhysics.reflectForceOffFlatSurface;
 		
@@ -109,6 +135,27 @@ function vectorGame(game) {
 			];
 		}
 		
+		
+		var launchProjectile = function(makeFunction) {
+			var newBulletVector= game.calc.vectorFromForces([  {m:this.momentum.m, h:this.momentum.h} , {m:10,h:this.h}  ]);
+			var newBulletMomentum={};
+			newBulletMomentum.m = Math.min(game.calc.distance(newBulletVector),30);
+			newBulletMomentum.h = game.calc.headingFromVector(newBulletVector);			
+			makeFunction = makeFunction || game.make.bullet;
+			var projectileSpec = {
+				x:this.x - newBulletVector.x*2.5,
+				y:this.y - newBulletVector.y*2.5,
+				h:(this.h/Math.PI),
+				mass:1.5,
+				lifeSpan:75,
+				momentum:{m:newBulletMomentum.m, h:newBulletMomentum.h},
+				maxSpeed:30
+			};
+					
+			game.session.items.push( makeFunction(projectileSpec));
+		}
+		that.launchProjectile = launchProjectile;
+				
 		return that;
 	}
 	
@@ -157,17 +204,19 @@ function vectorGame(game) {
 		game.library.vectorGraphics.assignVectorRender(that,spec);
 		game.library.vectorPhysics.assignVectorPhysics(that,spec);
 				
-		that.hit.ball = VP.queRoundBounce;
-		that.hit.ground = VP.reflectForceOffFlatSurface;
-		that.hit.ship = function(impactPoint,isReversed){
-//			reportImpact(impactPoint,isReversed);
-//			game.library.vectorPhysics.queRoundBounce(impactPoint,isReversed);	
+		that.automaticActions.push(VP.airResistForce);
+	
+		that.hit.ball = function(impactPoint,isReversed) {
+			//console.log(game.cycleCount, that.type,'that.hit.ball, isReversed:', isReversed)	
+			VP.mutualRoundBounce(impactPoint,isReversed);
 		}
 		
-		that.hit.planet = function (impactPoint,isReversed) {
-			
-		};
-				
+		that.hit.ship = function(impactPoint,isReversed) {
+			reportImpact(impactPoint,isReversed);
+		}
+		
+		that.hit.ground = VP.reflectForceOffFlatSurface;
+
 		return that;
 	};
 	
