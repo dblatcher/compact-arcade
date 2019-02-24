@@ -9,7 +9,7 @@ function vectorPhysics(game) {
 	var VP = game.library.vectorPhysics;
 
 	VP.environment = {
-		gravitationalConstant :0.2,
+		gravitationalConstant :0.05,
 		airDensity : 0.001
 	};
 	
@@ -157,12 +157,10 @@ function vectorPhysics(game) {
 		};
 
 		
-		
-		
 		if (pathAreaIntersectsItem2()) { 
 			result.type = "passed through";
 			result.stopPoint = findStopPoint();
-			console.log(findStopPoint())
+			//console.log(findStopPoint())
 			return result;
 		};
 		
@@ -353,18 +351,7 @@ function vectorPhysics(game) {
 			
 	}
 
-	VP.queRoundBounce = function (impactPoint,reverseItems) {
-		if (reverseItems) {return false};
-		
-		var body1,body2;
-
-		body1 = impactPoint.item1;
-		body2 = impactPoint.item2;
-		// this seems wrong - moving out of sequence
-		body1.x = impactPoint.stopPoint.x;
-		body1.y = impactPoint.stopPoint.y;
-		
-		
+	VP.findBounceVectors = function(body1,body2) {
 		//step 1 - normal unit vector and tangent unit vector
 		var n = {x: body2.x-body1.x, y: body2.y-body1.y};
 		n.mag = game.calc.distance(n);
@@ -383,32 +370,70 @@ function vectorPhysics(game) {
 		
 		//step 4 tangential velocity doesn't change
 		var v_1t = v1t;
-		//var v_2t = v2t;
+		var v_2t = v2t;
 		
 		//step 5 new normal velocity
 		var v_1n = ( (v1n * (body1.mass - body2.mass)) + 2*body2.mass*v2n ) /(body1.mass + body2.mass);
-		//var v_2n = ( (v2n * (body2.mass - body1.mass)) + 2*body1.mass*v1n ) /(body1.mass + body2.mass);
+		var v_2n = ( (v2n * (body2.mass - body1.mass)) + 2*body1.mass*v1n ) /(body1.mass + body2.mass);
 		
 		//step 6 convert new normal and tangential velocities in Vectors 
 		//mutliply by unit vectors 
 		var V_1n = {x:v_1n*un.x, y:v_1n*un.y};
 		var V_1t = {x:v_1t*ut.x, y:v_1t*ut.y};
 		
-		//var V_2n = {x:v_2n*un.x, y:v_2n*un.y};
-		//var V_2t = {x:v_2t*ut.x, y:v_2t*ut.y};
+		var V_2n = {x:v_2n*un.x, y:v_2n*un.y};
+		var V_2t = {x:v_2t*ut.x, y:v_2t*ut.y};
 		
 		// step 7 - add component vectors
 		var newVector1 = {x: V_1n.x + V_1t.x, y: V_1n.y + V_1t.y};
-	//	var newVector2 = {x: V_2n.x + V_2t.x, y: V_2n.y + V_2t.y};
+		var newVector2 = {x: V_2n.x + V_2t.x, y: V_2n.y + V_2t.y};
+		
+		return {
+			vector1:newVector1,
+			vector2:newVector2
+		};
+		
+	};
+	
+	VP.queRoundBounce = function (impactPoint,reverseItems) {
+		if (reverseItems) {return false};
+		var body1,body2;
+		body1 = impactPoint.item1;
+		body2 = impactPoint.item2;
+		// this seems wrong - moving out of sequence
+		body1.x = impactPoint.stopPoint.x;
+		body1.y = impactPoint.stopPoint.y;
 		
 		
-		body1.queuedMove.h = game.calc.headingFromVector(newVector1);
-		body1.queuedMove.m = game.calc.distance(newVector1);
-		body1.queuedMove.x = newVector1.x;
-		body1.queuedMove.y = newVector1.y;
+		var bounce = VP.findBounceVectors(body1,body2);		
+		body1.queuedMove.h = game.calc.headingFromVector(bounce.vector1);
+		body1.queuedMove.m = game.calc.distance(bounce.vector1);
+		body1.queuedMove.x = bounce.vector1.x;
+		body1.queuedMove.y = bounce.vector1.y;
 	
 	};
-
+	
+	VP.mutualRoundBounce = function(impactPoint,reverseItems) {
+		if (reverseItems) {return false};
+		var body1,body2;
+		body1 = impactPoint.item1;
+		body2 = impactPoint.item2;
+		// this seems wrong - moving out of sequence
+		body1.x = impactPoint.stopPoint.x;
+		body1.y = impactPoint.stopPoint.y;
+		
+		
+		var bounce = VP.findBounceVectors(body1,body2);		
+		body1.queuedMove.h = game.calc.headingFromVector(bounce.vector1);
+		body1.queuedMove.m = game.calc.distance(bounce.vector1);
+		body1.queuedMove.x = bounce.vector1.x;
+		body1.queuedMove.y = bounce.vector1.y;
+		
+		body2.queuedMove.h = game.calc.headingFromVector(bounce.vector2);
+		body2.queuedMove.m = game.calc.distance(bounce.vector2);
+		body2.queuedMove.x = bounce.vector2.x;
+		body2.queuedMove.y = bounce.vector2.y;
+	};
 	
 	VP.reflectForceOffFlatSurface = function (impactPoint,reverseItems) {
 		if (reverseItems) {return false};
@@ -439,7 +464,6 @@ function vectorPhysics(game) {
 		
 	};
 	
-
 	VP.flatBounce = function (body2,impactPoint,thisIsImpactedBody) {
 		if (thisIsImpactedBody) {return false};
 		var body1 = this;
