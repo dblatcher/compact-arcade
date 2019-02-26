@@ -37,6 +37,7 @@
 <script src = './vectorPhysics.js' ></script>
 <script src = './vectorGame.js' ></script>
 <script src = './vectorCalculations.js' ></script>
+<script src = './backgroundStars.js' ></script>
 
 <script>
 
@@ -62,7 +63,7 @@ var platformGameInstance = createGame([spriteHandling,platformGame],{
 	gameCycleTime : 25
 });	
 
-var vectorGameInstance = createGame([vectorGraphics,vectorCalculations,vectorPhysics,vectorGame],{
+var vectorGameInstance = createGame([backgroundStars,vectorGraphics,vectorCalculations,vectorPhysics,vectorGame],{
 	startingLives:1,
 	runCollisionTestInMainLoop:false,
 	bottomOfScreenIsZeroY : false,
