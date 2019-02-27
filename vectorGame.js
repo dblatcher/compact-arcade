@@ -1,6 +1,11 @@
-function vectorGame(game) {
-	var VP = game.library.vectorPhysics;
 
+function vectorGame(game) {
+		
+	var VP = game.library.vectorPhysics;
+	VP.environment.gravitationalConstant = 0;
+	VP.environment.airDensity = 0.0;
+	
+	
 	var reportImpact = function(impactPoint,isReversed) {
 		if (isReversed) return false;
 		
@@ -25,13 +30,23 @@ function vectorGame(game) {
 	}
 	
 
+	var shatterUntilTooSmall = function(item){
+		if (item.radius > 40) {
+			item.shatter();
+		} else {
+			item.dead = true;
+		}
+	};
+	
+	
 	game.level = [
 		{width:1000, height:1000,
 			items :[
 			//	{func:"planet", spec:{x:200,y:800,radius:50,color:'white'}},
-				{func:"ship", spec:{x:500,y:40,h:0.0*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
-				{func:'ball', spec:{x:500,y:500,h:0,v:0,radius:50, mass:150,color:'blue',momentum:{h:(Math.PI*0.5), m:5} }},
-				{func:'ball', spec:{x:850,y:520,h:0,v:0,radius:40, mass:100,color:'red', momentum:{h:(Math.PI*1.5), m:5} }},
+				{func:"ship", spec:{x:600,y:600,h:0.0*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
+				{func:'rock', spec:{x:500,y:400,h:0,v:0,radius:70, mass:50,color:'blue',momentum:{h:(Math.PI*0.5), m:0} }},
+				{func:'rock', spec:{x:100,y:700,h:0,v:0,radius:25, mass:50,color:'red', momentum:{h:(Math.PI*1.5), m:4} },isPlayer:false},
+				{func:'rock', spec:{x:200,y:50,h:0,v:0,radius:30, mass:20,color:'white', momentum:{h:(Math.PI*1.5), m:8} },isPlayer:false},
 			//	{func:"ground", spec:{x:0,y:950,width:1000,height:50}},
 			//	{func:"ground", spec:{x:100,y:700,width:40,height:250}},
 			//	{func:'ball', spec:{x:80,y:500,h:0,v:0,radius:50, mass:150,color:'blue',momentum:{h:(Math.PI*Math.random()*2), m:Math.random()*5} }},
@@ -79,6 +94,9 @@ function vectorGame(game) {
 		game.library.vectorGraphics.assignVectorRender(that,spec);
 		game.library.vectorPhysics.assignVectorPhysics(that,spec);
 		
+		that.radius = 10;
+		that.mass = 250;
+		
 		that.automaticActions.push(function() {
 			this.h = this.momentum.h;
 		});
@@ -87,13 +105,19 @@ function vectorGame(game) {
 			VP.reflectForceOffFlatSurface(impactPoint,isReversed);
 		}
 		
-		that.hit.ball = function(impactPoint,isReversed){	
-			VP.mutualRoundBounce(impactPoint,isReversed);
-			that.dead = true;
+		that.hit.ship = function(impactPoint,isReversed){	
+			VP.flatBounce(impactPoint,isReversed);
+			this.dead = true;
 		};
 		
-		that.radius = 10;
-		that.mass = 500;
+		that.hit.rock = function(impactPoint,isReversed){
+			game.session.effect.push(game.makeEffect.expandingRing({x:impactPoint.x, y:impactPoint.y, lastFrame:20}));
+			if (impactPoint.item2.type == "rock") {shatterUntilTooSmall(impactPoint.item2);}
+			if (impactPoint.item1.type == "rock") {shatterUntilTooSmall(impactPoint.item1);}
+			this.dead = true;
+		};
+		
+
 		
 		return that;
 	}
@@ -110,8 +134,8 @@ function vectorGame(game) {
 		};
 				
 		//that.automaticActions.push(VP.globalGravityForce);
-		that.automaticActions.push(VP.airResistForce);
-		//that.hit.planet = stopDead;
+		
+
 		that.hit.ground = game.library.vectorPhysics.reflectForceOffFlatSurface;
 		
 		that.draw = function(){
@@ -137,21 +161,20 @@ function vectorGame(game) {
 		
 		
 		var launchProjectile = function(makeFunction) {
-			var newBulletVector= game.calc.vectorFromForces([  {m:this.momentum.m, h:this.momentum.h} , {m:10,h:this.h}  ]);
-			var newBulletMomentum={};
-			newBulletMomentum.m = Math.min(game.calc.distance(newBulletVector),30);
-			newBulletMomentum.h = game.calc.headingFromVector(newBulletVector);			
-			makeFunction = makeFunction || game.make.bullet;
+			var projectileVector= game.calc.vectorFromForces([  {m:this.momentum.m, h:this.momentum.h} , {m:10,h:this.h}  ]);
+			var projectileMomentum={
+				m : Math.min(game.calc.distance(projectileVector),30),
+				h : game.calc.headingFromVector(projectileVector)				
+			};
 			var projectileSpec = {
-				x:this.x - newBulletVector.x*2.5,
-				y:this.y - newBulletVector.y*2.5,
+				x:this.x + (2*projectileVector.x*this.radius/projectileMomentum.m),
+				y:this.y - (2*projectileVector.y*this.radius/projectileMomentum.m),
 				h:(this.h/Math.PI),
-				mass:1.5,
-				lifeSpan:75,
-				momentum:{m:newBulletMomentum.m, h:newBulletMomentum.h},
+				momentum:projectileMomentum,
 				maxSpeed:30
 			};
 					
+			makeFunction = makeFunction || game.make.bullet;
 			game.session.items.push( makeFunction(projectileSpec));
 		}
 		that.launchProjectile = launchProjectile;
@@ -203,19 +226,84 @@ function vectorGame(game) {
 		that.type = 'ball';
 		game.library.vectorGraphics.assignVectorRender(that,spec);
 		game.library.vectorPhysics.assignVectorPhysics(that,spec);
-				
-		that.automaticActions.push(VP.airResistForce);
-	
-		that.hit.ball = function(impactPoint,isReversed) {
-			//console.log(game.cycleCount, that.type,'that.hit.ball, isReversed:', isReversed)	
-			VP.mutualRoundBounce(impactPoint,isReversed);
-		}
-		
-		that.hit.ship = function(impactPoint,isReversed) {
-			reportImpact(impactPoint,isReversed);
-		}
-		
+		that.automaticActions.push(VP.airResistForce,VP.exertGravity);
+		that.hit.ball = VP.mutualRoundBounce;
 		that.hit.ground = VP.reflectForceOffFlatSurface;
+		return that;
+	};
+	
+	game.make.rock = function(spec) {
+		var that = game.make.roundItem(spec);
+		that.type = 'rock';
+		game.library.vectorGraphics.assignVectorRender(that,spec);
+		game.library.vectorPhysics.assignVectorPhysics(that,spec);
+				
+		that.automaticActions.push(VP.airResistForce,VP.exertGravity);
+		that.hit.rock = VP.mutualRoundBounce;
+		that.hit.ground = VP.reflectForceOffFlatSurface;			
+	
+		that.shatter = function() {
+			this.dead = true;
+			var randomHeading = game.calc.round(Math.random()*2,3);
+			var randomSpeed = 5;
+			var shift = 0;
+			
+			var shardVector1 = game.calc.vectorFromForces([this.momentum, {h:randomHeading,m:randomSpeed}],3);
+			var shard1 = game.make.rock({
+				x:this.x+(shardVector1.x*shift),
+				y:this.y-(shardVector1.y*shift),
+				radius:Math.floor(this.radius*0.7),
+				mass:this.mass/2.2,
+				color:this.color
+			});
+			shard1.queuedMove = {
+				x:shardVector1.x+(shardVector1.x*shift),
+				y:shardVector1.y-(shardVector1.x*shift),
+				h:game.calc.headingFromVector(shardVector1.x,shardVector1.y),
+				m:game.calc.distance(shardVector1)
+			};		
+			game.session.items.push( shard1 );
+
+			var shardVector2 = game.calc.vectorFromForces([this.momentum, {h:game.calc.reverseHeading(randomHeading),m:randomSpeed}],3);
+			var shard2 = game.make.rock({
+				x:this.x-(shardVector2.x*shift),
+				y:this.y-(shardVector2.y * shift),
+				radius:Math.floor(this.radius*0.7),
+				mass:this.mass/2.2,
+				color:this.color
+			})
+			shard2.queuedMove = {
+				x:shardVector2.x,
+				y:shardVector2.y,
+				h:game.calc.headingFromVector(shardVector2.x,shardVector2.y),
+				m:game.calc.distance(shardVector2)
+			};			
+			game.session.items.push( shard2 );
+			
+		}
+		
+		vary = function(){return (Math.random()-0.5)/5 }
+		that.shape = [];
+		for (var a = 0; a<1.9; a=a+0.1){
+			that.shape.push({h:a+vary(), d:0.8 + vary()})
+		}
+		that.draw = function() {
+			var list = [
+			{com:'moveTo',h:this.shape[0].h,d:this.shape[0].d}
+			];
+			for (var i = 1; i < this.shape.length; i++){
+				list.push(
+					{com:'lineTo',h:this.shape[i].h,d:this.shape[i].d}
+				);
+			};
+			list.push(
+			{com:'lineTo',h:this.shape[0].h,d:this.shape[0].d},		
+			{com:'fillStyle',v:this.color},
+			{com:'fill'},
+			{com:'closePath'}			
+			)
+			return list;
+		}
 
 		return that;
 	};

@@ -77,7 +77,7 @@ function vectorPhysics(game) {
 		for (var i = 0; i < items.length; i++) {
 			if (items[i].queuedMove) {
 				if (errorTest(items[i].queuedMove)) {
-					console.log('**',i, items[i].queuedMove)
+					console.log('*non finite queuedMove for '+items[i].type,i, items[i].queuedMove)
 					items[i].queuedMove = {x:0,y:0,h:0,m:0};
 				};
 			};
@@ -93,7 +93,7 @@ function vectorPhysics(game) {
 		item.thrust = spec.thrust || 0;
 		item.unmovedByGravity  = spec.unmovedByGravity || false;
 		item.mass = spec.mass || 10;
-		item.maxSpeed = spec.maxSpeed;
+		item.maxSpeed = spec.maxSpeed || 100000;
 		item.queuedMove = {x:0,y:0,m:0,h:0};
 		item.queuedForces = [];
 		item.elasticity = spec.elasticity ||1;
@@ -465,16 +465,13 @@ function vectorPhysics(game) {
 		
 	};
 	
-	VP.flatBounce = function (body2,impactPoint,thisIsImpactedBody) {
+	VP.flatBounce = function (impactPoint,thisIsImpactedBody) {
 		if (thisIsImpactedBody) {return false};
-		var body1 = this;
+		body1 = impactPoint.item1;
+		body2 = impactPoint.item2;
 		
 		var vector1 = game.calc.vectorFromForces([body1.momentum],3);
-		
 		var vector2 = body2.momentum ? game.calc.vectorFromForces([body2.momentum],3) : {x:0,y:0};
-		
-		console.log(impactPoint.type)
-		console.log(body1.mass,vector1,body2.mass,vector2);
 		
 		var newVector1 = {};
 		newVector1.x = (vector1.x * (body1.mass - body2.mass) + (2 * body2.mass * vector2.x)) / (body1.mass + body2.mass);			
@@ -485,15 +482,22 @@ function vectorPhysics(game) {
 		
 		body1.x = impactPoint.stopPoint.x - newVector1.x;
 		body1.y = impactPoint.stopPoint.y + newVector1.y;
-		body1.momentum.h = game.calc.headingFromVector(newVector1);
-		body1.momentum.m = game.calc.distance(newVector1);
-		body1.momentum.m = Math.min(body1.momentum.m,body1.maxSpeed);
+			
+		body1.queuedMove = {
+			h:game.calc.headingFromVector(newVector1),
+			m:Math.min(game.calc.distance(newVector1),body1.maxSpeed),
+			x:newVector1.x,
+			y:newVector1.y
+		};
 	
-		if (body2.momentum) {
-			body2.momentum.h = game.calc.headingFromVector(newVector2);
-			body2.momentum.m = game.calc.distance(newVector2);
-			body2.momentum.m = Math.min(body2.momentum.m,body2.maxSpeed);
-		}	
+		if (body2.queuedMove) {
+			body2.queuedMove ={
+				h:game.calc.headingFromVector(newVector2),
+				m:Math.min(game.calc.distance(newVector2),body2.maxSpeed),
+				x:newVector2.x,
+				y:newVector2.y
+			};
+		}		
 	}
 	
 	
@@ -532,21 +536,13 @@ function vectorPhysics(game) {
 		function findGravityForce(body1,body2) {
 			var r = game.calc.distance(body1,body2);
 			var m = (VP.environment.gravitationalConstant * ((body1.mass * body2.mass) / Math.pow(r,2)) );
-			
 			var h = game.calc.headingFromVector(body1.x - body2.x , body2.y - body1.y);
-			
 			return {m:m,h:h}
 		};
 		
 		var effectedItems = game.session.items.filter(areEffectedByGravity);
-		//console.log(effectedItems);
-		
 		for (var i = 0; i < effectedItems.length; i++) {
-			
-			effectedItems[i].queuedForces.push(findGravityForce(gravitySource, effectedItems[i]));
-
-	
-			
+			effectedItems[i].queuedForces.push(findGravityForce(gravitySource, effectedItems[i]));			
 		};
 		
 	};
