@@ -89,11 +89,12 @@ function vectorPhysics(game) {
 
 	VP.assignVectorPhysics = function (item,spec) {
 		if(!item.h) {item.h = spec.h || 0;}
-		item.momentum = spec.momentum || {h:0,m:0};
+		item.momentum = Object.assign({},spec.momentum) || {h:0,m:0};
 		item.thrust = spec.thrust || 0;
+		item.thrustPower = spec.thrustPower || 10;
 		item.unmovedByGravity  = spec.unmovedByGravity || false;
 		item.mass = spec.mass || 10;
-		item.maxSpeed = spec.maxSpeed || 100000;
+		item.maxSpeed = spec.maxSpeed || 1000;
 		item.queuedMove = {x:0,y:0,m:0,h:0};
 		item.queuedForces = [];
 		item.elasticity = spec.elasticity ||1;
@@ -114,7 +115,11 @@ function vectorPhysics(game) {
 		item.findForceArray = item.findForceArray || function() {
 			var force =[] ;
 			force.push(this.momentum);
-			if (this.thrust > 0) { force.push( {m:(this.thrust/this.mass), h:this.h} ) }; 
+			if (this.thrust > 1) {this.thrust = 1}
+			if (this.thrust < 0) {this.thrust = 0}
+			if (this.thrust > 0) { 
+				force.push( {m:(this.thrust*this.thrustPower/this.mass), h:this.h} ) 
+			}; 
 			for (var i=0; i < this.queuedForces.length; i++) {
 				force.push({h:this.queuedForces[i].h, m:this.queuedForces[i].m});
 			};
