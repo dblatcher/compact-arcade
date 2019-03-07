@@ -98,6 +98,7 @@ function vectorPhysics(game) {
 		item.queuedMove = {x:0,y:0,m:0,h:0};
 		item.queuedForces = [];
 		item.elasticity = spec.elasticity ||1;
+		item.gravityMaxRange = spec.gravityMaxRange || false;
 		
 		item.move = item.move || function (){	
 			this.x += this.queuedMove.x;
@@ -539,7 +540,11 @@ function vectorPhysics(game) {
 			return true;
 		};
 		function findGravityForce(body1,body2) {
+			if (game.calc.areIntersecting(body1,body2)) {return {m:0,h:0}};
 			var r = game.calc.distance(body1,body2);
+			if (gravitySource.gravityMaxRange !== false) {
+				if (r>gravitySource.gravityMaxRange) {return {m:0,h:0}};
+			}
 			var m = (VP.environment.gravitationalConstant * ((body1.mass * body2.mass) / Math.pow(r,2)) );
 			var h = game.calc.headingFromVector(body1.x - body2.x , body2.y - body1.y);
 			return {m:m,h:h}
