@@ -543,7 +543,7 @@ function vectorPhysics(game) {
 			if (game.calc.areIntersecting(body1,body2)) {return {m:0,h:0}};
 			var r = game.calc.distance(body1,body2);
 			if (gravitySource.gravityMaxRange !== false) {
-				if (r>gravitySource.gravityMaxRange) {return {m:0,h:0}};
+				if (r-body1.radius-body2.radius>gravitySource.gravityMaxRange) {return {m:0,h:0}};
 			}
 			var m = (VP.environment.gravitationalConstant * ((body1.mass * body2.mass) / Math.pow(r,2)) );
 			var h = game.calc.headingFromVector(body1.x - body2.x , body2.y - body1.y);
