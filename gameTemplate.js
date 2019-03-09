@@ -70,7 +70,67 @@ function createGame (disks, options) {
 		scoreElement : null,
 		sendScore : function(){},
 		
-		library : {}
+		widgets :[
+			
+		],
+		library : {
+			defaultWidgets:{
+				
+				barChart : function(c,ctx,plotOffset) {
+					var barLevel = (this.height - 2*this.margin)*(this.getValue() / this.getRange());
+					var barFill;
+					if (typeof this.barFill === "function") {
+						barFill = this.barFill(barLevel,ctx)
+					} else {barFill=this.barFill};
+					var chartFill;
+					if (typeof this.chartFill === "function") {
+						chartFill = this.chartFill(barLevel,ctx)
+					} else {chartFill=this.chartFill};
+					
+					ctx.beginPath();
+					ctx.fillStyle = chartFill;
+					ctx.rect(this.xPos,this.yPos,this.width,this.height);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.fillStyle = barFill;
+					ctx.rect(this.xPos +this.margin,this.yPos+this.height-barLevel-this.margin,this.width - 2*this.margin,barLevel);
+					ctx.fill();
+				},
+	
+				circleChart : function(c,ctx,plotOffset) {
+					var barLevel = (this.height/2 - this.margin)*(this.getValue() / this.getRange());
+					var barFill;
+					if (typeof this.barFill === "function") {
+						barFill = this.barFill(barLevel,ctx)
+					} else {barFill=this.barFill};
+					var chartFill;
+					if (typeof this.chartFill === "function") {
+						chartFill = this.chartFill(barLevel,ctx)
+					} else {chartFill=this.chartFill};
+					
+					ctx.beginPath();
+					ctx.fillStyle = chartFill;
+					ctx.arc(this.xPos+this.height/2,this.yPos+this.height/2,this.height/2,0, Math.PI*2);
+					ctx.fill();
+					ctx.beginPath();
+					ctx.fillStyle = barFill;
+					
+					ctx.arc(this.xPos+this.height/2,this.yPos+this.height/2,barLevel,0, Math.PI*2);
+					ctx.fill();
+				},
+				
+				statusLine : function(c,ctx,plotOffset){
+					ctx.beginPath();
+					ctx.font = this.font ||"3vh sans-serif";
+					ctx.fillStyle = this.color || "white";
+					ctx.textAlign = "left";
+					ctx.textBaseline = "top";
+					ctx.fillText(this.getStatus(), 10, 10);
+				}
+				
+			}
+			
+		}
 	};
 	
 	game.session = {
@@ -139,6 +199,11 @@ function createGame (disks, options) {
 					
 		this.session.reset();			
 		this.timer = setTimeout(function(){game.refresh()},options.msPerGameCycle);
+		
+		this.widgets.push({
+			render: game.library.defaultWidgets.statusLine,
+			getStatus : function(){return 'Lives: ' + game.session.lives + ' Score: ' + game.session.score;}
+		})
 		
 		function addSound(src) {
 			var soundElement;
@@ -304,10 +369,10 @@ function createGame (disks, options) {
 		ctx.fillText('YOU WIN THE GAME!' , c.width/2, c.height/2);
 
 	};
-	
+		
 	game.renderScreen = function() {
 		var c = this.canvasElement;	var ctx = c.getContext("2d");
-		var plotOffset = {x:0,y:0}, statusLineText='', highscoreNameText='';
+		var plotOffset = {x:0,y:0}, highscoreNameText='';
 		
 		if (this.scoreElement) {
 			if (this.session.gameStatus === 'titleScreen') {
@@ -349,6 +414,11 @@ function createGame (disks, options) {
 			function checkEffectNotFinished(effect) {return (effect.animateFrame <= effect.lastFrame || effect.lastFrame === -1)}
 			this.session.effect = this.session.effect.filter(checkEffectNotFinished);
 			
+			for (i = 0; i<game.widgets.length; i++) {
+				if (typeof game.widgets[i] === 'function') {game.widgets[i](c,ctx,plotOffset)}
+				if (typeof game.widgets[i] === 'object') {game.widgets[i].render(c,ctx,plotOffset)}
+			};
+			
 			if (this.session.waitingToReset == 'gameOver') {this.renderGameOverMessage(c,ctx,plotOffset)}
 			if (this.session.waitingToReset == 'gameWon') {this.renderGameWonMessage(c,ctx,plotOffset)}
 		}
@@ -376,15 +446,6 @@ function createGame (disks, options) {
 		if (this.session.gameStatus === 'titleScreen') {
 			this.renderTitleScreen(c,ctx,plotOffset);
 		};
-		
-		statusLineText = 'Lives: ' + game.session.lives + ' Score: ' + game.session.score;
-		ctx.beginPath();
-		ctx.font = "3vh sans-serif";
-		ctx.fillStyle = "white";
-		ctx.textAlign = "left";
-		ctx.textBaseline="top";
-
-		ctx.fillText(statusLineText, 10, 10);
 		
 	};
 			
