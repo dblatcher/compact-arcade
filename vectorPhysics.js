@@ -26,9 +26,11 @@ function vectorPhysics(game) {
 			};
 			
 			if (items[i].queuedMove) {
-				itemVelocity = game.calc.vectorFromForces( items[i].findForceArray() );
+				itemVelocity = game.calc.vectorFromForces( items[i].queuedForces.concat(items[i].momentum) );
 				items[i].queuedMove.h = game.calc.headingFromVector(itemVelocity);
 				items[i].queuedMove.m = game.calc.distance(itemVelocity);
+				items[i].queuedForces = [];
+				
 				if (items[i].queuedMove.m > items[i].maxSpeed) {
 					itemVelocity.x = itemVelocity.x * (items[i].maxSpeed/items[i].queuedMove.m);
 					itemVelocity.y = itemVelocity.y * (items[i].maxSpeed/items[i].queuedMove.m);
@@ -112,23 +114,7 @@ function vectorPhysics(game) {
 			if (this.y > game.level[game.session.currentLevel].height) {this.y -= game.level[game.session.currentLevel].height}
 			if (this.y < 0) {this.y += game.level[game.session.currentLevel].height}			
 		};
-		
-		item.findForceArray = item.findForceArray || function() {
-			var force =[] ;
-			force.push(this.momentum);
-			if (this.thrust > 1) {this.thrust = 1}
-			if (this.thrust < 0) {this.thrust = 0}
-			if (this.thrust > 0) { 
-				force.push( {m:(this.thrust*this.thrustPower/this.mass), h:this.h} ) 
-			}; 
-			for (var i=0; i < this.queuedForces.length; i++) {
-				force.push({h:this.queuedForces[i].h, m:this.queuedForces[i].m});
-			};
-			this.queuedForces = [];	
-			return force;
-		};
-		
-		
+				
 	};
  
  
@@ -506,6 +492,14 @@ function vectorPhysics(game) {
 		}		
 	}
 	
+	
+	VP.thrustForce = function() {
+		if (this.thrust > 1) {this.thrust = 1}
+		if (this.thrust < 0) {this.thrust = 0}
+		if (this.thrust > 0) { 
+			this.queuedForces.push( {m:(this.thrust*this.thrustPower/this.mass), h:this.h} ) 
+		};
+	}
 	
 	VP.airResistForce = function(){	
 		if(!this.momentum.m) {return false}
