@@ -99,6 +99,8 @@ function createGame (disks, options) {
 	
 				circleChart : function(c,ctx,plotOffset) {
 					var barLevel = (this.height/2 - this.margin)*(this.getValue() / this.getRange());
+					if (barLevel<0){barLevel = 0;}
+					
 					var barFill;
 					if (typeof this.barFill === "function") {
 						barFill = this.barFill(barLevel,ctx)
@@ -138,6 +140,7 @@ function createGame (disks, options) {
 		items : [],
 		effect:[],
 		player:{},
+		environment:{},
 		currentLevel : 0,
 		score:0,
 		lives:2,
@@ -243,6 +246,11 @@ function createGame (disks, options) {
 		for (init = 0; init < level.effects.length; init++) {
 			this.session.effect.push( this.makeEffect[level.effects[init].func](level.effects[init].spec) );
 		};
+		
+		if (level.environment){
+			Object.assign(game.session.environment,level.environment);
+		}
+			
 		game.keyMap ={};
 		game.cycleCount = 0;
 		game.session.gameStatus = options.cyclesForLevelScreen? 'levelScreen' : 'play';

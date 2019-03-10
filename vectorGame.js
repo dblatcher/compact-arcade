@@ -2,8 +2,6 @@
 function vectorGame(game) {
 		
 	var VP = game.library.vectorPhysics;
-	VP.environment.gravitationalConstant = 0.1;
-	VP.environment.airDensity = 0.0;
 	
 	
 	var reportImpact = function(impactPoint,isReversed) {
@@ -108,18 +106,16 @@ function vectorGame(game) {
 	game.level = [
 		{width:1000, height:1000,
 			items :[
-				{func:"fancyShip", spec:{x:150,y:600,h:0.0*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
-				//{func:'rock', spec:{x:500,y:400,h:0,v:0,radius:70, mass:50,color:'blue',momentum:{h:(Math.PI*0.5), m:0} }},
-			//	{func:'blackHole', spec:{x:600,y:600,h:0,v:0,radius:50, mass:5000, gravityMaxRange:300,color:'purple' }},
-			//	{func:'rock', spec:{x:100,y:700,h:0,v:0,radius:25, mass:50,color:'red', momentum:{h:(Math.PI*1.5), m:4} },isPlayer:false},
+				{func:"fancyShip", spec:{x:150,y:600,h:0.0*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
 				{func:'rock', spec:{x:200,y:250,h:0,v:0,radius:90,density:2,color:'blue', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
 				{func:'rock', spec:{x:400,y:250,h:0,v:0,radius:90,density:1,color:'green', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
-			//	{func:'solidRock', spec:{x:300,y:150,h:0,v:0,radius:30, mass:20,color:'white', momentum:{h:(Math.PI*1.5), m:1} },isPlayer:false},
-			//	{func:"ground", spec:{x:0,y:950,width:1000,height:50}},
-			//	{func:"ground", spec:{x:100,y:700,width:40,height:250}},
 			],
 			effects : [
 			],
+			environment :{
+				gravitationalConstant:0.1,
+				airDensity:0
+			},
 			victoryCondition : function() {
 				return (game.session.items.filter(function(item){return(item.type==='rock')}).length === 0);
 			}
@@ -129,8 +125,8 @@ function vectorGame(game) {
 			
 				{func:"fancyShip", spec:{x:150,y:1100,h:0.0*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
 				{func:'blackHole', spec:{x:500,y:500,h:0,v:0,radius:10, mass:2500, gravityMaxRange:250,color:'purple' }},
-				{func:'solidRock', spec:{x:200,y:250,h:0,v:0,radius:90, mass:60,color:'red', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
 			
+				{func:'solidRock', spec:{x:200,y:250,h:0,v:0,radius:90, mass:60,color:'red', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
 				{func:'solidRock', spec:{x:800,y:950,h:0,v:0,radius:40, mass:20,color:'red', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
 				{func:'solidRock', spec:{x:200,y:950,h:0,v:0,radius:40, mass:20,color:'red', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
 				{func:'solidRock', spec:{x:700,y:150,h:0,v:0,radius:40, mass:20,color:'red', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
@@ -209,7 +205,9 @@ function vectorGame(game) {
 		that.type = 'ship';
 		game.library.vectorGraphics.assignVectorRender(that,spec);
 		game.library.vectorPhysics.assignVectorPhysics(that,spec);
-				
+		
+		that.automaticActions.push(VP.thrustForce);
+		
 		that.hit.rock = function(impactPoint,isReversed){
 			VP.flatBounce(impactPoint,isReversed);	
 			game.session.effect.push(game.makeEffect.expandingRing({x:impactPoint.x, y:impactPoint.y, lastFrame:20}));
@@ -224,7 +222,7 @@ function vectorGame(game) {
 			var flicker1 = (Math.random()-0.5)/20;
 			var flicker2 = (Math.random())/5;
 			var flameSize = 0.5+(10*this.thrust)*0.8;
-						
+			if (flameSize<0){flameSize = 0}			
 			return [
 				{com:'moveTo',x:-0.5,y:0.3},
 				{com:'quadraticCurveTo',x:0.5,y:0.3,controlPoint:{h:1+flicker1,d:flameSize+flicker2}},
@@ -275,7 +273,7 @@ function vectorGame(game) {
 			var flicker1 = (Math.random()-0.5)/20;
 			var flicker2 = (Math.random())/5;
 			var flameSize = 0.5+(this.thrust*10)*0.75;
-						
+			if (flameSize<0){flameSize = 0}	
 			return [
 				{com:'moveTo',x:-0.5,y:0.3},
 				{com:'quadraticCurveTo',x:0.5,y:0.3,controlPoint:{h:1+flicker1,d:flameSize+flicker2}},

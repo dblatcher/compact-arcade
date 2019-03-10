@@ -8,10 +8,10 @@ function vectorPhysics(game) {
 	game.library.vectorPhysics = {};
 	var VP = game.library.vectorPhysics;
 
-	VP.environment = {
+	Object.assign(game.session.environment, {
 		gravitationalConstant :0.05,
 		airDensity : 0.001
-	};
+	});
 	
 	var runItemActions = function(){
 		var collisions = [];
@@ -453,8 +453,6 @@ function vectorPhysics(game) {
 		body1.queuedMove.x = newVector.x;
 		body1.queuedMove.y = newVector.y;
 
-		
-		
 	};
 	
 	VP.flatBounce = function (impactPoint,thisIsImpactedBody) {
@@ -504,7 +502,7 @@ function vectorPhysics(game) {
 	VP.airResistForce = function(){	
 		if(!this.momentum.m) {return false}
 		var F;
-		var airDensity = VP.environment.airDensity;
+		var airDensity = game.session.environment.airDensity;
 		var dragCoef = 0.01;
 		var area = this.radius * Math.PI;
 				
@@ -518,7 +516,7 @@ function vectorPhysics(game) {
 	
 	VP.globalGravityForce = function() {
 		this.queuedForces.push({
-			m:VP.environment.gravitationalConstant,
+			m:game.session.environment.gravitationalConstant,
 			h:Math.PI*1
 		});
 	};
@@ -539,7 +537,7 @@ function vectorPhysics(game) {
 			if (gravitySource.gravityMaxRange !== false) {
 				if (r-body1.radius-body2.radius>gravitySource.gravityMaxRange) {return {m:0,h:0}};
 			}
-			var m = (VP.environment.gravitationalConstant * ((body1.mass * body2.mass) / Math.pow(r,2)) );
+			var m = (game.session.environment.gravitationalConstant * ((body1.mass * body2.mass) / Math.pow(r,2)) );
 			var h = game.calc.headingFromVector(body1.x - body2.x , body2.y - body1.y);
 			return {m:m,h:h}
 		};
