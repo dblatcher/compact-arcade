@@ -2,7 +2,7 @@
 function vectorGame(game) {
 		
 	var VP = game.library.vectorPhysics;
-	
+	game.soundFiles.push ('zap.mp3','die.mp3');	
 	
 	var reportImpact = function(impactPoint,isReversed) {
 		if (isReversed) return false;
@@ -103,12 +103,130 @@ function vectorGame(game) {
 	game.widgets.push(thrustmeter,mapWidget);
 	
 	
+	function slowDown_AI() {
+		var headingToSlowDown = game.calc.normaliseHeading(game.calc.reverseHeading(this.momentum.h));
+		var headingNow = game.calc.normaliseHeading(this.h);				
+		var turnNeeded = headingToSlowDown - headingNow;
+		if (turnNeeded < -Math.PI) (turnNeeded += (Math.PI*2));
+		if (turnNeeded > Math.PI) (turnNeeded -= (Math.PI*2));
+			
+		if (this.momentum.m > 0.5) {
+			if (turnNeeded > -0.01) {this.command("TURN_CLOCKWISE");}
+			if (turnNeeded <  0.01) {this.command("TURN_ANTICLOCKWISE");}	
+		}
+		
+		if ( Math.abs(turnNeeded) > 0.3 ) {
+			this.command("THRUST_DECREASE");
+		} else {
+			if (this.thrust < 0.5 && this.momentum.m > 0) {this.command("THRUST_INCREASE")}
+		}
+		
+	};
+	
+	function attack_AI(){
+		var target = game.session.player;
+		var headingToAttack = game.calc.headingFromVector(-(this.x-target.x), this.y - target.y);
+		var headingNow = game.calc.normaliseHeading(this.h);				
+		var turnNeeded = headingToAttack - headingNow;
+		if (turnNeeded < -Math.PI) (turnNeeded += (Math.PI*2));
+		if (turnNeeded > Math.PI) (turnNeeded -= (Math.PI*2));
+		if (turnNeeded > -0.025 * Math.PI) {this.command("TURN_CLOCKWISE");}
+		if (turnNeeded <  0.025 * Math.PI) {this.command("TURN_ANTICLOCKWISE");}	
+		
+		var distanceToTarget = game.calc.distance(this, target);
+		
+		if (distanceToTarget > 200 && this.thrust <0.05 && Math.abs(turnNeeded) < 0.5) {
+			this.command("THRUST_INCREASE")
+		} 
+		
+		if ( Math.abs(turnNeeded) < 0.05 && distanceToTarget<300) {
+			this.command("FIRE");		
+		};
+	}
+	
+	function findThreatsTo(ship){
+		var threats = [], item, riskLevel;
+		
+		for (var i = 0; i < game.session.items.length; i++) {
+			item = game.session.items[i];
+			if (item === ship){continue;}
+			riskLevel = determineRisk(item);
+			if (riskLevel) {
+				threats.push({item:item,risk:riskLevel});
+			}
+		}
+		threats.sort(function(a,b) {return b.risk - a.risk });
+		return threats;
+		
+		function determineRisk(item){
+			if (item.type !== "missile" && item.type !== "rock" && item.type !== "solidRock") {return 0}
+			
+			var bearing = game.calc.headingFromVector(-(item.x-ship.x), item.y - ship.y);
+			
+			var course = game.calc.normaliseHeading(item.momentum.h);				
+			var turnNeeded = bearing - course;
+			if (turnNeeded < -Math.PI) (turnNeeded += (Math.PI*2));
+			if (turnNeeded > Math.PI) (turnNeeded -= (Math.PI*2));
+			
+			var coliding;
+			if (Math.abs(turnNeeded) > Math.PI/2 ) {coliding = 0} else {
+				coliding = Math.PI/2 - Math.abs(turnNeeded)
+			}
+			
+			var distance = game.calc.distance (item,ship);
+			var speed = item.momentum.m;
+			
+			var danger;
+			if (item.type === "missile") {danger = 10} else {danger = 100}
+			
+			return danger * speed * coliding * coliding / distance;
+		}
+		
+	}
+	
+	function evadeThreat_AI() {
+		var threats = findThreatsTo(this);
+		
+		if (threats.length>0) {			
+			//console.log (threats[0].item.color + ' '+threats[0].item.type, threats[0].risk)
+			if (threats[0].risk > 0.05){
+				
+				var escapeCourse1 = game.calc.normaliseHeading(threats[0].item.momentum.h + Math.PI/2);
+				var turnNeeded1 = escapeCourse1 - this.h;
+				if (turnNeeded1 < -Math.PI) (turnNeeded1 += (Math.PI*2));
+				if (turnNeeded1 > Math.PI) (turnNeeded1 -= (Math.PI*2));
+				
+				var escapeCourse2 = game.calc.normaliseHeading(threats[0].item.momentum.h - Math.PI/2);
+				var turnNeeded2 = escapeCourse2 - this.h;
+				if (turnNeeded2 < -Math.PI) (turnNeeded2 += (Math.PI*2));
+				if (turnNeeded2 > Math.PI) (turnNeeded2 -= (Math.PI*2));	
+				
+				var turn = Math.abs(turnNeeded1) < Math.abs(turnNeeded2) ? turnNeeded1 : turnNeeded2;
+				
+				if (Math.abs(turn) > 0 ) {
+					if ( turn < 0 ){this.command("TURN_ANTICLOCKWISE")} else {this.command("TURN_CLOCKWISE")}
+				}
+				
+				if (this.thrust <0.1 && Math.abs(turn) < 0.5) {
+					this.command("THRUST_INCREASE")
+				} 
+				
+			} else {
+				slowDown_AI.apply(this,[]);
+			}
+		}
+		
+	}
+	
 	game.level = [
 		{width:1000, height:1000,
 			items :[
-				{func:"fancyShip", spec:{x:150,y:600,h:0.0*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
+				{func:"roundShip", spec:{x:150,y:600,h:0.0*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
 				{func:'rock', spec:{x:200,y:250,h:0,v:0,radius:90,density:2,color:'blue', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
 				{func:'rock', spec:{x:400,y:250,h:0,v:0,radius:90,density:1,color:'green', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
+				{func:"ship", spec:{x:850,y:600,h:0.2*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0.2,color:'purple', behaviour:slowDown_AI,momentum:{h:(Math.PI*1), m:6}}},		
+				{func:"ship", spec:{x:650,y:900,h:0.2*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'purple', behaviour:evadeThreat_AI,momentum:{h:(Math.PI*1), m:0}}},
+{func:'bullet', spec:{x:200,y:900,h:0,v:0,radius:20,density:1,color:'brown', momentum:{h:(Math.PI*0.51), m:1} },isPlayer:false},				
 			],
 			effects : [
 			],
@@ -117,7 +235,7 @@ function vectorGame(game) {
 				airDensity:0
 			},
 			victoryCondition : function() {
-				return (game.session.items.filter(function(item){return(item.type==='rock')}).length === 0);
+				return (game.session.items.filter(function(item){return(item.type==='rock')}).length === -1);
 			}
 		},
 		{width:1200, height:1200,
@@ -148,17 +266,15 @@ function vectorGame(game) {
 
 	game.reactToControls = function(){
 			var ship = this.session.player;
-			if (this.keyMap["ArrowLeft"])  {ship.h -= 0.025 * Math.PI;};
-			if (this.keyMap["ArrowRight"]) {ship.h += 0.025 * Math.PI;};
-			if (this.keyMap["ArrowUp"]) {ship.thrust += 0.03 };
-			if (this.keyMap["ArrowDown"]) {ship.thrust -= 0.06 };	
+			if (this.keyMap["ArrowLeft"])  {ship.command("TURN_ANTICLOCKWISE")};
+			if (this.keyMap["ArrowRight"]) {ship.command("TURN_CLOCKWISE")};
+			if (this.keyMap[" "]) {ship.command("FIRE");this.keyMap[" "] = false;};			
+			if (this.keyMap["ArrowUp"]) {ship.command("THRUST_INCREASE") };
+			if (this.keyMap["ArrowDown"]) {ship.command("THRUST_DECREASE")};	
+			
 			if (this.keyMap["z"]) {ship.momentum.m = 0.0 };	
 			if (this.keyMap["x"]) {ship.h = ship.momentum.h;};
 			if (this.keyMap["c"]) {ship.h = game.calc.reverseHeading(ship.momentum.h);};		
-			if (this.keyMap[" "]) {		
-				ship.launchProjectile();
-				this.keyMap[" "] = false;
-			};			
 		}
 	
 	game.make.ground = function(spec){
@@ -206,10 +322,22 @@ function vectorGame(game) {
 		game.library.vectorGraphics.assignVectorRender(that,spec);
 		game.library.vectorPhysics.assignVectorPhysics(that,spec);
 		
-		that.automaticActions.push(VP.thrustForce);
+		that.maxSpeed = spec.maxSpeed || 20;
+		
+		that.coolDownLevel = 0;
+		that.coolDownDelay = 15;
+		var coolDown = function(){
+			if (this.coolDownLevel){this.coolDownLevel--};
+		}
+		
+		
+		that.automaticActions.push(VP.thrustForce,coolDown);
+		
+		if (spec.behaviour){that.automaticActions.push(spec.behaviour)}
 		
 		that.hit.rock = function(impactPoint,isReversed){
-			VP.flatBounce(impactPoint,isReversed);	
+			VP.flatBounce(impactPoint,isReversed);
+			game.sound.play("die.mp3");
 			game.session.effect.push(game.makeEffect.expandingRing({x:impactPoint.x, y:impactPoint.y, lastFrame:20}));
 			this.dead = true;
 		};
@@ -217,6 +345,31 @@ function vectorGame(game) {
 		
 		that.hit.ground = game.library.vectorPhysics.reflectForceOffFlatSurface;
 		that.hit.blackHole = getSuckedIn;
+		
+		
+		that.command = function(commandName, commandOptions){
+			switch (commandName) {
+			case "FIRE":
+				if(this.coolDownLevel === 0) {
+					this.launchProjectile();
+					game.sound.play("zap.mp3");
+					this.coolDownLevel = this.coolDownDelay;
+				}
+				break;
+			case "THRUST_INCREASE":
+				this.thrust += 0.03 
+				break;
+			case "THRUST_DECREASE":
+				this.thrust -= 0.06 
+				break;
+			case "TURN_ANTICLOCKWISE":
+				this.h -= 0.025 * Math.PI;
+				break;
+			case "TURN_CLOCKWISE":
+				this.h += 0.025 * Math.PI;
+				break;
+			};
+		};
 		
 		that.draw = function(){
 			var flicker1 = (Math.random()-0.5)/20;
@@ -253,7 +406,7 @@ function vectorGame(game) {
 				momentum:projectileMomentum,
 				maxSpeed:30,
 				radius:5,
-				color:'red',
+				color:this.color,
 				mass:4,
 				lifeSpan:50
 			};
@@ -304,6 +457,70 @@ function vectorGame(game) {
 		
 		return that;
 	};
+		
+	game.make.roundShip = function(spec) {
+		var that = game.make.ship(spec);
+		
+		that.draw = function() {
+			var flickerY1 = (Math.random())/4;
+			var flickerY2 = (Math.random())/4;
+			var flickerX1 = (Math.random()-0.5)/5;
+			var flickerX2 = (Math.random()-0.5)/5;
+			
+			var flameSize = this.thrust*3+0.3;
+			return [
+	
+				{com:'beginPath'},
+				{com:'moveTo',x:-0.7,y:0.6},
+				{com:'quadraticCurveTo',x:-0.3,y:0.6,controlPoint:{y:flickerY1+flameSize,x:-0.5+flickerX1}},
+				{com:'fillStyle', colors:[{v:0, color:'white'},{v:0.3, color:'yellow'},{v:0.75, color:'red'}], start:0.1, end:flameSize+flickerY1 },				
+				{com:'fill'},	
+				
+				{com:'beginPath'},
+				{com:'moveTo',x:0.3,y:0.6},
+				{com:'quadraticCurveTo',x:0.7,y:0.6,controlPoint:{y:flickerY2+flameSize,x:0.5+flickerX2}},
+				{com:'fillStyle', colors:[{v:0, color:'white'},{v:0.3, color:'yellow'},{v:0.75, color:'red'}], start:0.1, end:flameSize+flickerY2 },				
+				{com:'fill'},	
+				
+				{com:'beginPath'},
+				{com:'arc', x:0,y:0,r:1,startAngle:0.9, endAngle:0.1},
+				{com:'closePath'},
+				{com:'fillStyle',v:this.color},
+				{com:'fill'},
+				
+				{com:'beginPath'},
+				{com:'arc', x:0,y:-0.2,r:0.5,startAngle:1, endAngle:0},
+				{com:'closePath'},
+				{com:'fillStyle', v:'black'},
+				{com:'fill'},
+				
+				{com:'beginPath'},
+				{com:'strokeStyle', v:this.color},
+				{com:'fillStyle', v:'gray'},
+				{com:'moveTo', x:-0.7 ,y:0.3 },
+				{com:'lineTo', x:-0.3 ,y:0.3 },
+				{com:'lineTo', x:-0.3 ,y:0.6 },
+				{com:'lineTo', x:-0.7 ,y:0.6 },
+				{com:'closePath'},
+				{com:'stroke'},
+				{com:'fill'},
+
+				{com:'beginPath'},
+				{com:'strokeStyle', v:this.color},
+				{com:'fillStyle', v:'gray'},
+				{com:'moveTo', x:0.7 ,y:0.3 },
+				{com:'lineTo', x:0.3 ,y:0.3 },
+				{com:'lineTo', x:0.3 ,y:0.6 },
+				{com:'lineTo', x:0.7 ,y:0.6 },
+				{com:'closePath'},
+				{com:'stroke'},
+				{com:'fill'},
+				
+			]
+		};
+		
+		return that;
+	};	
 		
 	game.make.rock = function(spec) {
 		var that = game.make.roundItem(spec);

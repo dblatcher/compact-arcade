@@ -40,6 +40,10 @@ function vectorCalculations(game,options) {
 				}
 			}
 	
+	game.calc.normaliseHeading = function(h){
+		return h%(Math.PI*2) > 0 ? h%(Math.PI*2): h%(Math.PI*2)+(Math.PI*2)
+	} 
+	
 	game.calc.reflectHeading = function (heading,wallAngle) {
 		var reflect = 2*wallAngle - heading;
 		if (reflect < (Math.PI)*0) {reflect += (Math.PI)*2};
