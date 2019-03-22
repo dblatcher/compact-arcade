@@ -112,29 +112,49 @@ console.log('running spaceShooter')
 	}
 
 	game.reactToControls = function() {
-		var player = this.session.player;
+		var player = this.session.player, touch, buttonsPressed = [];
 
 		if (player.action === "die") {return false};
+		
+		for (var i=0; i<this.ongoingTouches.length; i++) {
+			touch = this.ongoingTouches[i];
+			if (touch.status.button) {
+				console.log(touch.status.button.name);
+				buttonsPressed.push(touch.status.button.name);
+				if (touch.status.button.type === "click") {touch.status.button = null;}
+			};
+		};
+		if (game.swipeDelay.x){game.swipeDelay.x--}
+		if (game.swipeDelay.y){game.swipeDelay.y--}
+		
+		var control = {
+			left: (this.keyMap["ArrowLeft"] || this.swipeDirection.x==-1),
+			right: (this.keyMap["ArrowRight"] || this.swipeDirection.x==1),
+			up: (this.keyMap["ArrowUp"] || this.swipeDirection.y==-1),
+			down: (this.keyMap["ArrowDown"] || this.swipeDirection.y==1),
+			fire: (this.keyMap[" "] || buttonsPressed.indexOf('fire')>-1)
+		}
+		
 		player.setAction('slow');
-		if (this.keyMap["ArrowLeft"]) {player.forwardSpeed = -2};
-		if (this.keyMap["ArrowRight"]) {
+		if (control.left) {player.forwardSpeed = -2};
+		if (control.right) {
 			player.forwardSpeed = 8;
 			player.setAction('fast');
 		};	
-		if (this.keyMap["ArrowUp"]) {player.upSpeed = 4};
-		if (this.keyMap["ArrowDown"]) {player.upSpeed = -4};
+		if (control.up) {player.upSpeed = 4};
+		if (control.down) {player.upSpeed = -4};
 
-		if (!this.keyMap["ArrowLeft"] && !this.keyMap["ArrowRight"])
-			{player.forwardSpeed = 0};
-		if (!this.keyMap["ArrowDown"] && !this.keyMap["ArrowUp"])
-			{player.upSpeed = 0}
+		if (!control.left && !control.right) {player.forwardSpeed = 0};
+		if (!control.down && !control.up) {player.upSpeed = 0}
 		
-		if (this.keyMap[" "]) {
+		if (control.fire ) {
 			this.keyMap[" "] = false;
 			this.session.items.push(
 				this.make.bullet({x:player.x+60, y:player.y + player.height/2})
 			);
 		};
+		
+
 		
 	};
 
