@@ -7,7 +7,6 @@ function createGame (disks, options) {
 	options.cyclesBetweenDeathAndReset = options.cyclesBetweenDeathAndReset || 40;
 	options.cyclesBetweenLevelEndAndReset = options.cyclesBetweenLevelEndAndReset || 40;
 	options.cyclesForLevelScreen = options.cyclesForLevelScreen || 50;
-	options.enableTouch = options.enableTouch || true;
 
 	if (typeof(options.bottomOfScreenIsZeroY) === 'undefined' ) {
 		options.bottomOfScreenIsZeroY = true;
@@ -302,11 +301,22 @@ function createGame (disks, options) {
 				return key;
 			}
 		}
+	
+		if (outputs.enableTouch) {		
+			game.enableTouch = true;
+			this.canvasElement.addEventListener("touchstart", game.touch.handleStart, false);
+			this.canvasElement.addEventListener("touchend", game.touch.handleEnd, false);
+			this.canvasElement.addEventListener("touchcancel", game.touch.handleCancel, false);
+			this.canvasElement.addEventListener("touchmove", game.touch.handleMove, false);
+			
+			if (this.scoreElement) {
+				this.scoreElement.addEventListener("touchstart", game.touch.handleStart, false);
+				this.scoreElement.addEventListener("touchend", game.touch.handleEnd, false);
+				this.scoreElement.addEventListener("touchcancel", game.touch.handleCancel, false);
+				this.scoreElement.addEventListener("touchmove", game.touch.handleMove, false);
+			}
+		}
 		
-		this.canvasElement.addEventListener("touchstart", game.touch.handleStart, false);
-		this.canvasElement.addEventListener("touchend", game.touch.handleEnd, false);
-		this.canvasElement.addEventListener("touchcancel", game.touch.handleCancel, false);
-		this.canvasElement.addEventListener("touchmove", game.touch.handleMove, false);
 		console.log("initialized.");
 		
 		
@@ -412,8 +422,10 @@ function createGame (disks, options) {
 				}			
 				break;
 			
-			case 'titleScreen' :
-				if (this.keyMap[" "]) {	game.setUpLevel(0);	}
+			case 'titleScreen' :			
+				if (this.keyMap[" "] || game.ongoingTouches.length ) {
+					game.setUpLevel(0);	
+				}
 				break
 		};
 				
@@ -470,7 +482,13 @@ function createGame (disks, options) {
 		ctx.textBaseline="top";
 
 		ctx.fillText('Default Title Screen' , c.width/2, c.height/4);
-		ctx.fillText('Press space to start' , c.width/2, c.height/2);
+		
+		if (game.enableTouch) {
+			ctx.fillText('Press space or touch to start' , c.width/2, c.height/2);
+		} else {
+			ctx.fillText('Press space to start' , c.width/2, c.height/2);
+		}
+		
 		ctx.strokeStyle = "red";
 		ctx.strokeRect(40, 80, c.width-80, c.height-160);
 
@@ -556,7 +574,7 @@ function createGame (disks, options) {
 				if (typeof game.widgets[i] === 'object') {game.widgets[i].render(c,ctx,plotOffset)}
 			};
 			
-			if (options.enableTouch) {
+			if (game.enableTouch) {
 				for (i=0; i<game.touchButtons.length;i++) {
 					ctx.beginPath();
 					ctx.strokeStyle = "white";
