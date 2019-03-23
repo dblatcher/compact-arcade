@@ -387,7 +387,9 @@ function createGame (disks, options) {
 		var timeStamp = new Date();
 		
 		switch(this.session.gameStatus) {
-			case 'play' :
+			case 'play' :			
+				if (game.swipeDelay.x){game.swipeDelay.x--}
+				if (game.swipeDelay.y){game.swipeDelay.y--}
 				if (this.session.player.dead === false) {this.reactToControls()};
 				this.runItemActions();		
 				if (game.cycleCount % game.numberOfCyclesBetweenCheckingLevelEnds === 0 ) {		
