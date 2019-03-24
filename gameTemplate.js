@@ -220,7 +220,8 @@ function createGame (disks, options) {
 		handleMove : function(evt){
 			evt.preventDefault();
 			var touches = evt.changedTouches, oldPosition,newPosition;
-
+			var moveThreshold = 10;
+			
 			for (var i = 0; i < touches.length; i++) {
 				var idx = game.touch.indexById(touches[i].identifier);
 				if (idx >= 0) {								
@@ -232,12 +233,12 @@ function createGame (disks, options) {
 					
 					if (touches[i].status.isDirectional) {
 						if (!game.swipeDelay.x) {
-							if (touches[i].status.xMove > 5 && game.swipeDirection.x < 1 ) {game.swipeDirection.x++;game.swipeDelay.x = game.swipeDelay.pause;}
-							if (touches[i].status.xMove <-5 && game.swipeDirection.x >-1 ) {game.swipeDirection.x--;game.swipeDelay.x = game.swipeDelay.pause;}
+							if (touches[i].status.xMove > moveThreshold && game.swipeDirection.x < 1 ) {game.swipeDirection.x++;game.swipeDelay.x = game.swipeDelay.pause;}
+							if (touches[i].status.xMove <-moveThreshold && game.swipeDirection.x >-1 ) {game.swipeDirection.x--;game.swipeDelay.x = game.swipeDelay.pause;}
 						}
 						if (!game.swipeDelay.y) {
-						if (touches[i].status.yMove > 5 && game.swipeDirection.y < 1 ) {game.swipeDirection.y++;game.swipeDelay.y = game.swipeDelay.pause;}
-						if (touches[i].status.yMove <-5 && game.swipeDirection.y >-1 ) {game.swipeDirection.y--;game.swipeDelay.y = game.swipeDelay.pause;}
+						if (touches[i].status.yMove > moveThreshold && game.swipeDirection.y < 1 ) {game.swipeDirection.y++;game.swipeDelay.y = game.swipeDelay.pause;}
+						if (touches[i].status.yMove <-moveThreshold && game.swipeDirection.y >-1 ) {game.swipeDirection.y--;game.swipeDelay.y = game.swipeDelay.pause;}
 						}
 					};
 					
@@ -394,13 +395,29 @@ function createGame (disks, options) {
 	};
 	
 	game.refresh = function() {
-		var timeStamp = new Date();
+		var timeStamp = new Date(),buttonsPressed = [];
 		
 		switch(this.session.gameStatus) {
 			case 'play' :			
-				if (game.swipeDelay.x){game.swipeDelay.x--}
-				if (game.swipeDelay.y){game.swipeDelay.y--}
-				if (this.session.player.dead === false) {this.reactToControls()};
+				if (this.session.player.dead === false) {
+					if (game.enableTouch) {
+						if (game.swipeDelay.x){game.swipeDelay.x--}
+						if (game.swipeDelay.y){game.swipeDelay.y--}
+
+						var touch;
+						for (var i=0; i<this.ongoingTouches.length; i++) {
+							touch = this.ongoingTouches[i];
+							if (touch.status.button) {
+								console.log(touch.status.button.name);
+								buttonsPressed.push(touch.status.button.name);
+								if (touch.status.button.type === "click") {touch.status.button = null;}
+							};
+						};
+						
+					}
+					
+					this.reactToControls(buttonsPressed);
+				}
 				this.runItemActions();		
 				if (game.cycleCount % game.numberOfCyclesBetweenCheckingLevelEnds === 0 ) {		
 					if (this.level[this.session.currentLevel].victoryCondition() === true && !game.session.waitingToReset) {
@@ -583,11 +600,22 @@ function createGame (disks, options) {
 				}
 				ctx.beginPath();
 				ctx.strokeStyle = "white";
-				ctx.rect(10,940,50,50);
-				ctx.moveTo(35,965);
-				ctx.lineTo(35+(game.swipeDirection.x * 30),965+ (game.swipeDirection.y *30));
-				ctx.arc(35+(game.swipeDirection.x * 30),965+ (game.swipeDirection.y *30),10,0,Math.PI*2);
+				ctx.rect  (20,930,50,50);
+				ctx.moveTo(45,955);
+				ctx.lineTo(45+(game.swipeDirection.x * 30),955+ (game.swipeDirection.y *30));
+				ctx.moveTo(45+(game.swipeDirection.x * 30)+10,955+ (game.swipeDirection.y *30));
+				ctx.arc   (45+(game.swipeDirection.x * 30),955+ (game.swipeDirection.y *30),10,0,Math.PI*2);
 				ctx.stroke()
+				
+				ctx.beginPath();
+				ctx.strokeStyle = "white";
+				ctx.rect  (920,30,50,50);
+				ctx.moveTo(945,55);
+				ctx.lineTo(945+(game.swipeDirection.x * 30),55+ (game.swipeDirection.y *30));
+				ctx.moveTo(945+(game.swipeDirection.x * 30)+10,55+ (game.swipeDirection.y *30));
+				ctx.arc   (945+(game.swipeDirection.x * 30),55+ (game.swipeDirection.y *30),10,0,Math.PI*2);
+				ctx.stroke()
+				
 			}
 			
 			if (this.session.waitingToReset == 'gameOver') {this.renderGameOverMessage(c,ctx,plotOffset)}

@@ -111,22 +111,10 @@ console.log('running spaceShooter')
 		
 	}
 
-	game.reactToControls = function() {
-		var player = this.session.player, buttonsPressed = [];
-
+	game.reactToControls = function(buttonsPressed) {
+		var player = this.session.player;
 		if (player.action === "die") {return false};
-		
-		var touch;
-		for (var i=0; i<this.ongoingTouches.length; i++) {
-			touch = this.ongoingTouches[i];
-			if (touch.status.button) {
-				console.log(touch.status.button.name);
-				buttonsPressed.push(touch.status.button.name);
-				if (touch.status.button.type === "click") {touch.status.button = null;}
-			};
-		};
-
-		
+			
 		var control = {
 			left: (this.keyMap["ArrowLeft"] || this.swipeDirection.x==-1),
 			right: (this.keyMap["ArrowRight"] || this.swipeDirection.x==1),
