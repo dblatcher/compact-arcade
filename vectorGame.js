@@ -264,18 +264,28 @@ function vectorGame(game) {
 		
 	];
 
-	game.reactToControls = function(){
-			var ship = this.session.player;
-			if (this.keyMap["ArrowLeft"])  {ship.command("TURN_ANTICLOCKWISE")};
-			if (this.keyMap["ArrowRight"]) {ship.command("TURN_CLOCKWISE")};
-			if (this.keyMap[" "]) {ship.command("FIRE");this.keyMap[" "] = false;};			
-			if (this.keyMap["ArrowUp"]) {ship.command("THRUST_INCREASE") };
-			if (this.keyMap["ArrowDown"]) {ship.command("THRUST_DECREASE")};	
-			
-			if (this.keyMap["z"]) {ship.momentum.m = 0.0 };	
-			if (this.keyMap["x"]) {ship.h = ship.momentum.h;};
-			if (this.keyMap["c"]) {ship.h = game.calc.reverseHeading(ship.momentum.h);};		
+	game.reactToControls = function(buttonsPressed){
+		
+		var control = {
+			left: (this.keyMap["ArrowLeft"] || this.swipeDirection.x==-1),
+			right: (this.keyMap["ArrowRight"] || this.swipeDirection.x==1),
+			up: (this.keyMap["ArrowUp"] || this.swipeDirection.y==-1),
+			down: (this.keyMap["ArrowDown"] || this.swipeDirection.y==1),
+			fire: (this.keyMap[" "] || buttonsPressed.indexOf('fire')>-1)
 		}
+		
+		
+		var ship = this.session.player;
+		if (control.left)  {ship.command("TURN_ANTICLOCKWISE")};
+		if (control.right) {ship.command("TURN_CLOCKWISE")};
+		if (control.fire) {ship.command("FIRE");this.keyMap[" "] = false;};			
+		if (control.up) {ship.command("THRUST_INCREASE") };
+		if (control.down) {ship.command("THRUST_DECREASE")};	
+		
+		if (this.keyMap["z"]) {ship.momentum.m = 0.0 };	
+		if (this.keyMap["x"]) {ship.h = ship.momentum.h;};
+		if (this.keyMap["c"]) {ship.h = game.calc.reverseHeading(ship.momentum.h);};		
+	}
 	
 	game.make.ground = function(spec){
 		var that=game.make.item(spec);
