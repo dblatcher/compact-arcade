@@ -145,24 +145,24 @@ function vectorGame(game) {
 	}
 	
 	function findThreatsTo(ship){
-		var threats = [], item, riskLevel;
+		var threats = [], item, riskLevel, collideChance;
 		
 		for (var i = 0; i < game.session.items.length; i++) {
 			item = game.session.items[i];
 			if (item === ship){continue;}
+			if (item.type !== "missile" && item.type !== "rock" && item.type !== "solidRock") {continue}
 			riskLevel = determineRisk(item);
-			if (riskLevel) {
-				threats.push({item:item,risk:riskLevel});
+			collideChance = determineCollideChance(item);
+			
+			if (riskLevel || collideChance) {
+				threats.push({item:item,risk:riskLevel, coliding:collideChance});
 			}
 		}
-		threats.sort(function(a,b) {return b.risk - a.risk });
+		threats.sort(function(a,b) {return Math.max(b.risk, b.collideChance) - Math.max(a.risk, a.collideChance) });
 		return threats;
 		
 		function determineRisk(item){
-			if (item.type !== "missile" && item.type !== "rock" && item.type !== "solidRock") {return 0}
-			
 			var bearing = game.calc.headingFromVector(-(item.x-ship.x), item.y - ship.y);
-			
 			var course = game.calc.normaliseHeading(item.momentum.h);				
 			var turnNeeded = bearing - course;
 			if (turnNeeded < -Math.PI) (turnNeeded += (Math.PI*2));
@@ -170,18 +170,48 @@ function vectorGame(game) {
 			
 			var coliding;
 			if (Math.abs(turnNeeded) > Math.PI/2 ) {coliding = 0} else {
-				coliding = Math.PI/2 - Math.abs(turnNeeded)
+				coliding = (Math.PI/2 - Math.abs(turnNeeded)) / (Math.PI/2);
 			}
 			
 			var distance = game.calc.distance (item,ship);
 			var speed = item.momentum.m;
 			
-			var danger;
-			if (item.type === "missile") {danger = 10} else {danger = 100}
-			
+			var danger = 100;
+			if (item.type === "missile") {danger = 10}
 			return danger * speed * coliding * coliding / distance;
 		}
 		
+		function determineCollideChance (item) {
+			var bearing = game.calc.headingFromVector(-(ship.x-item.x), ship.y - item.y);
+			var course = game.calc.normaliseHeading(ship.momentum.h);
+			var divergence = bearing - course;
+			if (divergence < -Math.PI) (divergence += (Math.PI*2));
+			if (divergence > Math.PI) (divergence -= (Math.PI*2));
+			
+			var distance = game.calc.distance (item,ship);
+			var coliding;
+			if (Math.abs(divergence) > Math.PI/2 ) {coliding = 0} else {
+				
+				var directPathVector = game.calc.vectorFromForces([{m:distance,h:bearing}]);
+				var actualPathVector = game.calc.vectorFromForces([{m:distance,h:course}]);
+				
+				var divergenceDistance = game.calc.distance(
+					{x: ship.x + directPathVector.x, y:ship.y - directPathVector.y},
+					{x: ship.x + actualPathVector.x, y:ship.y - actualPathVector.y}
+				)
+				
+				if (divergenceDistance < item.radius + ship.radius) {
+					coliding = 1
+				} else {
+					coliding = 0;
+				}
+				var speed = ship.momentum.m;
+			}
+			
+			var danger = 100;
+			if (item.type === "missile") {danger = 10}
+			return danger * speed * coliding * coliding / distance;
+		}
 	}
 	
 	function evadeThreat_AI() {
@@ -189,7 +219,8 @@ function vectorGame(game) {
 		
 		if (threats.length>0) {			
 			//console.log (threats[0].item.color + ' '+threats[0].item.type, threats[0].risk)
-			if (threats[0].risk > 0.05){
+			
+			if (threats[0].risk > 0.1){
 				
 				var escapeCourse1 = game.calc.normaliseHeading(threats[0].item.momentum.h + Math.PI/2);
 				var turnNeeded1 = escapeCourse1 - this.h;
@@ -211,10 +242,37 @@ function vectorGame(game) {
 					this.command("THRUST_INCREASE")
 				} 
 				
-			} else {
-				slowDown_AI.apply(this,[]);
+			} 
+		
+			if (threats[0].coliding > 0 ) {
+		
+				var escapeCourse1 = game.calc.normaliseHeading(this.momentum.h + Math.PI/2);
+				var turnNeeded1 = escapeCourse1 - this.h;
+				if (turnNeeded1 < -Math.PI) (turnNeeded1 += (Math.PI*2));
+				if (turnNeeded1 > Math.PI) (turnNeeded1 -= (Math.PI*2));
+				
+				var escapeCourse2 = game.calc.normaliseHeading(this.momentum.h - Math.PI/2);
+				var turnNeeded2 = escapeCourse2 - this.h;
+				if (turnNeeded2 < -Math.PI) (turnNeeded2 += (Math.PI*2));
+				if (turnNeeded2 > Math.PI) (turnNeeded2 -= (Math.PI*2));	
+				
+				var turn = Math.abs(turnNeeded1) < Math.abs(turnNeeded2) ? turnNeeded1 : turnNeeded2;
+				
+				if (Math.abs(turn) > 0 ) {
+					if ( turn < 0 ){this.command("TURN_ANTICLOCKWISE")} else {this.command("TURN_CLOCKWISE")}
+				}
+				
+				if (this.thrust <0.1 && Math.abs(turn) < 0.5) {
+					this.command("THRUST_INCREASE")
+				}
+		
+		
 			}
-		}
+			
+		
+		} else {
+			slowDown_AI.apply(this,[])
+		};
 		
 	}
 	
@@ -222,11 +280,11 @@ function vectorGame(game) {
 		{width:1000, height:1000,
 			items :[
 				{func:"roundShip", spec:{x:150,y:600,h:0.0*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
-				{func:'rock', spec:{x:200,y:250,h:0,v:0,radius:90,density:2,color:'blue', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
-				{func:'rock', spec:{x:400,y:250,h:0,v:0,radius:90,density:1,color:'green', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
+				{func:'rock', spec:{x:200,y:400,h:0,v:0,radius:90,density:2,color:'blue', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
+			//	{func:'rock', spec:{x:400,y:250,h:0,v:0,radius:90,density:1,color:'green', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
 				{func:"ship", spec:{x:850,y:600,h:0.2*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0.2,color:'purple', behaviour:slowDown_AI,momentum:{h:(Math.PI*1), m:6}}},		
-				{func:"ship", spec:{x:650,y:900,h:0.2*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'purple', behaviour:evadeThreat_AI,momentum:{h:(Math.PI*1), m:0}}},
-{func:'bullet', spec:{x:200,y:900,h:0,v:0,radius:20,density:1,color:'brown', momentum:{h:(Math.PI*0.51), m:1} },isPlayer:false},				
+				{func:"ship", spec:{x:950,y:450,h:0.2*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'purple', behaviour:evadeThreat_AI,momentum:{h:(Math.PI*1.5), m:3}}},
+
 			],
 			effects : [
 			],
@@ -235,7 +293,7 @@ function vectorGame(game) {
 				airDensity:0
 			},
 			victoryCondition : function() {
-				return (game.session.items.filter(function(item){return(item.type==='rock')}).length === -1);
+				return (game.session.items.filter(function(item){return(item.type==='rock')}).length === 0);
 			}
 		},
 		{width:1200, height:1200,
