@@ -403,7 +403,6 @@ function createGame (disks, options) {
 					if (game.enableTouch) {
 						if (game.swipeDelay.x){game.swipeDelay.x--}
 						if (game.swipeDelay.y){game.swipeDelay.y--}
-
 						var touch;
 						for (var i=0; i<this.ongoingTouches.length; i++) {
 							touch = this.ongoingTouches[i];
@@ -413,7 +412,6 @@ function createGame (disks, options) {
 								if (touch.status.button.type === "click") {touch.status.button = null;}
 							};
 						};
-						
 					}
 					
 					this.reactToControls(buttonsPressed);
