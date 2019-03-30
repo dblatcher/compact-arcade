@@ -10,7 +10,8 @@ function vectorPhysics(game) {
 
 	Object.assign(game.session.environment, {
 		gravitationalConstant :0.05,
-		airDensity : 0.001
+		airDensity : 0.001,
+		localGravity: 0
 	});
 	
 	var runItemActions = function(){
@@ -516,7 +517,7 @@ function vectorPhysics(game) {
 	
 	VP.globalGravityForce = function() {
 		this.queuedForces.push({
-			m:game.session.environment.gravitationalConstant,
+			m:game.session.environment.gravitationalConstant * game.session.environment.localGravity,
 			h:Math.PI*1
 		});
 	};
