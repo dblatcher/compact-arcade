@@ -277,6 +277,47 @@ function vectorGame(game) {
 	}
 	
 	game.level = [
+		{width:1000, height:1500,
+			items:[
+				{func:"roundShip", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50,
+				v:0,radius:20,elasticity:0.5,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
+				, isPlayer:true},		
+				{func:'solidRock', spec:{x:800,y:950,h:0,v:0,radius:50, mass:20,color:'gray', momentum:{h:(Math.PI*1.5), m:0} }},
+				{func:"ground", spec:{x:0,y:1450,width:1000,height:50}},
+				{func:"landingZone", spec:{x:500,y:1400,width:300,height:50, isGoal:true,color:'green'}},
+				],
+			effects:[],
+			environment : {
+				gravitationalConstant: 0.1,
+				airDensity: 0.01,
+				localGravity:1
+			},
+			victoryCondition: function () {
+				return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0);
+			}
+		},
+		{width:1000, height:1500,
+			items:[
+				{func:"roundShip", spec:{x:50,y:800,h:0.0*Math.PI, mass: 50,
+				v:0,radius:20,elasticity:0.5,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
+				, isPlayer:true},		
+				{func:"ground", spec:{x:0,y:1450,width:1000,height:50}},
+				{func:"ground", spec:{x:0,y:1500-350,width:200,height:300}},
+				{func:"ground", spec:{x:200,y:1500-350,width:150,height:50}},
+				{func:"ground", spec:{x:800,y:1500-650,width:200,height:600}},
+				{func:"ground", spec:{x:750,y:1500-100,width:50,height:50}},
+				{func:"landingZone", spec:{x:300,y:1400,width:300,height:50, isGoal:true,color:'green'}},
+				],
+			effects:[],
+			environment : {
+				gravitationalConstant: 0.1,
+				airDensity: 0.04,
+				localGravity:1.5
+			},
+			victoryCondition: function () {
+				return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0);
+			}
+		},		
 		{width:1000, height:1000,
 			items :[
 				{func:"roundShip", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
@@ -289,7 +330,8 @@ function vectorGame(game) {
 			],
 			environment :{
 				gravitationalConstant:0.1,
-				airDensity:0
+				airDensity: 0,
+				localGravity: 0,
 			},
 			victoryCondition : function() {
 				return (game.session.items.filter(function(item){return(item.type==='rock')}).length === 0);
@@ -303,11 +345,9 @@ function vectorGame(game) {
 				{func:'blackHole', spec:{x:500,y:500,h:0,v:0,radius:10, mass:2500, gravityMaxRange:250,color:'purple' }},
 			
 				{func:'solidRock', spec:{x:200,y:250,h:0,v:0,radius:90, mass:60,color:'gray', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
-				{func:'solidRock', spec:{x:800,y:950,h:0,v:0,radius:40, mass:20,color:'gray', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
 				{func:'solidRock', spec:{x:200,y:950,h:0,v:0,radius:40, mass:20,color:'gray', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
 				{func:'solidRock', spec:{x:700,y:150,h:0,v:0,radius:40, mass:20,color:'gray', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
 			
-				{func:"ground", spec:{x:0,y:1150,width:1200,height:50}},
 				{func:"ground", spec:{x:0,y:0,width:1200,height:50}},
 				{func:"ground", spec:{x:0,y:0,width:50,height:1200}},
 				{func:"ground", spec:{x:1150,y:0,width:50,height:1200}},
@@ -349,6 +389,29 @@ function vectorGame(game) {
 		var that=game.make.item(spec);
 		that.type='ground';	
 		return that;
+	}
+	
+	game.make.landingZone = function(spec){
+		var that = game.make.ground(spec);
+		that.type='ground';
+		that.isGoal = typeof spec.isGoal === "undefined" ? true : spec.isGoal;
+		that.playerHasLanded = false;
+		
+		that.checkIfPlayerLanded = function () {
+			var player = game.session.player;
+			
+			if (this.top - player.bottom < 1 
+				&& player.x > this.left 
+				&& player.x < this.right
+				&& player.momentum.m < 1) {
+				this.playerHasLanded = true;
+			};
+				
+		};
+		
+		that.automaticActions.push (that.checkIfPlayerLanded); 		
+		return that;
+	
 	}
 	
 	game.make.bullet = function(spec) {
@@ -403,7 +466,7 @@ function vectorGame(game) {
 			if (this.thrust){this.thrust -= Math.min(this.thrust,0.05)};
 		}
 		
-		that.automaticActions.push(VP.thrustForce,coolDown,dropThrust);
+		that.automaticActions.push(VP.airResistForce, VP.thrustForce,VP.globalGravityForce,coolDown,dropThrust);
 		
 		if (spec.behaviour){that.automaticActions.push(spec.behaviour)}
 		
@@ -415,7 +478,18 @@ function vectorGame(game) {
 		};
 		that.hit.solidRock = that.hit.rock;
 		
-		that.hit.ground = game.library.vectorPhysics.reflectForceOffFlatSurface;
+		that.hit.ground = function(impactPoint,isReversed) {
+			//reportImpact(impactPoint,isReversed);
+			
+			if (impactPoint.force > 150) {
+				
+				game.session.effect.push(game.makeEffect.expandingRing({x:impactPoint.x, y:impactPoint.y, lastFrame:20}));
+				this.dead = true;
+			}
+			
+			VP.reflectForceOffFlatSurface(impactPoint,isReversed);
+		}
+		
 		that.hit.blackHole = getSuckedIn;
 		
 		
@@ -634,7 +708,7 @@ function vectorGame(game) {
 			};		
 			game.session.items.push( shard1 );
 
-			var shardVector2 = game.calc.vectorFromForces([this.momentum, {h:game.calc.reverseHeading(randomHeading),m:randomSpeed}],3);
+			var shardVector2 = game.calc.vectorFromForces([{h:game.calc.reverseHeading(randomHeading),m:randomSpeed}],3);
 			var shard2 = game.make.rock({
 				x:this.x,
 				y:this.y,
@@ -656,7 +730,7 @@ function vectorGame(game) {
 		that.hit.solidRock = VP.mutualRoundBounce;
 		that.hit.ground = VP.reflectForceOffFlatSurface;			
 		that.hit.blackHole = getSuckedIn;
-		that.automaticActions.push(VP.airResistForce,VP.exertGravity,function(){this.h +=this.spin;});
+		that.automaticActions.push(VP.airResistForce,VP.exertGravity,VP.globalGravityForce,function(){this.h +=this.spin;});
 		
 		
 		that.shape = [];
