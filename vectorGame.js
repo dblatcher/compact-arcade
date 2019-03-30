@@ -221,12 +221,11 @@ function vectorGame(game) {
 	game.level = [
 		{width:1000, height:1000,
 			items :[
-				{func:"roundShip", spec:{x:150,y:600,h:0.0*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
+				{func:"roundShip", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
 				{func:'rock', spec:{x:200,y:250,h:0,v:0,radius:90,density:2,color:'blue', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
-				{func:'rock', spec:{x:400,y:250,h:0,v:0,radius:90,density:1,color:'green', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
+				//{func:'rock', spec:{x:400,y:250,h:0,v:0,radius:90,density:1,color:'green', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
 				{func:"ship", spec:{x:850,y:600,h:0.2*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0.2,color:'purple', behaviour:slowDown_AI,momentum:{h:(Math.PI*1), m:6}}},		
-				{func:"ship", spec:{x:650,y:900,h:0.2*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'purple', behaviour:evadeThreat_AI,momentum:{h:(Math.PI*1), m:0}}},
-{func:'bullet', spec:{x:200,y:900,h:0,v:0,radius:20,density:1,color:'brown', momentum:{h:(Math.PI*0.51), m:1} },isPlayer:false},				
+				{func:"ship", spec:{x:650,y:900,h:0.2*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'yellow', behaviour:evadeThreat_AI,momentum:{h:(Math.PI*1), m:0}}}
 			],
 			effects : [
 			],
@@ -235,7 +234,7 @@ function vectorGame(game) {
 				airDensity:0
 			},
 			victoryCondition : function() {
-				return (game.session.items.filter(function(item){return(item.type==='rock')}).length === -1);
+				return (game.session.items.filter(function(item){return(item.type==='ship')}).length === 1);
 			}
 		},
 		{width:1200, height:1200,
@@ -244,10 +243,10 @@ function vectorGame(game) {
 				{func:"fancyShip", spec:{x:150,y:1100,h:0.0*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
 				{func:'blackHole', spec:{x:500,y:500,h:0,v:0,radius:10, mass:2500, gravityMaxRange:250,color:'purple' }},
 			
-				{func:'solidRock', spec:{x:200,y:250,h:0,v:0,radius:90, mass:60,color:'red', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
-				{func:'solidRock', spec:{x:800,y:950,h:0,v:0,radius:40, mass:20,color:'red', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
-				{func:'solidRock', spec:{x:200,y:950,h:0,v:0,radius:40, mass:20,color:'red', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
-				{func:'solidRock', spec:{x:700,y:150,h:0,v:0,radius:40, mass:20,color:'red', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
+				{func:'solidRock', spec:{x:200,y:250,h:0,v:0,radius:90, mass:60,color:'gray', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
+				{func:'solidRock', spec:{x:800,y:950,h:0,v:0,radius:40, mass:20,color:'gray', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
+				{func:'solidRock', spec:{x:200,y:950,h:0,v:0,radius:40, mass:20,color:'gray', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
+				{func:'solidRock', spec:{x:700,y:150,h:0,v:0,radius:40, mass:20,color:'gray', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
 			
 				{func:"ground", spec:{x:0,y:1150,width:1200,height:50}},
 				{func:"ground", spec:{x:0,y:0,width:1200,height:50}},
@@ -336,12 +335,16 @@ function vectorGame(game) {
 		
 		that.coolDownLevel = 0;
 		that.coolDownDelay = 15;
+
 		var coolDown = function(){
 			if (this.coolDownLevel){this.coolDownLevel--};
+		};
+
+		var dropThrust = function(){
+			if (this.thrust){this.thrust -= Math.min(this.thrust,0.05)};
 		}
 		
-		
-		that.automaticActions.push(VP.thrustForce,coolDown);
+		that.automaticActions.push(VP.thrustForce,coolDown,dropThrust);
 		
 		if (spec.behaviour){that.automaticActions.push(spec.behaviour)}
 		
@@ -367,10 +370,10 @@ function vectorGame(game) {
 				}
 				break;
 			case "THRUST_INCREASE":
-				this.thrust += 0.03 
+				this.thrust += 0.1 
 				break;
 			case "THRUST_DECREASE":
-				this.thrust -= 0.06 
+				this.thrust -= 0.05 
 				break;
 			case "TURN_ANTICLOCKWISE":
 				this.h -= 0.025 * Math.PI;

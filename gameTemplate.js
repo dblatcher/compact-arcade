@@ -407,7 +407,6 @@ function createGame (disks, options) {
 						for (var i=0; i<this.ongoingTouches.length; i++) {
 							touch = this.ongoingTouches[i];
 							if (touch.status.button) {
-								console.log(touch.status.button.name);
 								buttonsPressed.push(touch.status.button.name);
 								if (touch.status.button.type === "click") {touch.status.button = null;}
 							};
