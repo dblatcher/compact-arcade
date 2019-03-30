@@ -70,6 +70,7 @@ function createGame (disks, options) {
 		scoreElement : null,
 		sendScore : function(){},
 		
+		
 		widgets :[
 			
 		],
@@ -135,6 +136,125 @@ function createGame (disks, options) {
 		}
 	};
 	
+	game.ongoingTouches = [];
+	game.swipeDirection = {x:0,y:0};
+	game.swipeDelay = {x:0,y:0,pause:5};
+	
+	game.touchButtons = [
+		{name:'fire',type:'hold',x:800,y:800,r:50},
+		{name:'jump',type:'click',x:800,y:600,r:50}
+	];
+	
+	game.touch = {
+		copy : function(touch){
+			return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY, status:touch.status };
+		},
+		
+		indexById : function (idToFind) {
+		  for (var i = 0; i < game.ongoingTouches.length; i++) {
+				var id = game.ongoingTouches[i].identifier;
+				if (id == idToFind) {
+					return i;
+				}	
+			}
+		},
+		
+		position : function(touch) {
+			var rect = game.canvasElement.getBoundingClientRect(),
+			scrollLeft = window.pageXOffset || document.documentElement.scrollLeft,
+			scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+			
+			var elementPos = {
+				x:touch.pageX - rect.left,
+				y:touch.pageY - rect.top
+			};
+			
+			return {
+				x: elementPos.x*game.canvasElement.width/rect.width,
+				y: elementPos.y*game.canvasElement.height/rect.height,
+			}
+		},
+		
+		handleStart : function(evt){
+			evt.preventDefault();
+			var touches = evt.changedTouches;
+			for (var i = 0; i < touches.length; i++) {
+				touches[i].status = {button:null,xMove:0,yMove:0,xDirection:0,yDirection:0,isDirectional:false};	
+				for (var j = 0; j< game.touchButtons.length; j++) {
+					if (game.calc.distance(game.touchButtons[j], game.touch.position(touches[i])) < game.touchButtons[j].r) {
+						touches[i].status.button = game.touchButtons[j];
+					}
+				}
+				
+				if (!touches[i].status.button) {
+					touches[i].status.isDirectional = true;
+				}
+				
+				game.ongoingTouches.push(game.touch.copy(touches[i]));
+			}
+		},
+		
+		handleEnd : function(evt){
+			evt.preventDefault();
+			var touches = evt.changedTouches;
+			for (var i = 0; i < touches.length; i++) {
+				var idx = game.touch.indexById(touches[i].identifier);
+				if (idx >= 0) {
+					if (game.ongoingTouches[idx].status.isDirectional) {game.swipeDirection.x=0; game.swipeDirection.y=0}
+					game.ongoingTouches.splice(idx, 1);  // remove it; we're done
+				} 
+			}
+		},
+		
+		handleCancel : function(evt){
+			evt.preventDefault();
+			console.log("touchcancel.");
+			var touches = evt.changedTouches;
+			
+			for (var i = 0; i < touches.length; i++) {
+				var idx = game.touch.indexById(touches[i].identifier);
+				game.ongoingTouches.splice(idx, 1);  // remove it; we're done
+			}
+		},
+		
+		handleMove : function(evt){
+			evt.preventDefault();
+			var touches = evt.changedTouches, oldPosition,newPosition;
+			var moveThreshold = 10;
+			
+			for (var i = 0; i < touches.length; i++) {
+				var idx = game.touch.indexById(touches[i].identifier);
+				if (idx >= 0) {								
+					oldPosition = game.touch.position(game.ongoingTouches[idx]);
+					newPosition = game.touch.position(touches[i]);		
+					touches[i].status = game.ongoingTouches[idx].status;
+					touches[i].status.xMove = newPosition.x - oldPosition.x;
+					touches[i].status.yMove = newPosition.y - oldPosition.y;
+					
+					if (touches[i].status.isDirectional) {
+						if (!game.swipeDelay.x) {
+							if (touches[i].status.xMove > moveThreshold && game.swipeDirection.x < 1 ) {game.swipeDirection.x++;game.swipeDelay.x = game.swipeDelay.pause;}
+							if (touches[i].status.xMove <-moveThreshold && game.swipeDirection.x >-1 ) {game.swipeDirection.x--;game.swipeDelay.x = game.swipeDelay.pause;}
+						}
+						if (!game.swipeDelay.y) {
+						if (touches[i].status.yMove > moveThreshold && game.swipeDirection.y < 1 ) {game.swipeDirection.y++;game.swipeDelay.y = game.swipeDelay.pause;}
+						if (touches[i].status.yMove <-moveThreshold && game.swipeDirection.y >-1 ) {game.swipeDirection.y--;game.swipeDelay.y = game.swipeDelay.pause;}
+						}
+					};
+					
+					if (touches[i].status.button) {					
+						if (game.calc.distance(touches[i].status.button, newPosition) >= touches[i].status.button.r) {
+							touches[i].status.button = null;
+						}
+					};
+								
+					game.ongoingTouches.splice(idx, 1, game.touch.copy(touches[i]));  // swap in the new touch record
+				} 
+			}
+		},
+	},
+	
+	
 	game.session = {
 		paused: false,
 		items : [],
@@ -182,6 +302,24 @@ function createGame (disks, options) {
 				return key;
 			}
 		}
+	
+		if (outputs.enableTouch) {		
+			game.enableTouch = true;
+			this.canvasElement.addEventListener("touchstart", game.touch.handleStart, false);
+			this.canvasElement.addEventListener("touchend", game.touch.handleEnd, false);
+			this.canvasElement.addEventListener("touchcancel", game.touch.handleCancel, false);
+			this.canvasElement.addEventListener("touchmove", game.touch.handleMove, false);
+			
+			if (this.scoreElement) {
+				this.scoreElement.addEventListener("touchstart", game.touch.handleStart, false);
+				this.scoreElement.addEventListener("touchend", game.touch.handleEnd, false);
+				this.scoreElement.addEventListener("touchcancel", game.touch.handleCancel, false);
+				this.scoreElement.addEventListener("touchmove", game.touch.handleMove, false);
+			}
+		}
+		
+		console.log("initialized.");
+		
 		
 		window.onblur = function() {
 			game.keyMap={};
@@ -257,11 +395,26 @@ function createGame (disks, options) {
 	};
 	
 	game.refresh = function() {
-		var timeStamp = new Date();
+		var timeStamp = new Date(),buttonsPressed = [];
 		
 		switch(this.session.gameStatus) {
-			case 'play' :
-				if (this.session.player.dead === false) {this.reactToControls()};
+			case 'play' :			
+				if (this.session.player.dead === false) {
+					if (game.enableTouch) {
+						if (game.swipeDelay.x){game.swipeDelay.x--}
+						if (game.swipeDelay.y){game.swipeDelay.y--}
+						var touch;
+						for (var i=0; i<this.ongoingTouches.length; i++) {
+							touch = this.ongoingTouches[i];
+							if (touch.status.button) {
+								buttonsPressed.push(touch.status.button.name);
+								if (touch.status.button.type === "click") {touch.status.button = null;}
+							};
+						};
+					}
+					
+					this.reactToControls(buttonsPressed);
+				}
 				this.runItemActions();		
 				if (game.cycleCount % game.numberOfCyclesBetweenCheckingLevelEnds === 0 ) {		
 					if (this.level[this.session.currentLevel].victoryCondition() === true && !game.session.waitingToReset) {
@@ -283,8 +436,10 @@ function createGame (disks, options) {
 				}			
 				break;
 			
-			case 'titleScreen' :
-				if (this.keyMap[" "]) {	game.setUpLevel(0);	}
+			case 'titleScreen' :			
+				if (this.keyMap[" "] || game.ongoingTouches.length ) {
+					game.setUpLevel(0);	
+				}
 				break
 		};
 				
@@ -341,7 +496,13 @@ function createGame (disks, options) {
 		ctx.textBaseline="top";
 
 		ctx.fillText('Default Title Screen' , c.width/2, c.height/4);
-		ctx.fillText('Press space to start' , c.width/2, c.height/2);
+		
+		if (game.enableTouch) {
+			ctx.fillText('Press space or touch to start' , c.width/2, c.height/2);
+		} else {
+			ctx.fillText('Press space to start' , c.width/2, c.height/2);
+		}
+		
 		ctx.strokeStyle = "red";
 		ctx.strokeRect(40, 80, c.width-80, c.height-160);
 
@@ -380,7 +541,7 @@ function createGame (disks, options) {
 		
 	game.renderScreen = function() {
 		var c = this.canvasElement;	var ctx = c.getContext("2d");
-		var plotOffset = {x:0,y:0}, highscoreNameText='';
+		var plotOffset = {x:0,y:0}, highscoreNameText='', i;
 		
 		if (this.scoreElement) {
 			if (this.session.gameStatus === 'titleScreen') {
@@ -410,14 +571,14 @@ function createGame (disks, options) {
 		
 		if (this.session.gameStatus === 'play' || this.session.gameStatus === 'cutScene') {
 			this.renderBackground(c,ctx,plotOffset);
-			for (p=0;p<this.session.items.length;p++) {
-				if (this.session.items[p].dead == false) {
-					this.session.items[p].render(ctx,plotOffset)
+			for (i=0;i<this.session.items.length;i++) {
+				if (this.session.items[i].dead == false) {
+					this.session.items[i].render(ctx,plotOffset)
 				}
 			}			
-			for (p=0;p<this.session.effect.length;p++) {
-				this.session.effect[p].render(ctx,plotOffset,c);
-				this.session.effect[p].animateFrame++;			
+			for (i=0;i<this.session.effect.length;i++) {
+				this.session.effect[i].render(ctx,plotOffset,c);
+				this.session.effect[i].animateFrame++;			
 			}
 			function checkEffectNotFinished(effect) {return (effect.animateFrame <= effect.lastFrame || effect.lastFrame === -1)}
 			this.session.effect = this.session.effect.filter(checkEffectNotFinished);
@@ -426,6 +587,33 @@ function createGame (disks, options) {
 				if (typeof game.widgets[i] === 'function') {game.widgets[i](c,ctx,plotOffset)}
 				if (typeof game.widgets[i] === 'object') {game.widgets[i].render(c,ctx,plotOffset)}
 			};
+			
+			if (game.enableTouch) {
+				for (i=0; i<game.touchButtons.length;i++) {
+					ctx.beginPath();
+					ctx.strokeStyle = "white";
+					ctx.arc(game.touchButtons[i].x,game.touchButtons[i].y,game.touchButtons[i].r,0,Math.PI*2);
+					ctx.stroke();
+				}
+				ctx.beginPath();
+				ctx.strokeStyle = "white";
+				ctx.rect  (20,930,50,50);
+				ctx.moveTo(45,955);
+				ctx.lineTo(45+(game.swipeDirection.x * 30),955+ (game.swipeDirection.y *30));
+				ctx.moveTo(45+(game.swipeDirection.x * 30)+10,955+ (game.swipeDirection.y *30));
+				ctx.arc   (45+(game.swipeDirection.x * 30),955+ (game.swipeDirection.y *30),10,0,Math.PI*2);
+				ctx.stroke()
+				
+				ctx.beginPath();
+				ctx.strokeStyle = "white";
+				ctx.rect  (920,30,50,50);
+				ctx.moveTo(945,55);
+				ctx.lineTo(945+(game.swipeDirection.x * 30),55+ (game.swipeDirection.y *30));
+				ctx.moveTo(945+(game.swipeDirection.x * 30)+10,55+ (game.swipeDirection.y *30));
+				ctx.arc   (945+(game.swipeDirection.x * 30),55+ (game.swipeDirection.y *30),10,0,Math.PI*2);
+				ctx.stroke()
+				
+			}
 			
 			if (this.session.waitingToReset == 'gameOver') {this.renderGameOverMessage(c,ctx,plotOffset)}
 			if (this.session.waitingToReset == 'gameWon') {this.renderGameWonMessage(c,ctx,plotOffset)}

@@ -19,7 +19,7 @@
 <div class = 'squareResponsive outer'>
 	<div class = 'squareResponsive inner'>
 		<canvas id='gameSpace' class = 'centeredSquare' height='1000' width='1000'></canvas>
-		<div id = 'scoreOverlay' class = 'centeredSquare' style = 'color:red'></div>
+		<div id = 'scoreOverlay' class = 'centeredSquare' style = 'color:red'>HIGHSCORES:</div>
 		<div id = 'assetStore'></div>
 	</div>
 </div>
@@ -77,6 +77,7 @@ gameInstance.initialise({
 	canvasElement:document.getElementById("gameSpace"),
 	assetHolderElement:document.getElementById("assetStore"),
 	scoreElement:document.getElementById("scoreOverlay"),
+	enableTouch:true,
 	soundPath :'./sounds/',
 	spritePath :'./sprites/',
 	sendScoreFunction:function(name, score){},
