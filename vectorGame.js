@@ -82,6 +82,25 @@ function vectorGame(game) {
 		}
 	}
 	
+	var fuelMeter = {
+		render: game.library.defaultWidgets.barChart,
+		xPos:200, yPos:50,
+		width:40, height:100, margin:5,
+		getRange:function(){return game.session.player.fuelCapacity},
+		getValue:function(){return game.session.player.fuel},
+		barFill:'white',
+		chartFill:"rgba(200, 200, 200, 0.3)",
+	};
+	
+	var fuelMeterLabel = {
+		render:game.library.defaultWidgets.showText,
+		xPos : 200, yPos:150,
+		font: "4vh monospace",
+		textAlign: "right",
+		textBaseline: "bottom",
+		getText: function() {return "fuel"}
+	};
+	
 	var thrustmeter = {
 		render:game.library.defaultWidgets.circleChart,
 		xPos : 160, yPos:50, height:100,width:20,margin:1,
@@ -122,7 +141,7 @@ function vectorGame(game) {
 		
 		
 	};
-	game.widgets.push(descentMeter);
+	game.widgets.push(descentMeter,fuelMeter,fuelMeterLabel);
 	
 	
 	function slowDown_AI() {
@@ -301,10 +320,10 @@ function vectorGame(game) {
 	game.level = [
 		{width:1000, height:1500,
 			items:[
-				{func:"roundShip", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50,
-				v:0,radius:20,elasticity:0.5,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
+				{func:"landingCraft", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50,
+				v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
 				, isPlayer:true},		
-				{func:'solidRock', spec:{x:800,y:950,h:0,v:0,radius:50, mass:20,color:'gray', momentum:{h:(Math.PI*1.5), m:0} }},
+				{func:'landingCraft', spec:{x:800,y:950,h:1,v:0, mass:50,radius:20,color:'white'}},
 				{func:"ground", spec:{x:0,y:1450,width:1000,height:50}},
 				{func:"landingZone", spec:{x:500,y:1400,width:300,height:50, isGoal:true,color:'green'}},
 				],
@@ -320,7 +339,7 @@ function vectorGame(game) {
 		},
 		{width:1000, height:1500,
 			items:[
-				{func:"roundShip", spec:{x:50,y:800,h:0.0*Math.PI, mass: 50,
+				{func:"landingCraft", spec:{x:50,y:800,h:0.0*Math.PI, mass: 50,
 				v:0,radius:20,elasticity:0.5,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
 				, isPlayer:true},		
 				{func:"ground", spec:{x:0,y:1450,width:1000,height:50}},
@@ -342,14 +361,13 @@ function vectorGame(game) {
 		},		
 		{width:1000, height:1000,
 			items :[
-				{func:"roundShip", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
+				{func:"fancyShip", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
 				{func:'rock', spec:{x:200,y:250,h:0,v:0,radius:90,density:2,color:'blue', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
 				//{func:'rock', spec:{x:400,y:250,h:0,v:0,radius:90,density:1,color:'green', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
 				{func:"ship", spec:{x:850,y:600,h:0.2*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0.2,color:'purple', behaviour:slowDown_AI,momentum:{h:(Math.PI*1), m:6}}},		
 				{func:"ship", spec:{x:650,y:900,h:0.2*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'yellow', behaviour:evadeThreat_AI,momentum:{h:(Math.PI*1), m:0}}}
 			],
-			effects : [
-			],
+			effects : [],
 			environment :{
 				gravitationalConstant:0.1,
 				airDensity: 0,
@@ -357,12 +375,10 @@ function vectorGame(game) {
 			},
 			victoryCondition : function() {
 				return (game.session.items.filter(function(item){return(item.type==='rock')}).length === 0);
-				return (game.session.items.filter(function(item){return(item.type==='ship')}).length === 1);
 			}
 		},
 		{width:1200, height:1200,
 			items :[
-			
 				{func:"fancyShip", spec:{x:150,y:1100,h:0.0*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
 				{func:'blackHole', spec:{x:500,y:500,h:0,v:0,radius:10, mass:2500, gravityMaxRange:250,color:'purple' }},
 			
@@ -502,18 +518,14 @@ function vectorGame(game) {
 		
 		that.hit.ground = function(impactPoint,isReversed) {
 			//reportImpact(impactPoint,isReversed);
-			
 			if (impactPoint.force > 150) {
-				
 				game.session.effect.push(game.makeEffect.expandingRing({x:impactPoint.x, y:impactPoint.y, lastFrame:20}));
 				this.dead = true;
 			}
-			
 			VP.reflectForceOffFlatSurface(impactPoint,isReversed);
 		}
 		
 		that.hit.blackHole = getSuckedIn;
-		
 		
 		that.command = function(commandName, commandOptions){
 			switch (commandName) {
@@ -626,8 +638,38 @@ function vectorGame(game) {
 		return that;
 	};
 		
-	game.make.roundShip = function(spec) {
+	game.make.landingCraft = function(spec) {
 		var that = game.make.ship(spec);
+		
+		that.fuel = spec.fuel || 200;
+		that.fuelCapacity = spec.fuelCapacity || 200;
+		
+		var burnFuel = function() {
+			if (this.thrust){
+				this.fuel -=this.thrust;
+				if (this.fuel<0) {this.fuel = 0; this.thrust = 0};
+			};
+		}
+		
+		that.automaticActions.pop(); // remove dropThrust
+		that.automaticActions.push(burnFuel)
+		
+		that.command = function(commandName, commandOptions){
+			switch (commandName) {			
+			case "THRUST_INCREASE":
+				if (this.fuel){this.thrust += 0.05} 
+				break;
+			case "THRUST_DECREASE":
+				this.thrust -= 0.05 
+				break;
+			case "TURN_ANTICLOCKWISE":
+				this.h -= 0.025 * Math.PI;
+				break;
+			case "TURN_CLOCKWISE":
+				this.h += 0.025 * Math.PI;
+				break;
+			};
+		};
 		
 		that.draw = function() {
 			var flickerY1 = (Math.random())/4;
