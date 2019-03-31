@@ -78,7 +78,8 @@ function createGame (disks, options) {
 			defaultWidgets:{
 				
 				barChart : function(c,ctx,plotOffset) {
-					var barLevel = (this.height - 2*this.margin)*(this.getValue() / this.getRange());
+					var margin = this.margin || 0;
+					var barLevel = (this.height - 2*margin)*(this.getValue() / this.getRange());
 					var barFill;
 					if (typeof this.barFill === "function") {
 						barFill = this.barFill(barLevel,ctx)
@@ -94,7 +95,7 @@ function createGame (disks, options) {
 					ctx.fill();
 					ctx.beginPath();
 					ctx.fillStyle = barFill;
-					ctx.rect(this.xPos +this.margin,this.yPos+this.height-barLevel-this.margin,this.width - 2*this.margin,barLevel);
+					ctx.rect(this.xPos +margin,this.yPos+this.height-barLevel-margin,this.width - 2*margin,barLevel);
 					ctx.fill();
 				},
 	
@@ -129,8 +130,18 @@ function createGame (disks, options) {
 					ctx.textAlign = "left";
 					ctx.textBaseline = "top";
 					ctx.fillText(this.getStatus(), 10, 10);
-				}
+				},
 				
+				showText : function(c, ctx, plotOffset) {
+					ctx.beginPath();
+					ctx.font = this.font ||"3vh sans-serif";
+					ctx.fillStyle = typeof this.color === 'function' ?
+						this.color() :
+						this.color || "white";
+					ctx.textAlign = this.textAlign || "left";
+					ctx.textBaseline = this.textBaseline || "top";
+					ctx.fillText(this.getText(), this.xPos, this.yPos);
+				}
 			}
 			
 		}
