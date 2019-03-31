@@ -711,6 +711,9 @@ function createGame (disks, options) {
 		that.width = spec.width || 10;
 		that.height = spec.height || 10;
 		that.color = spec.color || 'gray';		
+		that.pattern = spec.pattern ? 
+			game.sprite[spec.pattern]: 
+			false;
 		that.dead = false;
 		that.type= 'none';
 		that.circular = false;
@@ -761,7 +764,9 @@ function createGame (disks, options) {
 		
 		var render = function (ctx,plotOffset){
 			ctx.beginPath();
-			ctx.fillStyle = this.color;
+			ctx.fillStyle = this.pattern ?  
+				ctx.createPattern(this.pattern, "repeat") :
+				this.color;
 			ctx.rect(this.x - plotOffset.x,this.renderY - plotOffset.y,this.width,this.height);
 			ctx.fill();	
 		}
@@ -777,6 +782,9 @@ function createGame (disks, options) {
 		that.y = spec.y || 0;
 		that.radius = spec.radius || 10;
 		that.color = spec.color || 'gray';		
+		that.pattern = spec.pattern ? 
+			game.sprite[spec.pattern]: 
+			false;
 		that.dead = false;
 		that.type= 'none';
 		that.circular = true;
@@ -826,7 +834,9 @@ function createGame (disks, options) {
 		
 		var render = function (ctx,plotOffset){
 			ctx.beginPath();
-			ctx.fillStyle = this.color;
+			ctx.fillStyle = this.pattern ?  
+				ctx.createPattern(this.pattern, "repeat") :
+				this.color;
 			ctx.arc(this.x-plotOffset.x, this.renderY-plotOffset.y, this.radius, 0,2*Math.PI);
 			ctx.fill();	
 		}

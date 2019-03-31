@@ -2,7 +2,8 @@
 function vectorGame(game, options) {
 		
 	var VP = game.library.vectorPhysics;
-	game.soundFiles.push ('zap.mp3','die.mp3');	
+	game.soundFiles.push ('zap.mp3','die.mp3');
+	game.spriteFiles.push ('stone.jpg');
 	
 	var reportImpact = function(impactPoint,isReversed) {
 		if (isReversed) return false;
@@ -320,11 +321,11 @@ function vectorGame(game, options) {
 	game.level = [
 		{name: "moonbase alpha", width:1000, height:1500,
 			items:[
-				{func:"landingCraft", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50,
+				{func:"landingCraft", spec:{x:150,y:300,h:0.0*Math.PI, mass: 50,
 				v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
 				, isPlayer:true},		
 				{func:'landingCraft', spec:{x:800,y:950,h:1,v:0, mass:50,radius:20,color:'white'}},
-				{func:"ground", spec:{x:0,y:1450,width:1000,height:50}},
+				{func:"ground", spec:{x:0,y:1450,width:1000,height:50, pattern:"stone.jpg"}},
 				{func:"landingZone", spec:{x:500,y:1400,width:300,height:50, isGoal:true,color:'green'}},
 				],
 			effects:[],
@@ -339,14 +340,14 @@ function vectorGame(game, options) {
 		},
 		{name: "moonbase beta", width:1000, height:1500,
 			items:[
-				{func:"landingCraft", spec:{x:50,y:800,h:0.0*Math.PI, mass: 50,
+				{func:"landingCraft", spec:{x:50,y:100,h:0.0*Math.PI, mass: 50,
 				v:0,radius:20,elasticity:0.5,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
 				, isPlayer:true},		
-				{func:"ground", spec:{x:0,y:1450,width:1000,height:50}},
-				{func:"ground", spec:{x:0,y:1500-350,width:200,height:300}},
-				{func:"ground", spec:{x:200,y:1500-350,width:150,height:50}},
-				{func:"ground", spec:{x:800,y:1500-650,width:200,height:600}},
-				{func:"ground", spec:{x:750,y:1500-100,width:50,height:50}},
+				{func:"ground", spec:{x:0,y:1450,width:1000,height:50, pattern:"stone.jpg"}},
+				{func:"ground", spec:{x:0,y:1500-350,width:200,height:300, pattern:"stone.jpg"}},
+				{func:"ground", spec:{x:200,y:1500-350,width:150,height:50, pattern:"stone.jpg"}},
+				{func:"ground", spec:{x:800,y:1500-650,width:200,height:600, pattern:"stone.jpg"}},
+				{func:"ground", spec:{x:750,y:1500-100,width:50,height:50, pattern:"stone.jpg"}},
 				{func:"landingZone", spec:{x:300,y:1400,width:300,height:50, isGoal:true,color:'green'}},
 				],
 			effects:[],
