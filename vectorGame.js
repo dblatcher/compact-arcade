@@ -1,5 +1,5 @@
 
-function vectorGame(game) {
+function vectorGame(game, options) {
 		
 	var VP = game.library.vectorPhysics;
 	game.soundFiles.push ('zap.mp3','die.mp3');	
@@ -318,7 +318,7 @@ function vectorGame(game) {
 	}
 	
 	game.level = [
-		{width:1000, height:1500,
+		{name: "moonbase alpha", width:1000, height:1500,
 			items:[
 				{func:"landingCraft", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50,
 				v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
@@ -337,7 +337,7 @@ function vectorGame(game) {
 				return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0);
 			}
 		},
-		{width:1000, height:1500,
+		{name: "moonbase beta", width:1000, height:1500,
 			items:[
 				{func:"landingCraft", spec:{x:50,y:800,h:0.0*Math.PI, mass: 50,
 				v:0,radius:20,elasticity:0.5,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
@@ -359,7 +359,7 @@ function vectorGame(game) {
 				return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0);
 			}
 		},		
-		{width:1000, height:1000,
+		{name: "asteroid belt", width:1000, height:1000,
 			items :[
 				{func:"fancyShip", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
 				{func:'rock', spec:{x:200,y:250,h:0,v:0,radius:90,density:2,color:'blue', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
@@ -377,7 +377,7 @@ function vectorGame(game) {
 				return (game.session.items.filter(function(item){return(item.type==='rock')}).length === 0);
 			}
 		},
-		{width:1200, height:1200,
+		{name:"planet pool", width:1200, height:1200,
 			items :[
 				{func:"fancyShip", spec:{x:150,y:1100,h:0.0*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
 				{func:'blackHole', spec:{x:500,y:500,h:0,v:0,radius:10, mass:2500, gravityMaxRange:250,color:'purple' }},
@@ -422,6 +422,32 @@ function vectorGame(game) {
 		if (this.keyMap["x"]) {ship.h = ship.momentum.h;};
 		if (this.keyMap["c"]) {ship.h = game.calc.reverseHeading(ship.momentum.h);};		
 	}
+	
+	game.renderLevelScreen = function (c,ctx,plotOffset) {
+		ctx.beginPath();
+		ctx.font = "12vh monospace";
+		ctx.fillStyle = "white";
+		ctx.textAlign = "center";
+		ctx.textBaseline="top";
+		ctx.fillText(
+			'level ' + (this.session.currentLevel+1),
+			c.width*1/2, c.height*1/4
+		);
+		ctx.font = "8vh monospace";
+		ctx.textAlign = "left";
+		ctx.fillText(
+			this.level[this.session.currentLevel].name, 
+			c.width*1/2, c.height*8/16
+		);
+		ctx.fillText(
+			"gravity: " + game.session.environment.localGravity, 
+			c.width*1/2, c.height*9/16
+		);
+		ctx.fillText(
+			"atmosphere: " + game.session.environment.airDensity, 
+			c.width*1/2, c.height*10/16
+		);
+	};
 	
 	game.make.ground = function(spec){
 		var that=game.make.item(spec);
