@@ -60,6 +60,28 @@ function vectorGame(game) {
 		this.dead = true;		
 	};
 		
+	var descentMeter = {
+		render:game.library.defaultWidgets.showText,
+		xPos : 180, yPos:50,
+		font: "8vh monospace",
+		textAlign: "right",
+		getValue: function() {
+			return -game.calc.vectorFromForces([game.session.player.momentum]).y
+		},
+		getText: function () {
+			var value = this.getValue();
+			if (value < 0.2 && value > -0.2){value = 0};
+			return value.toFixed(2) + "m/s"
+		},
+		color: function () {
+			var green = 255, red = 0, value = this.getValue();
+			if (value < 0.75) {green = 255; red = 0}
+			else if (value > 2) {green = 0; red = 255}
+			else {green = 255; red = 255};
+			return "rgb(" + red + "," + green + ",0)";
+		}
+	}
+	
 	var thrustmeter = {
 		render:game.library.defaultWidgets.circleChart,
 		xPos : 160, yPos:50, height:100,width:20,margin:1,
@@ -100,7 +122,7 @@ function vectorGame(game) {
 		
 		
 	};
-	game.widgets.push(thrustmeter,mapWidget);
+	game.widgets.push(descentMeter);
 	
 	
 	function slowDown_AI() {
@@ -613,40 +635,46 @@ function vectorGame(game) {
 			var flickerX1 = (Math.random()-0.5)/5;
 			var flickerX2 = (Math.random()-0.5)/5;
 			
-			var flameSize = this.thrust*3+0.3;
-			return [
-	
+			var flameSize = this.thrust*3;
+			
+			var drawFlames =  this.thrust ? [
 				{com:'beginPath'},
-				{com:'moveTo',x:-0.7,y:0.6},
-				{com:'quadraticCurveTo',x:-0.3,y:0.6,controlPoint:{y:flickerY1+flameSize,x:-0.5+flickerX1}},
-				{com:'fillStyle', colors:[{v:0, color:'white'},{v:0.3, color:'yellow'},{v:0.75, color:'red'}], start:0.1, end:flameSize+flickerY1 },				
+				{com:'moveTo',x:-0.7,y:1},
+				{com:'quadraticCurveTo',x:-0.3,y:1,controlPoint:{y:1+flickerY1+flameSize,x:-0.5+flickerX1}},
+				{com:'fillStyle', colors:[{v:0, color:'white'},{v:0.3, color:'yellow'},{v:0.75, color:'red'}], start:0.1, end:1+flameSize+flickerY1 },				
 				{com:'fill'},	
 				
 				{com:'beginPath'},
-				{com:'moveTo',x:0.3,y:0.6},
-				{com:'quadraticCurveTo',x:0.7,y:0.6,controlPoint:{y:flickerY2+flameSize,x:0.5+flickerX2}},
-				{com:'fillStyle', colors:[{v:0, color:'white'},{v:0.3, color:'yellow'},{v:0.75, color:'red'}], start:0.1, end:flameSize+flickerY2 },				
-				{com:'fill'},	
-				
+				{com:'moveTo',x:0.3,y:1},
+				{com:'quadraticCurveTo',x:0.7,y:1,controlPoint:{y:1+flickerY2+flameSize,x:0.5+flickerX2}},
+				{com:'fillStyle', colors:[{v:0, color:'white'},{v:0.3, color:'yellow'},{v:0.75, color:'red'}], start:0.1, end:1+flameSize+flickerY2 },				
+				{com:'fill'}]	
+			: [];
+			
+			var drawBody = [
 				{com:'beginPath'},
 				{com:'arc', x:0,y:0,r:1,startAngle:0.9, endAngle:0.1},
 				{com:'closePath'},
 				{com:'fillStyle',v:this.color},
-				{com:'fill'},
-				
+				{com:'fill'}			
+			];
+			
+			var drawCockpit = [
 				{com:'beginPath'},
 				{com:'arc', x:0,y:-0.2,r:0.5,startAngle:1, endAngle:0},
 				{com:'closePath'},
 				{com:'fillStyle', v:'black'},
-				{com:'fill'},
-				
+				{com:'fill'},			
+			];
+			
+			var drawThrusters = [			
 				{com:'beginPath'},
 				{com:'strokeStyle', v:this.color},
 				{com:'fillStyle', v:'gray'},
 				{com:'moveTo', x:-0.7 ,y:0.3 },
 				{com:'lineTo', x:-0.3 ,y:0.3 },
-				{com:'lineTo', x:-0.3 ,y:0.6 },
-				{com:'lineTo', x:-0.7 ,y:0.6 },
+				{com:'lineTo', x:-0.3 ,y:1 },
+				{com:'lineTo', x:-0.7 ,y:1 },
 				{com:'closePath'},
 				{com:'stroke'},
 				{com:'fill'},
@@ -656,13 +684,14 @@ function vectorGame(game) {
 				{com:'fillStyle', v:'gray'},
 				{com:'moveTo', x:0.7 ,y:0.3 },
 				{com:'lineTo', x:0.3 ,y:0.3 },
-				{com:'lineTo', x:0.3 ,y:0.6 },
-				{com:'lineTo', x:0.7 ,y:0.6 },
+				{com:'lineTo', x:0.3 ,y:1 },
+				{com:'lineTo', x:0.7 ,y:1 },
 				{com:'closePath'},
 				{com:'stroke'},
 				{com:'fill'},
-				
-			]
+			];
+			
+			return [].concat (drawFlames, drawBody, drawCockpit, drawThrusters);
 		};
 		
 		return that;
