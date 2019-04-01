@@ -64,7 +64,8 @@ function vectorGame(game, options) {
 	var descentMeter = {
 		render:game.library.defaultWidgets.showText,
 		xPos : 180, yPos:50,
-		font: "8vh monospace",
+		textSize: (4/100),
+		font: "monospace",
 		textAlign: "right",
 		getValue: function() {
 			return -game.calc.vectorFromForces([game.session.player.momentum]).y
@@ -96,7 +97,8 @@ function vectorGame(game, options) {
 	var fuelMeterLabel = {
 		render:game.library.defaultWidgets.showText,
 		xPos : 200, yPos:150,
-		font: "4vh monospace",
+		textSize: (1/30),
+		font: "monospace",
 		textAlign: "right",
 		textBaseline: "bottom",
 		getText: function() {return "fuel"}
@@ -353,8 +355,8 @@ function vectorGame(game, options) {
 			effects:[],
 			environment : {
 				gravitationalConstant: 0.1,
-				airDensity: 0.04,
-				localGravity:1.5
+				airDensity: 0.005,
+				localGravity:1.2
 			},
 			victoryCondition: function () {
 				return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0);
@@ -426,7 +428,8 @@ function vectorGame(game, options) {
 	
 	game.renderLevelScreen = function (c,ctx,plotOffset) {
 		ctx.beginPath();
-		ctx.font = "12vh monospace";
+		
+		ctx.font = (c.clientWidth*1/10)+"px monospace";
 		ctx.fillStyle = "white";
 		ctx.textAlign = "center";
 		ctx.textBaseline="top";
@@ -434,19 +437,19 @@ function vectorGame(game, options) {
 			'level ' + (this.session.currentLevel+1),
 			c.width*1/2, c.height*1/4
 		);
-		ctx.font = "8vh monospace";
+		ctx.font = (c.clientWidth*1/20) + "px monospace";
 		ctx.textAlign = "left";
 		ctx.fillText(
 			this.level[this.session.currentLevel].name, 
-			c.width*1/2, c.height*8/16
+			c.width*1/3, c.height*8/16
 		);
 		ctx.fillText(
 			"gravity: " + game.session.environment.localGravity, 
-			c.width*1/2, c.height*9/16
+			c.width*1/3, c.height*9/16
 		);
 		ctx.fillText(
 			"atmosphere: " + game.session.environment.airDensity, 
-			c.width*1/2, c.height*10/16
+			c.width*1/3, c.height*10/16
 		);
 	};
 	

@@ -125,7 +125,9 @@ function createGame (disks, options) {
 				
 				statusLine : function(c,ctx,plotOffset){
 					ctx.beginPath();
-					ctx.font = this.font ||"3vh sans-serif";
+					var font = this.font || "sans-serif";
+					var textSize = this.textSize || 3/100;
+					ctx.font = (textSize * c.height) +"px "+ font;
 					ctx.fillStyle = this.color || "white";
 					ctx.textAlign = "left";
 					ctx.textBaseline = "top";
@@ -134,7 +136,9 @@ function createGame (disks, options) {
 				
 				showText : function(c, ctx, plotOffset) {
 					ctx.beginPath();
-					ctx.font = this.font ||"3vh sans-serif";
+					var font = this.font || "sans-serif";
+					var textSize = this.textSize || 3/100;
+					ctx.font = (textSize * c.height) +"px "+ font;
 					ctx.fillStyle = typeof this.color === 'function' ?
 						this.color() :
 						this.color || "white";
@@ -501,13 +505,17 @@ function createGame (disks, options) {
 	
 	game.renderTitleScreen = function (c,ctx,plotOffset) {
 		ctx.beginPath();
-		ctx.font = "8vh sans-serif";
+		var font = "sans-serif";
+		var textSize = 10/100;
+		ctx.font = (textSize * c.height) +"px "+ font;
 		ctx.fillStyle = "red";
 		ctx.textAlign = "center";
 		ctx.textBaseline="top";
 
 		ctx.fillText('Default Title Screen' , c.width/2, c.height/4);
-		
+
+		var textSize = 6/100;
+		ctx.font = (textSize * c.height) +"px "+ font;		
 		if (game.enableTouch) {
 			ctx.fillText('Press space or touch to start' , c.width/2, c.height/2);
 		} else {
@@ -521,7 +529,7 @@ function createGame (disks, options) {
 	
 	game.renderLevelScreen = function (c,ctx,plotOffset) {
 		ctx.beginPath();
-		ctx.font = "4vh sans-serif";
+		ctx.font = (c.height * 8/100)+"px sans-serif";;
 		ctx.fillStyle = "white";
 		ctx.textAlign = "center";
 		ctx.textBaseline="top";
@@ -530,7 +538,7 @@ function createGame (disks, options) {
 	
 	game.renderGameOverMessage = function(c,ctx,plotOffset) {
 		ctx.beginPath();
-		ctx.font = "8vh sans-serif";
+		ctx.font = (c.height * 5/100)+"px sans-serif";;
 		ctx.fillStyle = "white";
 		ctx.textAlign = "center";
 		ctx.textBaseline="top";
@@ -541,7 +549,7 @@ function createGame (disks, options) {
 	
 	game.renderGameWonMessage = function(c,ctx,plotOffset) {
 		ctx.beginPath();
-		ctx.font = "8vh sans-serif";
+		ctx.font = (c.height * 5/100)+"px sans-serif";
 		ctx.fillStyle = "white";
 		ctx.textAlign = "center";
 		ctx.textBaseline="top";
@@ -632,14 +640,14 @@ function createGame (disks, options) {
 		
 		if (this.session.gameStatus === 'highscoreEntry') {
 			ctx.beginPath();
-			ctx.font = "4vh sans-serif";
+			ctx.font = (c.height * 2.5/100)+"px sans-serif";;
 			ctx.fillStyle = "red";
 			ctx.textAlign = "center";
 			ctx.textBaseline="top";
 
 			ctx.fillText('ENTER NAME', c.width/2, c.height*(0.25));
 
-			ctx.font = "18vh sans-serif";
+			ctx.font = (c.height * 12/100)+"px sans-serif";;
 			ctx.fillStyle = "red";
 			ctx.textAlign = "center";
 			ctx.textBaseline="top";			
@@ -878,7 +886,7 @@ function createGame (disks, options) {
 		that.message = spec.message || "no message defined!";
 		that.color = spec.color || "black";
 		that.font = spec.font || "arial";
-		that.size = spec.size || "15vh";
+		that.size = spec.size || (c.height * 6/100) +"px";
 		
 		var render = function (ctx,plotOffset,c){
 			ctx.beginPath();
