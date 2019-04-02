@@ -323,10 +323,10 @@ function vectorGame(game, options) {
 	game.level = [
 		{name: "moonbase alpha", width:1000, height:1500,
 			items:[
-				{func:"landingCraft", spec:{x:150,y:300,h:0.0*Math.PI, mass: 50,
+				{func:"landingCraft", spec:{x:150,y:1450,h:0.0*Math.PI, mass: 50,
 				v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
 				, isPlayer:true},		
-				{func:'landingCraft', spec:{x:800,y:350,h:0,thrust:0.2,v:0, mass:50,radius:20,color:'white'}},
+				{func:'landingCraft', spec:{x:800,y:350,h:0,thrust:0.45,v:0, mass:50,radius:20,color:'white'}},
 				{func:"ground", spec:{x:0,y:1450,width:1000,height:50, pattern:"stone.jpg"}},
 				{func:"landingZone", spec:{x:500,y:1400,width:300,height:50, isGoal:true,color:'green'}},
 				],
@@ -349,6 +349,7 @@ function vectorGame(game, options) {
 				{func:"ground", spec:{x:800,y:1500-650,width:200,height:600, pattern:"stone.jpg"}},
 				{func:"ground", spec:{x:750,y:1500-100,width:50,height:50, pattern:"stone.jpg"}},
 				{func:"landingZone", spec:{x:300,y:1400,width:300,height:50, isGoal:true,color:'green'}},
+				{func:"landingZone", spec:{x:50,y:1500-360,width:50,height:10, isRefuel:true,color:'red'}}
 				],
 			effects:[],
 			environment : {
@@ -362,9 +363,7 @@ function vectorGame(game, options) {
 		},	
 		{name: "death drop", width:1000, height:1500,
 			items:[
-				{func:"landingCraft", spec:{x:150,y:300,h:0.0*Math.PI, mass: 50,
-				v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
-				, isPlayer:true},		
+				{func:"landingCraft", spec:{x:150,y:300,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
 				{func:'landingCraft', spec:{x:800,y:950,h:1,v:0, mass:50,radius:20,color:'white'}},
 				{func:"ground", spec:{x:0,y:1450,width:1000,height:50, pattern:"stone.jpg"}},
 				{func:"landingZone", spec:{x:500,y:1400,width:300,height:50, isGoal:true,color:'green'}},
@@ -479,7 +478,8 @@ function vectorGame(game, options) {
 	game.make.landingZone = function(spec){
 		var that = game.make.ground(spec);
 		that.type='ground';
-		that.isGoal = typeof spec.isGoal === "undefined" ? true : spec.isGoal;
+		that.isGoal =  spec.isGoal || false;
+		that.isRefuel =  spec.isRefuel || false;
 		that.playerHasLanded = false;
 		that.timePlayerOn = 0;
 		
@@ -489,7 +489,10 @@ function vectorGame(game, options) {
 			this.playerHasLanded = (this.top - player.bottom < 1 && player.x > this.left 
 				&& player.x < this.right
 				&& player.momentum.m < 1) ;
-			if (this.playerHasLanded) {this.timePlayerOn++} else {this.timePlayerOn = 0};
+			if (this.playerHasLanded) {
+				this.timePlayerOn++;
+				if (this.isRefuel && typeof player.refuel === 'function') {player.refuel(1)}
+			} else {this.timePlayerOn = 0};
 		};
 		
 		that.automaticActions.push (that.checkIfPlayerLanded); 		
@@ -697,14 +700,21 @@ function vectorGame(game, options) {
 			};
 		}
 		
-	var dieIfStranded = function () {
-		if (this.fuel === 0 && this.momentum.m < 0.3) {
-			if (this.timeStranded++ > 30) {this.dead = true;}
-		} else { this.timeStranded = 0;} 
-	}
+		refuel = function (amount) {
+			this.fuel = Math.min (this.fuel + amount, this.fuelCapacity);
+		};
+		that.refuel = refuel;
+		
+		var dieIfPlayerStranded = function () {
+			if (this.fuel === 0 && this.momentum.m < 0.3  && this === game.session.player) {
+				if (this.timeStranded++ > 30) {
+					if (!game.session.waitingToReset) { game.handleDeadPlayer();}
+				}
+			} else { this.timeStranded = 0;} 
+		}
 		
 		that.automaticActions.pop(); // remove dropThrust
-		that.automaticActions.push(burnFuel,dieIfStranded)
+		that.automaticActions.push(burnFuel,dieIfPlayerStranded)
 		
 		that.command = function(commandName, commandOptions){
 			switch (commandName) {			
@@ -724,12 +734,12 @@ function vectorGame(game, options) {
 		};
 		
 		that.draw = function() {
-			var flickerY1 = (Math.random())/4;
-			var flickerY2 = (Math.random())/4;
-			var flickerX1 = (Math.random()-0.5)/5;
-			var flickerX2 = (Math.random()-0.5)/5;
+			var flickerY1 = (Math.random())/2;
+			var flickerY2 = (Math.random())/2;
+			var flickerX1 = (Math.random()-0.5)/3;
+			var flickerX2 = (Math.random()-0.5)/3;
 			
-			var flameSize = this.thrust*3;
+			var flameSize = 0.5+this.thrust*3;
 			
 			var drawFlames =  this.thrust ? [
 				{com:'beginPath'},
