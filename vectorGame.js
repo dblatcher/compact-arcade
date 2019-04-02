@@ -326,7 +326,7 @@ function vectorGame(game, options) {
 				{func:"landingCraft", spec:{x:150,y:300,h:0.0*Math.PI, mass: 50,
 				v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
 				, isPlayer:true},		
-				{func:'landingCraft', spec:{x:800,y:950,h:1,v:0, mass:50,radius:20,color:'white'}},
+				{func:'landingCraft', spec:{x:800,y:350,h:0,thrust:0.2,v:0, mass:50,radius:20,color:'white'}},
 				{func:"ground", spec:{x:0,y:1450,width:1000,height:50, pattern:"stone.jpg"}},
 				{func:"landingZone", spec:{x:500,y:1400,width:300,height:50, isGoal:true,color:'green'}},
 				],
@@ -337,14 +337,12 @@ function vectorGame(game, options) {
 				localGravity:1
 			},
 			victoryCondition: function () {
-				return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0);
+				return (game.session.items.filter(function(item){return(item.isGoal && item.timePlayerOn > 20)}).length > 0);
 			}
 		},
 		{name: "moonbase beta", width:1000, height:1500,
 			items:[
-				{func:"landingCraft", spec:{x:50,y:100,h:0.0*Math.PI, mass: 50,
-				v:0,radius:20,elasticity:0.5,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
-				, isPlayer:true},		
+				{func:"landingCraft", spec:{x:50,y:100,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}},isPlayer:true},		
 				{func:"ground", spec:{x:0,y:1450,width:1000,height:50, pattern:"stone.jpg"}},
 				{func:"ground", spec:{x:0,y:1500-350,width:200,height:300, pattern:"stone.jpg"}},
 				{func:"ground", spec:{x:200,y:1500-350,width:150,height:50, pattern:"stone.jpg"}},
@@ -359,9 +357,28 @@ function vectorGame(game, options) {
 				localGravity:1.2
 			},
 			victoryCondition: function () {
+				return (game.session.items.filter(function(item){return(item.isGoal && item.timePlayerOn > 20)}).length > 0);
+			}
+		},	
+		{name: "death drop", width:1000, height:1500,
+			items:[
+				{func:"landingCraft", spec:{x:150,y:300,h:0.0*Math.PI, mass: 50,
+				v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
+				, isPlayer:true},		
+				{func:'landingCraft', spec:{x:800,y:950,h:1,v:0, mass:50,radius:20,color:'white'}},
+				{func:"ground", spec:{x:0,y:1450,width:1000,height:50, pattern:"stone.jpg"}},
+				{func:"landingZone", spec:{x:500,y:1400,width:300,height:50, isGoal:true,color:'green'}},
+				],
+			effects:[],
+			environment : {
+				gravitationalConstant: 0.1,
+				airDensity: 0.0,
+				localGravity:1.1
+			},
+			victoryCondition: function () {
 				return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0);
 			}
-		},		
+		},	
 		{name: "asteroid belt", width:1000, height:1000,
 			items :[
 				{func:"fancyShip", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
@@ -464,17 +481,15 @@ function vectorGame(game, options) {
 		that.type='ground';
 		that.isGoal = typeof spec.isGoal === "undefined" ? true : spec.isGoal;
 		that.playerHasLanded = false;
+		that.timePlayerOn = 0;
 		
 		that.checkIfPlayerLanded = function () {
 			var player = game.session.player;
 			
-			if (this.top - player.bottom < 1 
-				&& player.x > this.left 
+			this.playerHasLanded = (this.top - player.bottom < 1 && player.x > this.left 
 				&& player.x < this.right
-				&& player.momentum.m < 1) {
-				this.playerHasLanded = true;
-			};
-				
+				&& player.momentum.m < 1) ;
+			if (this.playerHasLanded) {this.timePlayerOn++} else {this.timePlayerOn = 0};
 		};
 		
 		that.automaticActions.push (that.checkIfPlayerLanded); 		
@@ -673,6 +688,7 @@ function vectorGame(game, options) {
 		
 		that.fuel = spec.fuel || 200;
 		that.fuelCapacity = spec.fuelCapacity || 200;
+		that.timeStranded = 0;
 		
 		var burnFuel = function() {
 			if (this.thrust){
@@ -681,8 +697,14 @@ function vectorGame(game, options) {
 			};
 		}
 		
+	var dieIfStranded = function () {
+		if (this.fuel === 0 && this.momentum.m < 0.3) {
+			if (this.timeStranded++ > 30) {this.dead = true;}
+		} else { this.timeStranded = 0;} 
+	}
+		
 		that.automaticActions.pop(); // remove dropThrust
-		that.automaticActions.push(burnFuel)
+		that.automaticActions.push(burnFuel,dieIfStranded)
 		
 		that.command = function(commandName, commandOptions){
 			switch (commandName) {			
