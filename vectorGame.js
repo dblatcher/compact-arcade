@@ -104,7 +104,7 @@ function vectorGame(game, options) {
 		getText: function() {return "fuel"}
 	};
 	
-	var thrustmeter = {
+	var thrustMeter = {
 		render:game.library.defaultWidgets.circleChart,
 		xPos : 160, yPos:50, height:100,width:20,margin:1,
 		chartFill:"rgba(200, 200, 200, 0.3)",
@@ -144,7 +144,7 @@ function vectorGame(game, options) {
 		
 		
 	};
-	game.widgets.push(descentMeter,fuelMeter,fuelMeterLabel);
+	//game.widgets.push(descentMeter,fuelMeter,fuelMeterLabel);
 	
 	
 	function slowDown_AI() {
@@ -323,14 +323,18 @@ function vectorGame(game, options) {
 	game.level = [
 		{name: "moonbase alpha", width:1000, height:1500,
 			items:[
-				{func:"landingCraft", spec:{x:150,y:1450,h:0.0*Math.PI, mass: 50,
-				v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
+				{func:"landingCraft", spec:{x:600,y:1350,h:0.0*Math.PI, mass: 50,
+				v:0,radius:20,elasticity:0.25,thrust:0.1, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
 				, isPlayer:true},		
 				{func:'landingCraft', spec:{x:800,y:350,h:0,thrust:0.45,v:0, mass:50,radius:20,color:'white'}},
 				{func:"ground", spec:{x:0,y:1450,width:1000,height:50, pattern:"stone.jpg"}},
 				{func:"landingZone", spec:{x:500,y:1400,width:300,height:50, isGoal:true,color:'green'}},
+				{func:"boulder", spec:{x: 400, y:1450, radius:50, pattern: "stone.jpg"}},
+				{func:"boulder", spec:{x: 350, y:1430, radius:60, pattern: "stone.jpg"}},
 				],
 			effects:[],
+			removeWidgets: [thrustMeter,mapWidget],
+			addWidgets:[descentMeter,fuelMeter,fuelMeterLabel],
 			environment : {
 				gravitationalConstant: 0.1,
 				airDensity: 0.01,
@@ -342,12 +346,12 @@ function vectorGame(game, options) {
 		},
 		{name: "moonbase beta", width:1000, height:1500,
 			items:[
-				{func:"landingCraft", spec:{x:50,y:100,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}},isPlayer:true},		
+				{func:"landingCraft", spec:{x:350,y:1100,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0.1, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}},isPlayer:true},		
 				{func:"ground", spec:{x:0,y:1450,width:1000,height:50, pattern:"stone.jpg"}},
 				{func:"ground", spec:{x:0,y:1500-350,width:200,height:300, pattern:"stone.jpg"}},
 				{func:"ground", spec:{x:200,y:1500-350,width:150,height:50, pattern:"stone.jpg"}},
 				{func:"ground", spec:{x:800,y:1500-650,width:200,height:600, pattern:"stone.jpg"}},
-				{func:"ground", spec:{x:750,y:1500-100,width:50,height:50, pattern:"stone.jpg"}},
+				{func:"boulder", spec:{x:800,y:1500-80,radius:70, pattern:"stone.jpg"}},
 				{func:"landingZone", spec:{x:300,y:1400,width:300,height:50, isGoal:true,color:'green'}},
 				{func:"landingZone", spec:{x:50,y:1500-360,width:50,height:10, isRefuel:true,color:'red'}}
 				],
@@ -361,7 +365,7 @@ function vectorGame(game, options) {
 				return (game.session.items.filter(function(item){return(item.isGoal && item.timePlayerOn > 20)}).length > 0);
 			}
 		},	
-		{name: "death drop", width:1000, height:1500,
+		{name: "slow drop in thick atmo", width:1000, height:1500,
 			items:[
 				{func:"landingCraft", spec:{x:150,y:300,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
 				{func:'landingCraft', spec:{x:800,y:950,h:1,v:0, mass:50,radius:20,color:'white'}},
@@ -371,8 +375,8 @@ function vectorGame(game, options) {
 			effects:[],
 			environment : {
 				gravitationalConstant: 0.1,
-				airDensity: 0.0,
-				localGravity:1.1
+				airDensity: 0.15,
+				localGravity:1.3
 			},
 			victoryCondition: function () {
 				return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0);
@@ -392,6 +396,8 @@ function vectorGame(game, options) {
 				airDensity: 0,
 				localGravity: 0,
 			},
+			removeWidgets:[descentMeter,fuelMeter,fuelMeterLabel],
+			addWidgets:[thrustMeter,mapWidget],
 			victoryCondition : function() {
 				return (game.session.items.filter(function(item){return(item.type==='rock')}).length === 0);
 			}
@@ -471,6 +477,12 @@ function vectorGame(game, options) {
 	
 	game.make.ground = function(spec){
 		var that=game.make.item(spec);
+		that.type='ground';	
+		return that;
+	}
+
+	game.make.boulder = function(spec){
+		var that=game.make.roundItem(spec);
 		that.type='ground';	
 		return that;
 	}
@@ -719,16 +731,16 @@ function vectorGame(game, options) {
 		that.command = function(commandName, commandOptions){
 			switch (commandName) {			
 			case "THRUST_INCREASE":
-				if (this.fuel){this.thrust += 0.05} 
+				if (this.fuel){this.thrust += 0.025} 
 				break;
 			case "THRUST_DECREASE":
-				this.thrust -= 0.05 
+				this.thrust -= 0.025 
 				break;
 			case "TURN_ANTICLOCKWISE":
-				this.h -= 0.025 * Math.PI;
+				this.h -= 0.02 * Math.PI;
 				break;
 			case "TURN_CLOCKWISE":
-				this.h += 0.025 * Math.PI;
+				this.h += 0.02 * Math.PI;
 				break;
 			};
 		};
