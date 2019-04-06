@@ -327,9 +327,9 @@ function vectorGame(game, options) {
 				v:0,radius:20,elasticity:0.25,thrust:0.1, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
 				, isPlayer:true},		
 				{func:'landingCraft', spec:{x:800,y:350,h:0,thrust:0.45,v:0, mass:50,radius:20,color:'white'}},
-				{func:"ground", spec:{x:0,y:1450,width:1000,height:50, pattern:"stone.jpg"}},
+				{func:"boulder", spec:{x:500,y:3950,radius:2550, pattern:"stone.jpg"}},
 				{func:"landingZone", spec:{x:500,y:1400,width:300,height:50, isGoal:true,color:'green'}},
-				{func:"boulder", spec:{x: 400, y:1450, radius:50, pattern: "stone.jpg"}},
+				{func:"boulder", spec:{x: 200, y:1450, radius:50, pattern: "stone.jpg"}},
 				{func:"boulder", spec:{x: 350, y:1430, radius:60, pattern: "stone.jpg"}},
 				],
 			effects:[],
@@ -658,6 +658,34 @@ function vectorGame(game, options) {
 				
 		return that;
 	}
+	
+	game.customNewLevelAction = function(level) {
+		game.library.backgroundStars.defineStars(level);
+	};
+
+	game.renderBackground = function(c,ctx,plotOffset) {
+		var level = game.level[game.session.currentLevel];
+		game.library.backgroundStars.plotStars(c,ctx,plotOffset);
+		
+		var planetRadius = 2500;
+		
+		var atmo = {
+			depth:1000,
+			x: level.width*1/2-plotOffset.x,
+			y: level.height+planetRadius-plotOffset.y
+		};
+		
+		var gradient = ctx.createRadialGradient(atmo.x,atmo.y,planetRadius, atmo.x,atmo.y,planetRadius+atmo.depth);
+		gradient.addColorStop(0,'rgba(80,70,220,1)');
+		gradient.addColorStop(1, 'rgba(50,50,200,0)');
+		
+		ctx.beginPath();
+		ctx.fillStyle = gradient;
+		ctx.arc(atmo.x,atmo.y,planetRadius+atmo.depth,0,Math.PI*2);
+		ctx.fill();
+		
+	}; 
+	
 	
 	game.make.fancyShip = function(spec) {
 		var that = game.make.ship(spec);
