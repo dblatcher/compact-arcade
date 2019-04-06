@@ -403,7 +403,26 @@ function createGame (disks, options) {
 		if (level.environment){
 			Object.assign(game.session.environment,level.environment);
 		}
-			
+		
+		
+		if (level.addWidgets) {
+			for (init = 0; init < level.addWidgets.length; init++) {
+				if (game.widgets.indexOf(level.addWidgets[init]) === -1) {
+					game.widgets.push(level.addWidgets[init]);
+				}
+			}
+		};
+		
+		if (level.removeWidgets) {
+			for (init = 0; init < level.removeWidgets.length; init++) {
+				if (game.widgets.indexOf(level.removeWidgets[init]) > -1) {
+					
+					game.widgets.splice (game.widgets.indexOf(level.removeWidgets[init]), 1 );
+					
+				}
+			}
+		};
+		
 		game.keyMap ={};
 		game.cycleCount = 0;
 		game.session.gameStatus = options.cyclesForLevelScreen? 'levelScreen' : 'play';
