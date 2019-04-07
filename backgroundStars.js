@@ -7,6 +7,14 @@ function backgroundStars(game) {
 			var colorRange =  ['white', 'white', 'red'];
 			var star = [];
 			
+			
+			if (currentLevel.backgroundStars) {
+				number =  currentLevel.backgroundStars.number || number,
+				depth =  currentLevel.backgroundStars.depth || depth,
+				colorRange =  currentLevel.backgroundStars.colorRange || colorRange;
+			}
+		
+			
 			for (var i = 0; i< number; i++) {
 				star[i] = {
 					x : Math.floor(Math.random() * currentLevel.width),

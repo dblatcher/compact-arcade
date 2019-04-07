@@ -340,6 +340,11 @@ function vectorGame(game, options) {
 				airDensity: 0.01,
 				localGravity:1
 			},
+			background : {
+				planetRadius: 2000,
+				atmosphereDepth: 1000,
+				atmosphereColor: '150,40,160'
+			},
 			victoryCondition: function () {
 				return (game.session.items.filter(function(item){return(item.isGoal && item.timePlayerOn > 20)}).length > 0);
 			}
@@ -356,6 +361,9 @@ function vectorGame(game, options) {
 				{func:"landingZone", spec:{x:50,y:1500-360,width:50,height:10, isRefuel:true,color:'red'}}
 				],
 			effects:[],
+			backgroundStars:{
+				number:1000
+			},			
 			environment : {
 				gravitationalConstant: 0.1,
 				airDensity: 0.005,
@@ -667,22 +675,28 @@ function vectorGame(game, options) {
 		var level = game.level[game.session.currentLevel];
 		game.library.backgroundStars.plotStars(c,ctx,plotOffset);
 		
-		var planetRadius = 2500;
 		
-		var atmo = {
-			depth:1000,
-			x: level.width*1/2-plotOffset.x,
-			y: level.height+planetRadius-plotOffset.y
-		};
-		
-		var gradient = ctx.createRadialGradient(atmo.x,atmo.y,planetRadius, atmo.x,atmo.y,planetRadius+atmo.depth);
-		gradient.addColorStop(0,'rgba(80,70,220,1)');
-		gradient.addColorStop(1, 'rgba(50,50,200,0)');
-		
-		ctx.beginPath();
-		ctx.fillStyle = gradient;
-		ctx.arc(atmo.x,atmo.y,planetRadius+atmo.depth,0,Math.PI*2);
-		ctx.fill();
+		if (level.background) {
+			if (level.background.atmosphereDepth) {
+				var planetRadius = level.background.planetRadius || 2500;
+				
+				var atmo = {
+					depth:level.background.atmosphereDepth,
+					x: level.width*1/2-plotOffset.x,
+					y: level.height+planetRadius-plotOffset.y,
+					color: level.background.atmosphereColor ||'100,100,220'
+				};
+				
+				var gradient = ctx.createRadialGradient(atmo.x,atmo.y,planetRadius, atmo.x,atmo.y,planetRadius+atmo.depth);
+				gradient.addColorStop(0.4,'rgba('+ atmo.color +',1)');
+				gradient.addColorStop(1, 'rgba('+ atmo.color +',0)');
+				
+				ctx.beginPath();
+				ctx.fillStyle = gradient;
+				ctx.arc(atmo.x,atmo.y,planetRadius+atmo.depth,0,Math.PI*2);
+				ctx.fill();
+			}
+		}
 		
 	}; 
 	
