@@ -144,9 +144,8 @@ function vectorGame(game, options) {
 		
 		
 	};
-	//game.widgets.push(descentMeter,fuelMeter,fuelMeterLabel);
 	
-	
+
 	function slowDown_AI() {
 		var headingToSlowDown = game.calc.normaliseHeading(game.calc.reverseHeading(this.momentum.h));
 		var headingNow = game.calc.normaliseHeading(this.h);				
@@ -347,6 +346,9 @@ function vectorGame(game, options) {
 			},
 			victoryCondition: function () {
 				return (game.session.items.filter(function(item){return(item.isGoal && item.timePlayerOn > 20)}).length > 0);
+			},
+			failureCondition: function() {
+				return game.session.player.stuck;
 			}
 		},
 		{name: "moonbase beta", width:1000, height:1500,
@@ -371,6 +373,9 @@ function vectorGame(game, options) {
 			},
 			victoryCondition: function () {
 				return (game.session.items.filter(function(item){return(item.isGoal && item.timePlayerOn > 20)}).length > 0);
+			},
+			failureCondition: function() {
+				return game.session.player.stuck;
 			}
 		},	
 		{name: "slow drop in thick atmo", width:1000, height:1500,
@@ -388,6 +393,9 @@ function vectorGame(game, options) {
 			},
 			victoryCondition: function () {
 				return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0);
+			},
+			failureCondition: function() {
+				return game.session.player.stuck;
 			}
 		},	
 		{name: "asteroid belt", width:1000, height:1000,
@@ -402,7 +410,7 @@ function vectorGame(game, options) {
 			environment :{
 				gravitationalConstant:0.1,
 				airDensity: 0,
-				localGravity: 0,
+				localGravity: 0
 			},
 			removeWidgets:[descentMeter,fuelMeter,fuelMeterLabel],
 			addWidgets:[thrustMeter,mapWidget],
@@ -482,6 +490,39 @@ function vectorGame(game, options) {
 			c.width*1/3, c.height*10/16
 		);
 	};
+	
+	game.customNewLevelAction = function(level) {
+		game.library.backgroundStars.defineStars(level);
+	};
+
+	game.renderBackground = function(c,ctx,plotOffset) {
+		var level = game.level[game.session.currentLevel];
+		game.library.backgroundStars.plotStars(c,ctx,plotOffset);
+		
+		if (level.background) {
+			if (level.background.atmosphereDepth) {
+				var planetRadius = level.background.planetRadius || 2500;
+				
+				var atmo = {
+					depth:level.background.atmosphereDepth,
+					x: level.width*1/2-plotOffset.x,
+					y: level.height+planetRadius-plotOffset.y,
+					color: level.background.atmosphereColor ||'100,100,220'
+				};
+				
+				var gradient = ctx.createRadialGradient(atmo.x,atmo.y,planetRadius, atmo.x,atmo.y,planetRadius+atmo.depth);
+				gradient.addColorStop(0.4,'rgba('+ atmo.color +',1)');
+				gradient.addColorStop(1, 'rgba('+ atmo.color +',0)');
+				
+				ctx.beginPath();
+				ctx.fillStyle = gradient;
+				ctx.arc(atmo.x,atmo.y,planetRadius+atmo.depth,0,Math.PI*2);
+				ctx.fill();
+			}
+		}
+		
+	}; 
+	
 	
 	game.make.ground = function(spec){
 		var that=game.make.item(spec);
@@ -665,41 +706,7 @@ function vectorGame(game, options) {
 		that.launchProjectile = launchProjectile;
 				
 		return that;
-	}
-	
-	game.customNewLevelAction = function(level) {
-		game.library.backgroundStars.defineStars(level);
-	};
-
-	game.renderBackground = function(c,ctx,plotOffset) {
-		var level = game.level[game.session.currentLevel];
-		game.library.backgroundStars.plotStars(c,ctx,plotOffset);
-		
-		
-		if (level.background) {
-			if (level.background.atmosphereDepth) {
-				var planetRadius = level.background.planetRadius || 2500;
-				
-				var atmo = {
-					depth:level.background.atmosphereDepth,
-					x: level.width*1/2-plotOffset.x,
-					y: level.height+planetRadius-plotOffset.y,
-					color: level.background.atmosphereColor ||'100,100,220'
-				};
-				
-				var gradient = ctx.createRadialGradient(atmo.x,atmo.y,planetRadius, atmo.x,atmo.y,planetRadius+atmo.depth);
-				gradient.addColorStop(0.4,'rgba('+ atmo.color +',1)');
-				gradient.addColorStop(1, 'rgba('+ atmo.color +',0)');
-				
-				ctx.beginPath();
-				ctx.fillStyle = gradient;
-				ctx.arc(atmo.x,atmo.y,planetRadius+atmo.depth,0,Math.PI*2);
-				ctx.fill();
-			}
-		}
-		
-	}; 
-	
+	}	
 	
 	game.make.fancyShip = function(spec) {
 		var that = game.make.ship(spec);
@@ -746,6 +753,7 @@ function vectorGame(game, options) {
 		that.fuel = spec.fuel || 200;
 		that.fuelCapacity = spec.fuelCapacity || 200;
 		that.timeStranded = 0;
+		that.stuck = false;
 		
 		var burnFuel = function() {
 			if (this.thrust){
@@ -759,16 +767,16 @@ function vectorGame(game, options) {
 		};
 		that.refuel = refuel;
 		
-		var dieIfPlayerStranded = function () {
-			if (this.fuel === 0 && this.momentum.m < 0.3  && this === game.session.player) {
-				if (this.timeStranded++ > 30) {
-					if (!game.session.waitingToReset) { game.handleDeadPlayer();}
+		var checkIfStuck = function () {
+			if (this.fuel === 0 && this.momentum.m < 0.2 ) {
+				if (this.timeStranded++ > 10) {
+					that.stuck = true;
 				}
 			} else { this.timeStranded = 0;} 
 		}
 		
 		that.automaticActions.pop(); // remove dropThrust
-		that.automaticActions.push(burnFuel,dieIfPlayerStranded)
+		that.automaticActions.push(burnFuel,checkIfStuck)
 		
 		that.command = function(commandName, commandOptions){
 			switch (commandName) {			

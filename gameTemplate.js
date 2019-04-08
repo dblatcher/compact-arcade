@@ -47,33 +47,12 @@ function createGame (disks, options) {
 		make : {},
 		makeEffect : {},
 		calc : {},
-		session: {},
-		
-		customNewLevelAction : function(){},
-		renderBackground : function(c,ctx,plotOffset){},
-		renderLevelScreen : function(c,ctx,plotOffset){},
-		renderTitleScreen : function(c,ctx,plotOffset){},
-		renderGameOverMessage: function(c,ctx,plotOffset){},
-		renderGameWonMessage: function(c,ctx,plotOffset){},
-		initialise : function(){},
-		setUpLevel : function(){},
-		refresh : function(){},
-		runItemActions : function(){},
-		reactToControls : function(){},
-		reactToHighscoreEntry : function(){},
-		renderScreen : function(){},
-		handleEndOfLevel : function(){},
-		handleDeadPlayer : function(){},
-		
+		session: {},		
 		canvasElement : null,
 		assetHolderElement : null,
 		scoreElement : null,
 		sendScore : function(){},
-		
-		
-		widgets :[
-			
-		],
+		widgets :[],
 		library : {
 			defaultWidgets:{
 				
@@ -451,9 +430,16 @@ function createGame (disks, options) {
 				}
 				this.runItemActions();		
 				if (game.cycleCount % game.numberOfCyclesBetweenCheckingLevelEnds === 0 ) {		
-					if (this.level[this.session.currentLevel].victoryCondition() === true && !game.session.waitingToReset) {
-						this.handleEndOfLevel()
+					if (typeof this.level[this.session.currentLevel].victoryCondition === 'function') {
+						if (this.level[this.session.currentLevel].victoryCondition() === true && !game.session.waitingToReset) {
+							this.handleEndOfLevel()
+						};
 					};
+					if (typeof this.level[this.session.currentLevel].failureCondition === 'function') {
+						if (this.level[this.session.currentLevel].failureCondition() === true && !game.session.waitingToReset) {
+							this.handleDeadPlayer()
+						};
+					}	
 					if (game.session.player.dead == true && game.session.waitingToReset === false) {
 						this.handleDeadPlayer();
 					};			
