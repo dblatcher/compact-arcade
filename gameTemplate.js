@@ -41,9 +41,7 @@ function createGame (disks, options) {
 			}
 		},
 		
-		sprite : {
-		},
-		
+		sprite : {},
 		make : {},
 		makeEffect : {},
 		calc : {},
@@ -52,6 +50,9 @@ function createGame (disks, options) {
 		assetHolderElement : null,
 		scoreElement : null,
 		sendScore : function(){},
+		customNewLevelAction : function(){},
+		renderBackground : function(c,ctx,plotOffset){},
+		reactToControls : function(){},	
 		widgets :[],
 		library : {
 			defaultWidgets:{
@@ -129,6 +130,8 @@ function createGame (disks, options) {
 			
 		}
 	};
+	
+
 	
 	game.ongoingTouches = [];
 	game.swipeDirection = {x:0,y:0};
@@ -269,7 +272,6 @@ function createGame (disks, options) {
 			this.gameStatus = 'titleScreen';
 			this.player ={};
 			this.currentLevel = 0;
-			//game.setUpLevel(0);
 		}
 	};
 	
@@ -432,16 +434,16 @@ function createGame (disks, options) {
 				if (game.cycleCount % game.numberOfCyclesBetweenCheckingLevelEnds === 0 ) {		
 					if (typeof this.level[this.session.currentLevel].victoryCondition === 'function') {
 						if (this.level[this.session.currentLevel].victoryCondition() === true && !game.session.waitingToReset) {
-							this.handleEndOfLevel()
+							this.handlePlayerWinsLevel()
 						};
 					};
 					if (typeof this.level[this.session.currentLevel].failureCondition === 'function') {
 						if (this.level[this.session.currentLevel].failureCondition() === true && !game.session.waitingToReset) {
-							this.handleDeadPlayer()
+							this.handlePlayerLosesLevel()
 						};
 					}	
 					if (game.session.player.dead == true && game.session.waitingToReset === false) {
-						this.handleDeadPlayer();
+						this.handlePlayerLosesLevel();
 					};			
 				};			
 				break;
@@ -669,7 +671,7 @@ function createGame (disks, options) {
 		
 	};
 			
-	game.handleEndOfLevel = function () {	
+	game.handlePlayerWinsLevel = function () {	
 		if (this.level[this.session.currentLevel].score) {this.session.score += this.level[this.session.currentLevel].score}
 		if (this.session.currentLevel+1 < this.level.length) {
 			game.session.waitingToReset = 'nextLevel';
@@ -680,7 +682,7 @@ function createGame (disks, options) {
 		};
 	};
 		
-	game.handleDeadPlayer = function () {
+	game.handlePlayerLosesLevel = function () {
 		if (game.session.lives-- > 0) {
 			game.session.waitingToReset = 'restartLevel';
 			game.session.resetTime = game.cycleCount + options.cyclesBetweenDeathAndReset;
@@ -891,7 +893,7 @@ function createGame (disks, options) {
 		that.message = spec.message || "no message defined!";
 		that.color = spec.color || "black";
 		that.font = spec.font || "arial";
-		that.size = spec.size || (c.height * 6/100) +"px";
+		that.size = spec.size || (game.canvasElement.height * 6/100) +"px";
 		
 		var render = function (ctx,plotOffset,c){
 			ctx.beginPath();
