@@ -53,6 +53,7 @@ function createGame (disks, options) {
 		renderBackground : function(c,ctx,plotOffset){},
 		renderLevelScreen : function(c,ctx,plotOffset){},
 		renderTitleScreen : function(c,ctx,plotOffset){},
+		renderHighscores : function(c,ctx,plotOffset){},
 		renderGameOverMessage: function(c,ctx,plotOffset){},
 		renderGameWonMessage: function(c,ctx,plotOffset){},
 		initialise : function(){},
@@ -67,9 +68,11 @@ function createGame (disks, options) {
 		
 		canvasElement : null,
 		assetHolderElement : null,
-		scoreElement : null,
-		sendScore : function(){},
 		
+		sendScore : function(){},
+		fetchScore : function(){}, 
+		localScores : [],
+		remoteScores : [],
 		
 		widgets :[
 			
@@ -275,17 +278,28 @@ function createGame (disks, options) {
 			this.gameStatus = 'titleScreen';
 			this.player ={};
 			this.currentLevel = 0;
-			//game.setUpLevel(0);
+			game.cycleCount = 0;
 		}
 	};
 	
 	game.initialise = function(outputs) {
 		this.canvasElement = outputs.canvasElement;
-		this.scoreElement = outputs.scoreElement || 0;
 		this.assetHolderElement = outputs.assetHolderElement || document.body;
-		this.sendScore = outputs.sendScoreFunction 
-			|| function(){console.log('No sendScoreFunction was defined in call to initialise - can\'t send highscore. ')};
-
+		
+		this.localScores = [];
+		this.lastScore = null;
+		
+		this.sendScore = outputs.sendScoreFunction ||
+			function(){};
+		
+		// the 'spoof' object is a security feature
+		// prevents the page-supplied fetchScoreFunction having access to game object as 'this'
+		this.spoof = {remoteScores:[]};
+		this.spoof.fetchScore = outputs.fetchScoreFunction ||
+		function() {return []}
+		this.spoof.fetchScore();
+		this.remoteScores = this.spoof.remoteScores;
+		
 		var soundPath  = outputs.soundPath || './'
 		var spritePath = outputs.spritePath ||'./'
 			
@@ -309,13 +323,6 @@ function createGame (disks, options) {
 			this.canvasElement.addEventListener("touchend", game.touch.handleEnd, false);
 			this.canvasElement.addEventListener("touchcancel", game.touch.handleCancel, false);
 			this.canvasElement.addEventListener("touchmove", game.touch.handleMove, false);
-			
-			if (this.scoreElement) {
-				this.scoreElement.addEventListener("touchstart", game.touch.handleStart, false);
-				this.scoreElement.addEventListener("touchend", game.touch.handleEnd, false);
-				this.scoreElement.addEventListener("touchcancel", game.touch.handleCancel, false);
-				this.scoreElement.addEventListener("touchmove", game.touch.handleMove, false);
-			}
 		}
 		
 		console.log("initialized.");
@@ -483,30 +490,71 @@ function createGame (disks, options) {
 		}
 		if (this.keyMap['Enter']) {
 			this.keyMap['Enter'] = false;
-			this.sendScore(game.session.highscoreName, game.session.score);
+			game.lastScore  = {
+				name: game.session.highscoreName,
+				score: game.session.score,
+				date: new Date()
+			}
+			this.localScores.push(game.lastScore);
+			this.sendScore(game.lastScore);
 			game.session.reset();
 		}
 	};
 	
 	game.renderTitleScreen = function (c,ctx,plotOffset) {
-		ctx.beginPath();
-		ctx.font = "8vh sans-serif";
-		ctx.fillStyle = "red";
-		ctx.textAlign = "center";
-		ctx.textBaseline="top";
-
-		ctx.fillText('Default Title Screen' , c.width/2, c.height/4);
+		var fontUnit = c.clientHeight/100;
 		
-		if (game.enableTouch) {
-			ctx.fillText('Press space or touch to start' , c.width/2, c.height/2);
-		} else {
-			ctx.fillText('Press space to start' , c.width/2, c.height/2);
-		}
-		
-		ctx.strokeStyle = "red";
+		ctx.strokeStyle = "white";
 		ctx.strokeRect(40, 80, c.width-80, c.height-160);
 
+		if (game.cycleCount%200 < 100) {
+			ctx.beginPath();
+			ctx.font = (fontUnit*12) + "px sans-serif";
+			ctx.fillStyle = "red";
+			ctx.textAlign = "center";
+			ctx.textBaseline="top";
+			ctx.fillText('Default Title Screen' , c.width/2, c.height*2/10);
+			ctx.font = (fontUnit*8) + "px sans-serif";
+			if (game.enableTouch) {
+				ctx.fillText('Press space or touch to start' , c.width/2, c.height*3/10);
+			} else {
+				ctx.fillText('Press space to start' , c.width/2, c.height*3/10);
+			}
+		} else {
+			game.renderHighscores(c,ctx,plotOffset);
+		}
 	};
+	
+	game.renderHighscores = function (c,ctx,plotOffset) {		
+		var numberOfHighScoresToDisplay = 5;
+		var fontUnit = c.clientHeight/100;
+		ctx.beginPath();
+		ctx.font = (fontUnit*8) + "px monospace";
+		ctx.textBaseline = "top";
+		
+		var scoreTable = game.localScores.concat(game.remoteScores).sort(function(a,b){return b.score - a.score});
+		
+		
+		for (var i = 0; (i < numberOfHighScoresToDisplay && i < scoreTable.length); i++) {	
+			ctx.fillStyle = (scoreTable[i] === game.lastScore) ? 'red' : 'white';
+			ctx.textAlign = "left";
+			ctx.fillText ( (i+1)+ ' ' +scoreTable[i].name, c.width*1/4, (c.height/20)*(i+4) );
+			ctx.textAlign = "right";
+			ctx.fillText (scoreTable[i].score,
+				c.width-(c.width*1/4), (c.height/20)*(i+4)
+			);
+		}
+		if (game.lastScore) {
+			var placeInTable = scoreTable.indexOf(game.lastScore);
+			if ( placeInTable >= numberOfHighScoresToDisplay  ) {
+				ctx.fillStyle = 'red';
+				ctx.textAlign = "left";
+				ctx.fillText ( (placeInTable+1)+ ' ' +game.lastScore.name, c.width*1/4, (c.height/20)*(numberOfHighScoresToDisplay+7.5) );
+				ctx.textAlign = "right";
+				ctx.fillText (game.lastScore.score,c.width-(c.width*1/4), (c.height/20)*(numberOfHighScoresToDisplay+7.5));
+			}
+		}
+	}
 	
 	game.renderLevelScreen = function (c,ctx,plotOffset) {
 		ctx.beginPath();
@@ -542,15 +590,7 @@ function createGame (disks, options) {
 	game.renderScreen = function() {
 		var c = this.canvasElement;	var ctx = c.getContext("2d");
 		var plotOffset = {x:0,y:0}, highscoreNameText='', i;
-		
-		if (this.scoreElement) {
-			if (this.session.gameStatus === 'titleScreen') {
-				this.scoreElement.style.display = 'block';
-			} else {
-				this.scoreElement.style.display = 'none';
-			}
-		}
-		
+				
 		ctx.fillStyle = "black";
 		ctx.fillRect(0,0,c.width,c.height);
 		ctx.lineWidth = 1;

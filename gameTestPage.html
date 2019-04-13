@@ -19,7 +19,6 @@
 <div class = 'squareResponsive outer'>
 	<div class = 'squareResponsive inner'>
 		<canvas id='gameSpace' class = 'centeredSquare' height='1000' width='1000'></canvas>
-		<div id = 'scoreOverlay' class = 'centeredSquare' style = 'color:red'>HIGHSCORES:</div>
 		<div id = 'assetStore'></div>
 	</div>
 </div>
@@ -73,14 +72,33 @@ var vectorGameInstance = createGame([backgroundStars,vectorGraphics,vectorCalcul
 // select which game is run
 var gameInstance = vectorGameInstance;
 
+
+var retrieveScores = function() {
+	
+	var dummyScores = [
+		{name: 'Joe', score: 500, date: new Date(1550000000012)},
+		{name: 'Tim', score: 2500, date: new Date(1550000000110)},
+		{name: 'Bob', score: 300, date: new Date(1550000000050)},
+		{name: 'Joe', score: 1500, date: new Date(1550000000100)},
+		{name: 'Joe', score: 10, date: new Date(1550000000002)},
+		{name: 'Joe', score: 10, date: new Date(1550000000001)}
+	];
+	
+	this.remoteScores = dummyScores;
+};
+
+var sendScore = function(newScore) {
+	
+}
+
 gameInstance.initialise({
 	canvasElement:document.getElementById("gameSpace"),
 	assetHolderElement:document.getElementById("assetStore"),
-	scoreElement:document.getElementById("scoreOverlay"),
 	enableTouch:true,
 	soundPath :'./sounds/',
 	spritePath :'./sprites/',
-	sendScoreFunction:function(name, score){},
+	sendScoreFunction: sendScore,
+	fetchScoreFunction: retrieveScores
 });
 	
 	
