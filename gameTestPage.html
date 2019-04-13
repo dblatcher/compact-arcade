@@ -50,7 +50,7 @@ console.log('running in game debug mode.');
 
 var spaceGameInstance = createGame([spriteHandling,spaceShooter],{
 	leftOffset:150,
-	startingLives:1,
+	startingLives:0,
 	runCollisionTestInMainLoop:true,
 	bottomOfScreenIsZeroY : true,
 });	
@@ -81,17 +81,25 @@ var dummyScores = [
 	{name: 'Joe', score: 10, date: new Date(1550000000002)},
 	{name: 'Joe', score: 10, date: new Date(1550000000001)}
 ];
-var retrieveScores = function() {	
-	var self = this;
-	self.pending = true;
-	setTimeout (function() {
-		self.remoteScores = dummyScores;
-		self.pending = false;
-	},5000);
+var retrieveScores = function() {
+	console.log('request received')
+	return new Promise(function(resolve, reject) {
+	  setTimeout(function() {
+		console.log('sending data')
+		resolve({success:true, data:dummyScores});
+	  }, 3000);
+	});
 };
 
 var sendScore = function(newScore) {
 	console.log('newScore', newScore);
+	return new Promise (function (resolve, reject) {
+		setTimeout(function() {
+			dummyScores.push(newScore);
+			console.log('success:',dummyScores.length);
+			resolve({success:true, data:dummyScores})
+		},3000);
+	});	
 }
 
 gameInstance.initialise({

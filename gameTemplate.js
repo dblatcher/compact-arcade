@@ -289,23 +289,33 @@ function createGame (disks, options) {
 		this.localScores = [];
 		this.lastScore = null;
 		
-		this.sendScore = outputs.sendScoreFunction || function(){};
 		
 		// the 'spoof' object is a security feature
 		// prevents the page-supplied fetchScoreFunction having access to game object as 'this'
 		this.spoof = {remoteScores:[], pending:false};
-		this.spoof.fetchScore = outputs.fetchScoreFunction || function() {return false}
+		this.spoof.sendScore = outputs.sendScoreFunction || function(){};
+		this.spoof.fetchScore = outputs.fetchScoreFunction || function() {return []}
 		
 		Object.defineProperty(this, 'remoteScores', {
 			get: function() { return this.spoof.remoteScores},
 			set: function(v) {this.spoof.remoteScores = v}
 		});
 		Object.defineProperty(this, 'fetchScoreIsPending', {
-			get: function() { return this.spoof.pending}			
+			get: function() { return this.spoof.pending},
+			set: function(v){this.spoof.pending = v}
 		});
 		
-		this.spoof.fetchScore();
 		
+		this.spoof.fetchScore()
+			.then( function(results) {
+				console.log(results)
+				if (results.success) {
+					game.remoteScores = results.data;
+					game.fetchScoreIsPending = false;
+				} else {
+					console.log('failed to get data')
+				}
+			});
 		
 		var soundPath  = outputs.soundPath || './'
 		var spritePath = outputs.spritePath ||'./'
@@ -503,7 +513,19 @@ function createGame (disks, options) {
 				date: new Date()
 			}
 			this.localScores.push(game.lastScore);
-			this.sendScore(game.lastScore);
+			this.spoof.sendScore(game.lastScore)
+				.then( function(response) {
+					console.log(response);
+					if (response.success) {
+						game.remoteScores = response.data;
+						var i = game.localScores.indexOf(game.lastScore);
+						if (i > -1) {
+							game.localScores.splice(i,1)
+						}
+					} else {
+						console.log ('failed to update!!')
+					}
+				} );
 			game.session.reset();
 		}
 	};
