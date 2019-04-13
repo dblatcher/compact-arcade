@@ -289,16 +289,23 @@ function createGame (disks, options) {
 		this.localScores = [];
 		this.lastScore = null;
 		
-		this.sendScore = outputs.sendScoreFunction ||
-			function(){};
+		this.sendScore = outputs.sendScoreFunction || function(){};
 		
 		// the 'spoof' object is a security feature
 		// prevents the page-supplied fetchScoreFunction having access to game object as 'this'
-		this.spoof = {remoteScores:[]};
-		this.spoof.fetchScore = outputs.fetchScoreFunction ||
-		function() {return []}
+		this.spoof = {remoteScores:[], pending:false};
+		this.spoof.fetchScore = outputs.fetchScoreFunction || function() {return false}
+		
+		Object.defineProperty(this, 'remoteScores', {
+			get: function() { return this.spoof.remoteScores},
+			set: function(v) {this.spoof.remoteScores = v}
+		});
+		Object.defineProperty(this, 'fetchScoreIsPending', {
+			get: function() { return this.spoof.pending}			
+		});
+		
 		this.spoof.fetchScore();
-		this.remoteScores = this.spoof.remoteScores;
+		
 		
 		var soundPath  = outputs.soundPath || './'
 		var spritePath = outputs.spritePath ||'./'
@@ -528,12 +535,22 @@ function createGame (disks, options) {
 	game.renderHighscores = function (c,ctx,plotOffset) {		
 		var numberOfHighScoresToDisplay = 5;
 		var fontUnit = c.clientHeight/100;
+		var scoreTable = game.localScores.concat(game.remoteScores).sort(function(a,b){return b.score - a.score});
+		
 		ctx.beginPath();
 		ctx.font = (fontUnit*8) + "px monospace";
 		ctx.textBaseline = "top";
 		
-		var scoreTable = game.localScores.concat(game.remoteScores).sort(function(a,b){return b.score - a.score});
+		ctx.fillStyle = 'white';
+		ctx.textAlign = "center";
+		ctx.fillText ('HIGHSCORES',c.width-(c.width*1/2), (c.height/20)*(3));
 		
+		if (game.fetchScoreIsPending) {
+			if (game.cycleCount % 20 > 5) {
+				ctx.textAlign = "right";
+				ctx.fillText ('(waiting for updates from server)',(c.width*9/10), (c.height * 8/10));
+			}
+		}
 		
 		for (var i = 0; (i < numberOfHighScoresToDisplay && i < scoreTable.length); i++) {	
 			ctx.fillStyle = (scoreTable[i] === game.lastScore) ? 'red' : 'white';

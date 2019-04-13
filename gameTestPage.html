@@ -70,21 +70,24 @@ var vectorGameInstance = createGame([backgroundStars,vectorGraphics,vectorCalcul
 });	
 
 // select which game is run
-var gameInstance = vectorGameInstance;
+var gameInstance = spaceGameInstance;
 
 
-var retrieveScores = function() {
-	
-	var dummyScores = [
-		{name: 'Joe', score: 500, date: new Date(1550000000012)},
-		{name: 'Tim', score: 2500, date: new Date(1550000000110)},
-		{name: 'Bob', score: 300, date: new Date(1550000000050)},
-		{name: 'Joe', score: 1500, date: new Date(1550000000100)},
-		{name: 'Joe', score: 10, date: new Date(1550000000002)},
-		{name: 'Joe', score: 10, date: new Date(1550000000001)}
-	];
-	
-	this.remoteScores = dummyScores;
+var dummyScores = [
+	{name: 'Joe', score: 500, date: new Date(1550000000012)},
+	{name: 'Tim', score: 2500, date: new Date(1550000000110)},
+	{name: 'Bob', score: 300, date: new Date(1550000000050)},
+	{name: 'Joe', score: 1500, date: new Date(1550000000100)},
+	{name: 'Joe', score: 10, date: new Date(1550000000002)},
+	{name: 'Joe', score: 10, date: new Date(1550000000001)}
+];
+var retrieveScores = function() {	
+	var self = this;
+	self.pending = true;
+	setTimeout (function() {
+		self.remoteScores = dummyScores;
+		self.pending = false;
+	},5000);
 };
 
 var sendScore = function(newScore) {
