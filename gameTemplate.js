@@ -45,19 +45,18 @@ function createGame (disks, options) {
 		make : {},
 		makeEffect : {},
 		calc : {},
-		session: {},
-				
+		session: {},				
 		canvasElement : null,
 		assetHolderElement : null,
 		localScores : [],
 		lastScore : null, 
 		widgets :[],
-		
 		library : {
 			defaultWidgets:{
 				
 				barChart : function(c,ctx,plotOffset) {
-					var barLevel = (this.height - 2*this.margin)*(this.getValue() / this.getRange());
+					var margin = this.margin || 0;
+					var barLevel = (this.height - 2*margin)*(this.getValue() / this.getRange());
 					var barFill;
 					if (typeof this.barFill === "function") {
 						barFill = this.barFill(barLevel,ctx)
@@ -73,7 +72,7 @@ function createGame (disks, options) {
 					ctx.fill();
 					ctx.beginPath();
 					ctx.fillStyle = barFill;
-					ctx.rect(this.xPos +this.margin,this.yPos+this.height-barLevel-this.margin,this.width - 2*this.margin,barLevel);
+					ctx.rect(this.xPos +margin,this.yPos+this.height-barLevel-margin,this.width - 2*margin,barLevel);
 					ctx.fill();
 				},
 	
@@ -103,17 +102,33 @@ function createGame (disks, options) {
 				
 				statusLine : function(c,ctx,plotOffset){
 					ctx.beginPath();
-					ctx.font = this.font ||"3vh sans-serif";
+					var font = this.font || "sans-serif";
+					var textSize = this.textSize || 3/100;
+					ctx.font = (textSize * c.height) +"px "+ font;
 					ctx.fillStyle = this.color || "white";
 					ctx.textAlign = "left";
 					ctx.textBaseline = "top";
 					ctx.fillText(this.getStatus(), 10, 10);
-				}
+				},
 				
+				showText : function(c, ctx, plotOffset) {
+					ctx.beginPath();
+					var font = this.font || "sans-serif";
+					var textSize = this.textSize || 3/100;
+					ctx.font = (textSize * c.height) +"px "+ font;
+					ctx.fillStyle = typeof this.color === 'function' ?
+						this.color() :
+						this.color || "white";
+					ctx.textAlign = this.textAlign || "left";
+					ctx.textBaseline = this.textBaseline || "top";
+					ctx.fillText(this.getText(), this.xPos, this.yPos);
+				}
 			}
 			
 		}
 	};
+	
+
 	
 	game.ongoingTouches = [];
 	game.swipeDirection = {x:0,y:0};
@@ -379,7 +394,26 @@ function createGame (disks, options) {
 		if (level.environment){
 			Object.assign(game.session.environment,level.environment);
 		}
-			
+		
+		
+		if (level.addWidgets) {
+			for (init = 0; init < level.addWidgets.length; init++) {
+				if (game.widgets.indexOf(level.addWidgets[init]) === -1) {
+					game.widgets.push(level.addWidgets[init]);
+				}
+			}
+		};
+		
+		if (level.removeWidgets) {
+			for (init = 0; init < level.removeWidgets.length; init++) {
+				if (game.widgets.indexOf(level.removeWidgets[init]) > -1) {
+					
+					game.widgets.splice (game.widgets.indexOf(level.removeWidgets[init]), 1 );
+					
+				}
+			}
+		};
+		
 		game.keyMap ={};
 		game.cycleCount = 0;
 		game.session.gameStatus = options.cyclesForLevelScreen? 'levelScreen' : 'play';
@@ -408,11 +442,18 @@ function createGame (disks, options) {
 				}
 				this.runItemActions();		
 				if (game.cycleCount % game.numberOfCyclesBetweenCheckingLevelEnds === 0 ) {		
-					if (this.level[this.session.currentLevel].victoryCondition() === true && !game.session.waitingToReset) {
-						this.handleEndOfLevel()
+					if (typeof this.level[this.session.currentLevel].victoryCondition === 'function') {
+						if (this.level[this.session.currentLevel].victoryCondition() === true && !game.session.waitingToReset) {
+							this.handlePlayerWinsLevel()
+						};
 					};
+					if (typeof this.level[this.session.currentLevel].failureCondition === 'function') {
+						if (this.level[this.session.currentLevel].failureCondition() === true && !game.session.waitingToReset) {
+							this.handlePlayerLosesLevel()
+						};
+					}	
 					if (game.session.player.dead == true && game.session.waitingToReset === false) {
-						this.handleDeadPlayer();
+						this.handlePlayerLosesLevel();
 					};			
 				};			
 				break;
@@ -562,6 +603,7 @@ function createGame (disks, options) {
 				ctx.textAlign = "right";
 				ctx.fillText ('(waiting for updates from server)',(c.width*9/10), (c.height * 8/10));
 			}
+
 		}
 		
 		for (var i = 0; (i < numberOfHighScoresToDisplay && i < scoreTable.length); i++) {	
@@ -587,7 +629,7 @@ function createGame (disks, options) {
 	
 	game.renderLevelScreen = function (c,ctx,plotOffset) {
 		ctx.beginPath();
-		ctx.font = "4vh sans-serif";
+		ctx.font = (c.height * 8/100)+"px sans-serif";;
 		ctx.fillStyle = "white";
 		ctx.textAlign = "center";
 		ctx.textBaseline="top";
@@ -596,7 +638,7 @@ function createGame (disks, options) {
 	
 	game.renderGameOverMessage = function(c,ctx,plotOffset) {
 		ctx.beginPath();
-		ctx.font = "8vh sans-serif";
+		ctx.font = (c.height * 5/100)+"px sans-serif";;
 		ctx.fillStyle = "white";
 		ctx.textAlign = "center";
 		ctx.textBaseline="top";
@@ -607,7 +649,7 @@ function createGame (disks, options) {
 	
 	game.renderGameWonMessage = function(c,ctx,plotOffset) {
 		ctx.beginPath();
-		ctx.font = "8vh sans-serif";
+		ctx.font = (c.height * 5/100)+"px sans-serif";
 		ctx.fillStyle = "white";
 		ctx.textAlign = "center";
 		ctx.textBaseline="top";
@@ -690,14 +732,14 @@ function createGame (disks, options) {
 		
 		if (this.session.gameStatus === 'highscoreEntry') {
 			ctx.beginPath();
-			ctx.font = "4vh sans-serif";
+			ctx.font = (c.height * 2.5/100)+"px sans-serif";;
 			ctx.fillStyle = "red";
 			ctx.textAlign = "center";
 			ctx.textBaseline="top";
 
 			ctx.fillText('ENTER NAME', c.width/2, c.height*(0.25));
 
-			ctx.font = "18vh sans-serif";
+			ctx.font = (c.height * 12/100)+"px sans-serif";;
 			ctx.fillStyle = "red";
 			ctx.textAlign = "center";
 			ctx.textBaseline="top";			
@@ -719,9 +761,8 @@ function createGame (disks, options) {
 	game.customNewLevelAction = function(){},
 	
 	game.reactToControls = function(){},
-
-	
-	game.handleEndOfLevel = function () {	
+			
+	game.handlePlayerWinsLevel = function () {	
 		if (this.level[this.session.currentLevel].score) {this.session.score += this.level[this.session.currentLevel].score}
 		if (this.session.currentLevel+1 < this.level.length) {
 			game.session.waitingToReset = 'nextLevel';
@@ -732,7 +773,7 @@ function createGame (disks, options) {
 		};
 	};
 		
-	game.handleDeadPlayer = function () {
+	game.handlePlayerLosesLevel = function () {
 		if (game.session.lives-- > 0) {
 			game.session.waitingToReset = 'restartLevel';
 			game.session.resetTime = game.cycleCount + options.cyclesBetweenDeathAndReset;
@@ -776,6 +817,9 @@ function createGame (disks, options) {
 		that.width = spec.width || 10;
 		that.height = spec.height || 10;
 		that.color = spec.color || 'gray';		
+		that.pattern = spec.pattern ? 
+			game.sprite[spec.pattern]: 
+			false;
 		that.dead = false;
 		that.type= 'none';
 		that.circular = false;
@@ -826,7 +870,9 @@ function createGame (disks, options) {
 		
 		var render = function (ctx,plotOffset){
 			ctx.beginPath();
-			ctx.fillStyle = this.color;
+			ctx.fillStyle = this.pattern ?  
+				ctx.createPattern(this.pattern, "repeat") :
+				this.color;
 			ctx.rect(this.x - plotOffset.x,this.renderY - plotOffset.y,this.width,this.height);
 			ctx.fill();	
 		}
@@ -842,6 +888,9 @@ function createGame (disks, options) {
 		that.y = spec.y || 0;
 		that.radius = spec.radius || 10;
 		that.color = spec.color || 'gray';		
+		that.pattern = spec.pattern ? 
+			game.sprite[spec.pattern]: 
+			false;
 		that.dead = false;
 		that.type= 'none';
 		that.circular = true;
@@ -891,7 +940,9 @@ function createGame (disks, options) {
 		
 		var render = function (ctx,plotOffset){
 			ctx.beginPath();
-			ctx.fillStyle = this.color;
+			ctx.fillStyle = this.pattern ?  
+				ctx.createPattern(this.pattern, "repeat") :
+				this.color;
 			ctx.arc(this.x-plotOffset.x, this.renderY-plotOffset.y, this.radius, 0,2*Math.PI);
 			ctx.fill();	
 		}
@@ -933,7 +984,7 @@ function createGame (disks, options) {
 		that.message = spec.message || "no message defined!";
 		that.color = spec.color || "black";
 		that.font = spec.font || "arial";
-		that.size = spec.size || "15vh";
+		that.size = spec.size || (game.canvasElement.height * 6/100) +"px";
 		
 		var render = function (ctx,plotOffset,c){
 			ctx.beginPath();

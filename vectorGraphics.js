@@ -76,6 +76,8 @@ function vectorGraphics(game) {
 				
 			case 'arc':
 				setPointRelativeToRoundItem(coord,order,item);
+				if (typeof order.startAngle === 'undefined') {order.startAngle = 0}
+				if (typeof order.endAngle === 'undefined') {order.endAngle = 2}
 				ctx.arc(
 					coord.x - plotOffset.x + item.x,
 					coord.y - plotOffset.y + item.y,
