@@ -41,42 +41,18 @@ function createGame (disks, options) {
 			}
 		},
 		
-		sprite : {
-		},
-		
+		sprite : {},
 		make : {},
 		makeEffect : {},
 		calc : {},
 		session: {},
-		
-		customNewLevelAction : function(){},
-		renderBackground : function(c,ctx,plotOffset){},
-		renderLevelScreen : function(c,ctx,plotOffset){},
-		renderTitleScreen : function(c,ctx,plotOffset){},
-		renderHighscores : function(c,ctx,plotOffset){},
-		renderGameOverMessage: function(c,ctx,plotOffset){},
-		renderGameWonMessage: function(c,ctx,plotOffset){},
-		initialise : function(){},
-		setUpLevel : function(){},
-		refresh : function(){},
-		runItemActions : function(){},
-		reactToControls : function(){},
-		reactToHighscoreEntry : function(){},
-		renderScreen : function(){},
-		handleEndOfLevel : function(){},
-		handleDeadPlayer : function(){},
-		
+				
 		canvasElement : null,
 		assetHolderElement : null,
-		
-		sendScore : function(){},
-		fetchScore : function(){}, 
 		localScores : [],
-		remoteScores : [],
+		lastScore : null, 
+		widgets :[],
 		
-		widgets :[
-			
-		],
 		library : {
 			defaultWidgets:{
 				
@@ -285,17 +261,13 @@ function createGame (disks, options) {
 	game.initialise = function(outputs) {
 		this.canvasElement = outputs.canvasElement;
 		this.assetHolderElement = outputs.assetHolderElement || document.body;
-		
-		this.localScores = [];
-		this.lastScore = null;
-		
-		
+				
 		// the 'spoof' object is a security feature
 		// prevents the page-supplied fetchScoreFunction having access to game object as 'this'
 		this.spoof = {remoteScores:[], pending:false};
-		this.spoof.sendScore = outputs.sendScoreFunction || function(){};
-		this.spoof.fetchScore = outputs.fetchScoreFunction || function() {return []}
-		
+		this.spoof.fetchScore = outputs.fetchScoreFunction || false;
+		this.spoof.sendScore =  outputs.sendScoreFunction || false;
+
 		Object.defineProperty(this, 'remoteScores', {
 			get: function() { return this.spoof.remoteScores},
 			set: function(v) {this.spoof.remoteScores = v}
@@ -305,17 +277,15 @@ function createGame (disks, options) {
 			set: function(v){this.spoof.pending = v}
 		});
 		
+		if (typeof outputs.fixedScoreData === 'object' && typeof outputs.fetchScoreFunction !== 'function') {
+			if (outputs.fixedScoreData.length) {
+				this.remoteScores = this.remoteScores.concat(outputs.fixedScoreData);
+			}
+		};
 		
-		this.spoof.fetchScore()
-			.then( function(results) {
-				console.log(results)
-				if (results.success) {
-					game.remoteScores = results.data;
-					game.fetchScoreIsPending = false;
-				} else {
-					console.log('failed to get data')
-				}
-			});
+		if (typeof this.spoof.fetchScore === 'function') {
+			game.handleFetchingScore();
+		}
 		
 		var soundPath  = outputs.soundPath || './'
 		var spritePath = outputs.spritePath ||'./'
@@ -340,10 +310,7 @@ function createGame (disks, options) {
 			this.canvasElement.addEventListener("touchend", game.touch.handleEnd, false);
 			this.canvasElement.addEventListener("touchcancel", game.touch.handleCancel, false);
 			this.canvasElement.addEventListener("touchmove", game.touch.handleMove, false);
-		}
-		
-		console.log("initialized.");
-		
+		}		
 		
 		window.onblur = function() {
 			game.keyMap={};
@@ -507,28 +474,51 @@ function createGame (disks, options) {
 		}
 		if (this.keyMap['Enter']) {
 			this.keyMap['Enter'] = false;
-			game.lastScore  = {
+			
+			var newScore  = {
 				name: game.session.highscoreName,
 				score: game.session.score,
 				date: new Date()
 			}
-			this.localScores.push(game.lastScore);
-			this.spoof.sendScore(game.lastScore)
-				.then( function(response) {
-					console.log(response);
-					if (response.success) {
-						game.remoteScores = response.data;
-						var i = game.localScores.indexOf(game.lastScore);
-						if (i > -1) {
-							game.localScores.splice(i,1)
-						}
-					} else {
-						console.log ('failed to update!!')
-					}
-				} );
+			this.localScores.push(newScore);
+			if (typeof game.spoof.sendScore === 'function') {game.handleSendingScore(newScore)};
+			game.lastScore = newScore;
 			game.session.reset();
 		}
 	};
+	
+	game.handleFetchingScore = function () {
+		this.spoof.fetchScore()
+		.then( function(results) {
+			if (results.success) {
+				game.remoteScores = results.data;
+				game.fetchScoreIsPending = false;
+			} else {
+				console.log('failed to fetch scores:', results)
+			}
+		})
+		.catch (function(error){
+			console.log('error fetching scores.')
+		});
+	};
+	
+	game.handleSendingScore = function (newScore){
+		this.spoof.sendScore(newScore)
+		.then( function(response) {
+			if (response.success) {
+				game.remoteScores = response.data;
+				var i = game.localScores.indexOf(newScore);
+				if (i > -1) {
+					game.localScores.splice(i,1)
+				}
+			} else {
+				console.log ('failed to update:', response)
+			}
+		})
+		.catch (function(error) {
+			console.log('error with highscore update');
+		});		
+	}
 	
 	game.renderTitleScreen = function (c,ctx,plotOffset) {
 		var fontUnit = c.clientHeight/100;
@@ -723,7 +713,14 @@ function createGame (disks, options) {
 		};
 		
 	};
-			
+
+	game.renderBackground = function(c,ctx,plotOffset){},
+	
+	game.customNewLevelAction = function(){},
+	
+	game.reactToControls = function(){},
+
+	
 	game.handleEndOfLevel = function () {	
 		if (this.level[this.session.currentLevel].score) {this.session.score += this.level[this.session.currentLevel].score}
 		if (this.session.currentLevel+1 < this.level.length) {

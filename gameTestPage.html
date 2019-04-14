@@ -78,9 +78,10 @@ var dummyScores = [
 	{name: 'Tim', score: 2500, date: new Date(1550000000110)},
 	{name: 'Bob', score: 300, date: new Date(1550000000050)},
 	{name: 'Joe', score: 1500, date: new Date(1550000000100)},
-	{name: 'Joe', score: 10, date: new Date(1550000000002)},
-	{name: 'Joe', score: 10, date: new Date(1550000000001)}
+	{name: 'Joe', score: 15, date: new Date(1550000000002)},
+	{name: 'Joe', score: 20, date: new Date(1550000000001)}
 ];
+
 var retrieveScores = function() {
 	console.log('request received')
 	return new Promise(function(resolve, reject) {
@@ -109,7 +110,8 @@ gameInstance.initialise({
 	soundPath :'./sounds/',
 	spritePath :'./sprites/',
 	sendScoreFunction: sendScore,
-	fetchScoreFunction: retrieveScores
+	fetchScoreFunction: retrieveScores,
+	fixedScoreData: dummyScores
 });
 	
 	
