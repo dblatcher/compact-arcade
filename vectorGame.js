@@ -320,16 +320,37 @@ function vectorGame(game, options) {
 	}
 	
 	game.level = [
-		{name: "moonbase alpha", width:1000, height:1500,
+		{name: "space duel", width:1000, height: 1000,
+			items: [
+				{func:"fancyShip", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50, v:0,radius:20,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
+				{func:"ship", spec:{x:850,y:600,h:0.2*Math.PI,v:0,radius:20,shield:0.5,thrust:0.2,color:'green', behaviour:attack_AI,momentum:{h:(Math.PI*1), m:6}}},		
+			],
+			effects : [],
+			addWidgets: [thrustMeter,mapWidget],
+			removeWidgets:[descentMeter,fuelMeter,fuelMeterLabel],
+			environment : {
+				gravitationalConstant: 0.1,
+				airDensity: 0.0,
+				localGravity:0
+			},
+			victoryCondition : function(){
+				var test = function(item){
+					return ((item.type==='ship') && (item.color === 'green'));
+				}
+				var filtered = game.session.items.filter(test);
+				return filtered.length === 0;
+			}
+		},
+		{name: "moonbase alpha", width:1000, height:2500,
 			items:[
-				{func:"landingCraft", spec:{x:600,y:1350,h:0.0*Math.PI, mass: 50,
+				{func:"landingCraft", spec:{x:600,y:2350,h:0.0*Math.PI, mass: 50,
 				v:0,radius:20,elasticity:0.25,thrust:0.1, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
 				, isPlayer:true},		
-				{func:'landingCraft', spec:{x:800,y:350,h:0,thrust:0.45,v:0, mass:50,radius:20,color:'white'}},
-				{func:"boulder", spec:{x:500,y:3950,radius:2550, pattern:"stone.jpg"}},
-				{func:"landingZone", spec:{x:500,y:1400,width:300,height:50, isGoal:true,color:'green'}},
-				{func:"boulder", spec:{x: 200, y:1450, radius:50, pattern: "stone.jpg"}},
-				{func:"boulder", spec:{x: 350, y:1430, radius:60, pattern: "stone.jpg"}},
+				{func:'landingCraft', spec:{x:800,y:1350,h:0,thrust:0.45,v:0, mass:50,radius:20,color:'white'}},
+				{func:"boulder", spec:{x:500,y:4950,radius:2550, pattern:"stone.jpg"}},
+				{func:"landingZone", spec:{x:500,y:2400,width:300,height:50, isGoal:true,color:'green'}},
+				{func:"boulder", spec:{x: 200, y:2450, radius:50, pattern: "stone.jpg"}},
+				{func:"boulder", spec:{x: 350, y:2430, radius:60, pattern: "stone.jpg"}},
 				],
 			effects:[],
 			removeWidgets: [thrustMeter,mapWidget],
@@ -341,8 +362,8 @@ function vectorGame(game, options) {
 			},
 			background : {
 				planetRadius: 2000,
-				atmosphereDepth: 1000,
-				atmosphereColor: '150,40,160'
+				atmosphereDepth: 800,
+				atmosphereColor: '150,140,255'
 			},
 			victoryCondition: function () {
 				return (game.session.items.filter(function(item){return(item.isGoal && item.timePlayerOn > 20)}).length > 0);
@@ -353,18 +374,18 @@ function vectorGame(game, options) {
 		},
 		{name: "moonbase beta", width:1000, height:1500,
 			items:[
-				{func:"landingCraft", spec:{x:350,y:1100,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0.1, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}},isPlayer:true},		
-				{func:"ground", spec:{x:0,y:1450,width:1000,height:50, pattern:"stone.jpg"}},
+				{func:"landingCraft", spec:{x:500,y:1300,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0.15, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}},isPlayer:true},		
+				{func:"boulder", spec:{x:500,y:3950,radius:2550, pattern:"stone.jpg"}},
 				{func:"ground", spec:{x:0,y:1500-350,width:200,height:300, pattern:"stone.jpg"}},
 				{func:"ground", spec:{x:200,y:1500-350,width:150,height:50, pattern:"stone.jpg"}},
 				{func:"ground", spec:{x:800,y:1500-650,width:200,height:600, pattern:"stone.jpg"}},
-				{func:"boulder", spec:{x:800,y:1500-80,radius:70, pattern:"stone.jpg"}},
+				{func:"boulder", spec:{x:800,y:1500-80,radius:100, pattern:"stone.jpg"}},
 				{func:"landingZone", spec:{x:300,y:1400,width:300,height:50, isGoal:true,color:'green'}},
 				{func:"landingZone", spec:{x:50,y:1500-360,width:50,height:10, isRefuel:true,color:'red'}}
 				],
 			effects:[],
 			backgroundStars:{
-				number:1000
+				number:500
 			},			
 			environment : {
 				gravitationalConstant: 0.1,
@@ -391,6 +412,11 @@ function vectorGame(game, options) {
 				airDensity: 0.15,
 				localGravity:1.3
 			},
+			background : {
+				planetRadius: 2000,
+				atmosphereDepth: 1000,
+				atmosphereColor: '150,40,160'
+			},
 			victoryCondition: function () {
 				return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0);
 			},
@@ -402,7 +428,6 @@ function vectorGame(game, options) {
 			items :[
 				{func:"fancyShip", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
 				{func:'rock', spec:{x:200,y:250,h:0,v:0,radius:90,density:2,color:'blue', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
-				//{func:'rock', spec:{x:400,y:250,h:0,v:0,radius:90,density:1,color:'green', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
 				{func:"ship", spec:{x:850,y:600,h:0.2*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0.2,color:'purple', behaviour:slowDown_AI,momentum:{h:(Math.PI*1), m:6}}},		
 				{func:"ship", spec:{x:650,y:900,h:0.2*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'yellow', behaviour:evadeThreat_AI,momentum:{h:(Math.PI*1), m:0}}}
 			],
@@ -418,7 +443,7 @@ function vectorGame(game, options) {
 				return (game.session.items.filter(function(item){return(item.type==='rock')}).length === 0);
 			}
 		},
-		{name:"planet pool", width:1200, height:1200,
+		{name: "planet pool", width:1200, height:1200,
 			items :[
 				{func:"fancyShip", spec:{x:150,y:1100,h:0.0*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
 				{func:'blackHole', spec:{x:500,y:500,h:0,v:0,radius:10, mass:2500, gravityMaxRange:250,color:'purple' }},
@@ -601,35 +626,35 @@ function vectorGame(game, options) {
 		game.library.vectorPhysics.assignVectorPhysics(that,spec);
 		
 		that.maxSpeed = spec.maxSpeed || 20;
-		
+		that.shield = spec.shield || 0;
 		that.coolDownLevel = 0;
 		that.coolDownDelay = 15;
 
 		var coolDown = function(){
 			if (this.coolDownLevel){this.coolDownLevel--};
 		};
-
 		var dropThrust = function(){
 			if (this.thrust){this.thrust -= Math.min(this.thrust,0.05)};
 		}
-		
 		that.automaticActions.push(VP.airResistForce, VP.thrustForce,VP.globalGravityForce,coolDown,dropThrust);
-		
 		if (spec.behaviour){that.automaticActions.push(spec.behaviour)}
 		
-		that.hit.rock = function(impactPoint,isReversed){
-			VP.flatBounce(impactPoint,isReversed);
+		that.explode = function() {
 			game.sound.play("die.mp3");
 			game.session.effect.push(game.makeEffect.expandingRing({x:impactPoint.x, y:impactPoint.y, lastFrame:20}));
 			this.dead = true;
+		};
+		
+		that.hit.rock = function(impactPoint,isReversed){
+			VP.flatBounce(impactPoint,isReversed);
+			this.explode();
 		};
 		that.hit.solidRock = that.hit.rock;
 		
 		that.hit.ground = function(impactPoint,isReversed) {
 			//reportImpact(impactPoint,isReversed);
 			if (impactPoint.force > 150) {
-				game.session.effect.push(game.makeEffect.expandingRing({x:impactPoint.x, y:impactPoint.y, lastFrame:20}));
-				this.dead = true;
+				thia.explode();
 			}
 			VP.reflectForceOffFlatSurface(impactPoint,isReversed);
 		}
@@ -660,6 +685,24 @@ function vectorGame(game, options) {
 			};
 		};
 		
+		that.drawShield = function(){
+			if (!this.shield) {return [];}
+			
+			if (game.cycleCount%10 > this.shield*10) {return []}
+		
+			var draw = [
+			{com:'beginPath'},
+			{com:'fillStyle',v:'rgba(170,170,255,0.25)'},
+			{com:"moveTo", h:0.5,d:1},
+			{com:"arc", x:0,y:0,r:1.1 },			
+			{com:'fill'}
+			];
+			
+			
+			
+			return draw;
+		}
+		
 		that.draw = function(){
 			var flicker1 = (Math.random()-0.5)/20;
 			var flicker2 = (Math.random())/5;
@@ -678,7 +721,7 @@ function vectorGame(game, options) {
 				{com:'lineTo',h:0,d:1},
 				{com:'fillStyle',v:this.color},
 				{com:'fill'}
-			];
+			].concat(this.drawShield());
 		}
 		
 		
@@ -716,11 +759,15 @@ function vectorGame(game, options) {
 			var flicker2 = (Math.random())/5;
 			var flameSize = 0.5+(this.thrust*10)*0.75;
 			if (flameSize<0){flameSize = 0}	
-			return [
+			
+			var drawFlames = this.thrust ? [
 				{com:'moveTo',x:-0.5,y:0.3},
 				{com:'quadraticCurveTo',x:0.5,y:0.3,controlPoint:{h:1+flicker1,d:flameSize+flicker2}},
 				{com:'fillStyle', colors:[{v:0, color:'green'},{v:0.5, color:'white'},{v:1, color:'green'}], start:0.1, end:flameSize+flicker2 },				
-				{com:'fill'},	
+				{com:'fill'}				
+			] :	[];
+			
+			var drawBody = [
 				{com:'beginPath'},
 				{com:'moveTo', h:0.75, d:1},
 				{com:'quadraticCurveTo',h:0.2 , d:1,controlPoint:{h:0.7,d:1}},
@@ -731,7 +778,10 @@ function vectorGame(game, options) {
 				{com:'lineTo', h:1.2,d:0.6},
 				{com:'lineTo', h:0.8,d:0.6},
 				{com:'lineTo', h:0.75,d:1},
-				{com:'fillStyle',v:this.color},
+				{com:'fillStyle',v:this.color}
+			];
+			
+			var drawCockpit = [
 				{com:'fill'},
 				{com:'beginPath'},
 				{com:'strokeStyle', v:"white"},
@@ -741,7 +791,9 @@ function vectorGame(game, options) {
 				{com:'fillStyle',v:'black'},
 				{com:'fill'},
 				{com:'closePath'}
-			]
+			];
+			
+			return [].concat(drawFlames, drawBody, drawCockpit);
 		};
 		
 		return that;
@@ -885,8 +937,6 @@ function vectorGame(game, options) {
 			this.dead = true;
 			var randomHeading = game.calc.round(Math.random()*2,3);
 			var randomSpeed = game.calc.round(Math.random()*2,3);
-			
-			
 			var shardVector1 = game.calc.vectorFromForces([this.momentum, {h:randomHeading,m:randomSpeed}],3);
 			var shard1 = game.make.rock({
 				x:this.x,
@@ -926,7 +976,6 @@ function vectorGame(game, options) {
 		that.hit.ground = VP.reflectForceOffFlatSurface;			
 		that.hit.blackHole = getSuckedIn;
 		that.automaticActions.push(VP.airResistForce,VP.exertGravity,VP.globalGravityForce,function(){this.h +=this.spin;});
-		
 		
 		that.shape = [];
 		for (var a = 0; a<1.9; a=a+0.1){
@@ -993,39 +1042,6 @@ function vectorGame(game, options) {
 		
 		return that;
 	};
-	
-	
-	game.make.complex = function(spec) {
-		var that = game.make.roundItem(spec);
-		game.library.vectorGraphics.assignVectorRender(that,spec);
-		
-		that.automaticActions.push(function(){
-			this.h += 0.01;
-			while(this.h > Math.PI*2) {this.h -= Math.PI*2};
-		});	
-		
-		that.draw = function() {
-			return [
-					{com:'moveTo',x:-1,y:-1},
-					{com:'lineTo', x:0, y:-0.8},
-					{com:'lineTo', x:1, y:-1},
-					{com:'strokeStyle', v:"white"},
-					{com:'lineTo', x:1, y:1},
-					{com:'lineTo', x:-1, y:1},
-					{com:'lineTo',x:-1,y:-1},
-					{com:'moveTo',h:0,d:0},
-					{com:'lineTo',h:0,d:0.5},
-					{com:'strokeStyle', v:this.color},
-					{com:'lineTo',h:0.2,d:0.5},
-					{com:'lineTo',h:0.4,d:0.5},
-					{com:'lineTo',h:0.6,d:0.5},
-					{com:'lineTo',h:0.8,d:0.5},
-					{com:'arc',h:0.8,d:0.5,r:0.5,startAngle:1.5-this.h,endAngle:0-this.h}
-				];
-		};
-		return that;
-	};
-	
 	
 	return game;
 };
