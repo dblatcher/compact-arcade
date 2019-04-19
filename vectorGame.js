@@ -2,7 +2,7 @@
 function vectorGame(game, options) {
 		
 	var VP = game.library.vectorPhysics;
-	game.soundFiles.push ('zap.mp3','die.mp3');
+	game.soundFiles.push ('laser.mp3','die.mp3');
 	game.spriteFiles.push ('stone.jpg');
 	
 	var reportImpact = function(impactPoint,isReversed) {
@@ -641,7 +641,7 @@ function vectorGame(game, options) {
 		
 		that.explode = function() {
 			game.sound.play("die.mp3");
-			game.session.effect.push(game.makeEffect.expandingRing({x:impactPoint.x, y:impactPoint.y, lastFrame:20}));
+			game.session.effect.push(game.makeEffect.expandingRing({x:this.x, y:this.y, lastFrame:20}));
 			this.dead = true;
 		};
 		
@@ -654,7 +654,7 @@ function vectorGame(game, options) {
 		that.hit.ground = function(impactPoint,isReversed) {
 			//reportImpact(impactPoint,isReversed);
 			if (impactPoint.force > 150) {
-				thia.explode();
+				this.explode();
 			}
 			VP.reflectForceOffFlatSurface(impactPoint,isReversed);
 		}
@@ -666,7 +666,7 @@ function vectorGame(game, options) {
 			case "FIRE":
 				if(this.coolDownLevel === 0) {
 					this.launchProjectile();
-					game.sound.play("zap.mp3");
+					game.sound.play("laser.mp3");
 					this.coolDownLevel = this.coolDownDelay;
 				}
 				break;
