@@ -488,23 +488,27 @@ function createGame (disks, options) {
 	};
 	
 	game.handleFetchingScore = function () {
+		game.fetchScoreIsPending = true;
 		this.spoof.fetchScore()
 		.then( function(results) {
+			game.fetchScoreIsPending = false;
 			if (results.success) {
 				game.remoteScores = results.data;
-				game.fetchScoreIsPending = false;
 			} else {
 				console.log('failed to fetch scores:', results)
 			}
 		})
 		.catch (function(error){
+			game.fetchScoreIsPending = false;
 			console.log('error fetching scores.')
 		});
 	};
 	
 	game.handleSendingScore = function (newScore){
+		game.fetchScoreIsPending = true;
 		this.spoof.sendScore(newScore)
 		.then( function(response) {
+			game.fetchScoreIsPending = false;
 			if (response.success) {
 				game.remoteScores = response.data;
 				var i = game.localScores.indexOf(newScore);
@@ -512,6 +516,7 @@ function createGame (disks, options) {
 					game.localScores.splice(i,1)
 				}
 			} else {
+				game.fetchScoreIsPending = false;
 				console.log ('failed to update:', response)
 			}
 		})
@@ -547,7 +552,10 @@ function createGame (disks, options) {
 	game.renderHighscores = function (c,ctx,plotOffset) {		
 		var numberOfHighScoresToDisplay = 5;
 		var fontUnit = c.clientHeight/100;
-		var scoreTable = game.localScores.concat(game.remoteScores).sort(function(a,b){return b.score - a.score});
+		var scoreTable = game.localScores.concat(game.remoteScores).sort(function(a,b){
+			if (b.score === a.score) {return b.date - a.date};
+			return b.score - a.score;
+		});
 		
 		ctx.beginPath();
 		ctx.font = (fontUnit*8) + "px monospace";
