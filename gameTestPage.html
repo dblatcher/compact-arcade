@@ -5,7 +5,6 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<link rel="stylesheet" href="./style-canvas.css" />
-	
 </head>
 
 <body>
@@ -40,7 +39,6 @@
 
 <script>
 
-console.log('running in game debug mode.');
 	
 /* Declaring gameInstance gives access to it and its properties in the console.
    This is useful for debugging and playtesting but allows players to cheat.
@@ -72,8 +70,10 @@ var vectorGameInstance = createGame([backgroundStars,vectorGraphics,vectorCalcul
 // select which game is run
 var gameInstance = spaceGameInstance;
 
-
-var dummyScores = [
+// on this script dummyScoreData, fetchScores and sendScore simulate asynchronous requests 
+// they can be replaced with fetch and send functions that use Promise to query a server-side resource
+// if successfull, they must resolve as shown in the example
+var dummyScoreData = [
 	{name: 'Joe', score: 500, date: new Date(1550000000012)},
 	{name: 'Tim', score: 2500, date: new Date(1550000000110)},
 	{name: 'Bob', score: 300, date: new Date(1550000000050)},
@@ -82,26 +82,41 @@ var dummyScores = [
 	{name: 'Joe', score: 20, date: new Date(1550000000001)}
 ];
 
-var retrieveScores = function() {
-	console.log('request received')
+var fetchScores = function() {
+	console.log('fetch score request received')
 	return new Promise(function(resolve, reject) {
-	  setTimeout(function() {
-		console.log('sending data')
-		resolve({success:true, data:dummyScores});
-	  }, 3000);
+		setTimeout(function() {
+			if (true) {
+				resolve({success:true, data:dummyScoreData});
+			} else {
+				reject ('error');
+			}		
+		}, 4000);
 	});
 };
 
 var sendScore = function(newScore) {
-	console.log('newScore', newScore);
+	console.log('new score received : ', newScore);
 	return new Promise (function (resolve, reject) {
 		setTimeout(function() {
-			dummyScores.push(newScore);
-			console.log('success:',dummyScores.length);
-			resolve({success:true, data:dummyScores})
-		},3000);
+			if (true) {
+				dummyScoreData.push(newScore);
+				resolve({success:true, data:dummyScoreData});
+			} else {
+				reject ('error');
+			}
+		},4000);
 	});	
 }
+
+// you can set a fixed set of scores directly on the client side
+// the game will use fixedScoreData (defaults to [] ) if there is no fetchScoreFunction
+// if fetchScoreFunction fails, it will fall back to the fixedScoreData
+var fixedScoreData = [
+	{name: 'Joe', score: 500, date: new Date(1550000000012)},
+	{name: 'Joe', score: 15, date: new Date(1550000000002)},
+	{name: 'Joe', score: 20, date: new Date(1550000000001)}
+];
 
 gameInstance.initialise({
 	canvasElement:document.getElementById("gameSpace"),
@@ -110,8 +125,8 @@ gameInstance.initialise({
 	soundPath :'./sounds/',
 	spritePath :'./sprites/',
 	sendScoreFunction: sendScore,
-	fetchScoreFunction: retrieveScores,
-	fixedScoreData: dummyScores
+	fetchScoreFunction: fetchScores,
+	fixedScoreData: fixedScoreData
 });
 	
 	
