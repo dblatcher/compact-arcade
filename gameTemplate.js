@@ -49,6 +49,7 @@ function createGame (disks, options) {
 		canvasElement : null,
 		assetHolderElement : null,
 		localScores : [],
+		fallbackScores : [],
 		lastScore : null, 
 		widgets :[],
 		library : {
@@ -292,9 +293,13 @@ function createGame (disks, options) {
 			set: function(v){this.spoof.pending = v}
 		});
 		
-		if (typeof outputs.fixedScoreData === 'object' && typeof outputs.fetchScoreFunction !== 'function') {
+		if (typeof outputs.fixedScoreData === 'object') {
 			if (outputs.fixedScoreData.length) {
-				this.remoteScores = this.remoteScores.concat(outputs.fixedScoreData);
+				if (typeof outputs.fetchScoreFunction !== 'function') {
+					this.remoteScores = this.remoteScores.concat(outputs.fixedScoreData);
+				} else {
+					this.fallbackScores = outputs.fixedScoreData;
+				}
 			}
 		};
 		
@@ -529,23 +534,34 @@ function createGame (disks, options) {
 	};
 	
 	game.handleFetchingScore = function () {
-		this.spoof.fetchScore()
+		game.fetchScoreIsPending = true;
+		game.spoof.fetchScore()
 		.then( function(results) {
+			game.fetchScoreIsPending = false;
 			if (results.success) {
 				game.remoteScores = results.data;
-				game.fetchScoreIsPending = false;
 			} else {
-				console.log('failed to fetch scores:', results)
+				handleFail();
 			}
 		})
 		.catch (function(error){
-			console.log('error fetching scores.')
+			game.fetchScoreIsPending = false;
+			handleFail();
 		});
+		
+		function handleFail() {
+			console.error('failed to fetch current scores');
+			if (game.remoteScores.length === 0 && game.fallbackScores.length >0 ) {
+				game.remoteScores = [].concat(game.fallbackScores);
+			}
+		}
 	};
 	
 	game.handleSendingScore = function (newScore){
+		game.fetchScoreIsPending = true;
 		this.spoof.sendScore(newScore)
 		.then( function(response) {
+			game.fetchScoreIsPending = false;
 			if (response.success) {
 				game.remoteScores = response.data;
 				var i = game.localScores.indexOf(newScore);
@@ -553,6 +569,7 @@ function createGame (disks, options) {
 					game.localScores.splice(i,1)
 				}
 			} else {
+				game.fetchScoreIsPending = false;
 				console.log ('failed to update:', response)
 			}
 		})
@@ -566,29 +583,34 @@ function createGame (disks, options) {
 		
 		ctx.strokeStyle = "white";
 		ctx.strokeRect(40, 80, c.width-80, c.height-160);
-
-		if (game.cycleCount%200 < 100) {
-			ctx.beginPath();
-			ctx.font = (fontUnit*12) + "px sans-serif";
-			ctx.fillStyle = "red";
-			ctx.textAlign = "center";
-			ctx.textBaseline="top";
-			ctx.fillText('Default Title Screen' , c.width/2, c.height*2/10);
-			ctx.font = (fontUnit*8) + "px sans-serif";
-			if (game.enableTouch) {
-				ctx.fillText('Press space or touch to start' , c.width/2, c.height*3/10);
-			} else {
-				ctx.fillText('Press space to start' , c.width/2, c.height*3/10);
-			}
+		
+		ctx.beginPath();
+		ctx.font = (fontUnit*12) + "px sans-serif";
+		ctx.fillStyle = "red";
+		ctx.textAlign = "center";
+		ctx.textBaseline="top";
+		ctx.fillText('Default Title Screen' , c.width/2, c.height*2/10);
+		ctx.font = (fontUnit*8) + "px sans-serif";
+		if (game.enableTouch) {
+			ctx.fillText('Press space or touch to start' , c.width/2, c.height*3/10);
 		} else {
-			game.renderHighscores(c,ctx,plotOffset);
+			ctx.fillText('Press space to start' , c.width/2, c.height*3/10);
 		}
+
 	};
 	
 	game.renderHighscores = function (c,ctx,plotOffset) {		
 		var numberOfHighScoresToDisplay = 5;
 		var fontUnit = c.clientHeight/100;
-		var scoreTable = game.localScores.concat(game.remoteScores).sort(function(a,b){return b.score - a.score});
+		var scoreTable = game.localScores.concat(game.remoteScores).sort(function(a,b){
+			if (b.score === a.score) {return b.date - a.date};
+			return b.score - a.score;
+		});
+		
+		var fontUnit = c.clientHeight/100;
+		
+		ctx.strokeStyle = "white";
+		ctx.strokeRect(40, 80, c.width-80, c.height-160);
 		
 		ctx.beginPath();
 		ctx.font = (fontUnit*8) + "px monospace";
@@ -751,7 +773,11 @@ function createGame (disks, options) {
 		};
 		
 		if (this.session.gameStatus === 'titleScreen') {
-			this.renderTitleScreen(c,ctx,plotOffset);
+			if (this.cycleCount%200 < 100) {
+				this.renderTitleScreen(c,ctx,plotOffset);				
+			} else {
+				this.renderHighscores(c,ctx,plotOffset)
+			}
 		};
 		
 	};
