@@ -29,13 +29,14 @@
 
 <script src = './gameTemplate.js' ></script>
 <script src = './spriteHandling.js' ></script>
-<script src = './platforms.js' ></script>
-<script src = './spaceshooter.js' ></script>
 <script src = './vectorGraphics.js' ></script>
 <script src = './vectorPhysics.js' ></script>
-<script src = './vectorGame.js' ></script>
 <script src = './vectorCalculations.js' ></script>
+<script src = './spaceshooter.js' ></script>
 <script src = './backgroundStars.js' ></script>
+<script src = './platforms.js' ></script>
+<script src = './vectorGame.js' ></script>
+<script src = './landerGame.js' ></script>
 
 <script>
 
@@ -61,14 +62,23 @@ var platformGameInstance = createGame([spriteHandling,platformGame],{
 });	
 
 var vectorGameInstance = createGame([backgroundStars,vectorGraphics,vectorCalculations,vectorPhysics,vectorGame],{
+	startingLives:3,
+	runCollisionTestInMainLoop:false,
+	bottomOfScreenIsZeroY : false,
+	gameCycleTime : 10
+});	
+
+
+var landerGameInstance = createGame([backgroundStars,vectorGraphics,vectorCalculations,vectorPhysics,landerGame],{
 	startingLives:4,
 	runCollisionTestInMainLoop:false,
 	bottomOfScreenIsZeroY : false,
 	gameCycleTime : 10
 });	
 
+
 // select which game is run
-var gameInstance = vectorGameInstance;
+var gameInstance = landerGameInstance;
 
 // on this script dummyScoreData, fetchScores and sendScore simulate asynchronous requests 
 // they can be replaced with fetch and send functions that use Promise to query a server-side resource
