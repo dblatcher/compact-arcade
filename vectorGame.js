@@ -1,4 +1,5 @@
 
+
 function vectorGame(game, options) {
 		
 	var VP = game.library.vectorPhysics;
@@ -311,95 +312,74 @@ function vectorGame(game, options) {
 		
 		
 			}
-			
-		
+					
 		} else {
 			slowDown_AI.apply(this,[])
 		};
 		
 	}
 	
-	game.level = [
-		{name: "space duel", width:1000, height: 1000,
-			items: [
-				{func:"fancyShip", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50, v:0,radius:20,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
-				{func:"ship", spec:{x:850,y:600,h:0.2*Math.PI,v:0,radius:20,shield:0.5,thrust:0.2,color:'green', behaviour:attack_AI,momentum:{h:(Math.PI*1), m:6}}},		
+
+	var ourLevels = {		
+	moonbaseAlpha: {name: "moonbase alpha", width:1000, height:2500,
+		items:[
+			{func:"landingCraft", spec:{x:600,y:2350,h:0.0*Math.PI, mass: 50,
+			v:0,radius:20,elasticity:0.25,thrust:0.1, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
+			, isPlayer:true},		
+			{func:'landingCraft', spec:{x:800,y:1350,h:0,thrust:0.45,v:0, mass:50,radius:20,color:'white'}},
+			{func:"boulder", spec:{x:500,y:4950,radius:2550, pattern:"stone.jpg"}},
+			{func:"landingZone", spec:{x:500,y:2400,width:300,height:50, isGoal:true,color:'green'}},
+			{func:"boulder", spec:{x: 200, y:2450, radius:50, pattern: "stone.jpg"}},
+			{func:"boulder", spec:{x: 350, y:2430, radius:60, pattern: "stone.jpg"}},
 			],
-			effects : [],
-			addWidgets: [thrustMeter,mapWidget],
-			removeWidgets:[descentMeter,fuelMeter,fuelMeterLabel],
-			environment : {
-				gravitationalConstant: 0.1,
-				airDensity: 0.0,
-				localGravity:0
-			},
-			victoryCondition : function(){
-				var test = function(item){
-					return ((item.type==='ship') && (item.color === 'green'));
-				}
-				var filtered = game.session.items.filter(test);
-				return filtered.length === 0;
-			}
+		effects:[],
+		removeWidgets: [thrustMeter,mapWidget],
+		addWidgets:[descentMeter,fuelMeter,fuelMeterLabel],
+		environment : {
+			gravitationalConstant: 0.1,
+			airDensity: 0.01,
+			localGravity:1
 		},
-		{name: "moonbase alpha", width:1000, height:2500,
-			items:[
-				{func:"landingCraft", spec:{x:600,y:2350,h:0.0*Math.PI, mass: 50,
-				v:0,radius:20,elasticity:0.25,thrust:0.1, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
-				, isPlayer:true},		
-				{func:'landingCraft', spec:{x:800,y:1350,h:0,thrust:0.45,v:0, mass:50,radius:20,color:'white'}},
-				{func:"boulder", spec:{x:500,y:4950,radius:2550, pattern:"stone.jpg"}},
-				{func:"landingZone", spec:{x:500,y:2400,width:300,height:50, isGoal:true,color:'green'}},
-				{func:"boulder", spec:{x: 200, y:2450, radius:50, pattern: "stone.jpg"}},
-				{func:"boulder", spec:{x: 350, y:2430, radius:60, pattern: "stone.jpg"}},
-				],
-			effects:[],
-			removeWidgets: [thrustMeter,mapWidget],
-			addWidgets:[descentMeter,fuelMeter,fuelMeterLabel],
-			environment : {
-				gravitationalConstant: 0.1,
-				airDensity: 0.01,
-				localGravity:1
-			},
-			background : {
-				planetRadius: 2000,
-				atmosphereDepth: 800,
-				atmosphereColor: '150,140,255'
-			},
-			victoryCondition: function () {
-				return (game.session.items.filter(function(item){return(item.isGoal && item.timePlayerOn > 20)}).length > 0);
-			},
-			failureCondition: function() {
-				return game.session.player.stuck;
-			}
+		background : {
+			planetRadius: 2000,
+			atmosphereDepth: 800,
+			atmosphereColor: '150,140,255'
 		},
-		{name: "moonbase beta", width:1000, height:1500,
-			items:[
-				{func:"landingCraft", spec:{x:500,y:1300,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0.15, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}},isPlayer:true},		
-				{func:"boulder", spec:{x:500,y:3950,radius:2550, pattern:"stone.jpg"}},
-				{func:"ground", spec:{x:0,y:1500-350,width:200,height:300, pattern:"stone.jpg"}},
-				{func:"ground", spec:{x:200,y:1500-350,width:150,height:50, pattern:"stone.jpg"}},
-				{func:"ground", spec:{x:800,y:1500-650,width:200,height:600, pattern:"stone.jpg"}},
-				{func:"boulder", spec:{x:800,y:1500-80,radius:100, pattern:"stone.jpg"}},
-				{func:"landingZone", spec:{x:300,y:1400,width:300,height:50, isGoal:true,color:'green'}},
-				{func:"landingZone", spec:{x:50,y:1500-360,width:50,height:10, isRefuel:true,color:'red'}}
-				],
-			effects:[],
-			backgroundStars:{
-				number:500
-			},			
-			environment : {
-				gravitationalConstant: 0.1,
-				airDensity: 0.005,
-				localGravity:1.2
-			},
-			victoryCondition: function () {
-				return (game.session.items.filter(function(item){return(item.isGoal && item.timePlayerOn > 20)}).length > 0);
-			},
-			failureCondition: function() {
-				return game.session.player.stuck;
-			}
-		},	
-		{name: "slow drop in thick atmo", width:1000, height:1500,
+		victoryCondition: function () {
+			return (game.session.items.filter(function(item){return(item.isGoal && item.timePlayerOn > 20)}).length > 0);
+		},
+		failureCondition: function() {
+			return game.session.player.stuck;
+		}
+	},
+	moonbaseBeta: {name: "moonbase beta", width:1000, height:1500,
+		items:[
+			{func:"landingCraft", spec:{x:500,y:1300,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0.15, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}},isPlayer:true},		
+			{func:"boulder", spec:{x:500,y:3950,radius:2550, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:0,y:1500-350,width:200,height:300, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:200,y:1500-350,width:150,height:50, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:800,y:1500-650,width:200,height:600, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:800,y:1500-80,radius:100, pattern:"stone.jpg"}},
+			{func:"landingZone", spec:{x:300,y:1400,width:300,height:50, isGoal:true,color:'green'}},
+			{func:"landingZone", spec:{x:50,y:1500-360,width:50,height:10, isRefuel:true,color:'red'}}
+			],
+		effects:[],
+		backgroundStars:{
+			number:500
+		},			
+		environment : {
+			gravitationalConstant: 0.1,
+			airDensity: 0.005,
+			localGravity:1.2
+		},
+		victoryCondition: function () {
+			return (game.session.items.filter(function(item){return(item.isGoal && item.timePlayerOn > 20)}).length > 0);
+		},
+		failureCondition: function() {
+			return game.session.player.stuck;
+		}
+	},	
+	slowdrop:	{name: "slow drop in thick atmo", width:1000, height:1500,
 			items:[
 				{func:"landingCraft", spec:{x:150,y:300,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
 				{func:'landingCraft', spec:{x:800,y:950,h:1,v:0, mass:50,radius:20,color:'white'}},
@@ -424,7 +404,7 @@ function vectorGame(game, options) {
 				return game.session.player.stuck;
 			}
 		},	
-		{name: "asteroid belt", width:1000, height:1000,
+	asteroidBelt:	{name: "asteroid belt", width:1000, height:1000,
 			items :[
 				{func:"fancyShip", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
 				{func:'rock', spec:{x:200,y:250,h:0,v:0,radius:90,density:2,color:'blue', momentum:{h:(Math.PI*1.5), m:0} },isPlayer:false},
@@ -443,7 +423,7 @@ function vectorGame(game, options) {
 				return (game.session.items.filter(function(item){return(item.type==='rock')}).length === 0);
 			}
 		},
-		{name: "planet pool", width:1200, height:1200,
+	planetPool:	{name: "planet pool", width:1200, height:1200,
 			items :[
 				{func:"fancyShip", spec:{x:150,y:1100,h:0.0*Math.PI,v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
 				{func:'blackHole', spec:{x:500,y:500,h:0,v:0,radius:10, mass:2500, gravityMaxRange:250,color:'purple' }},
@@ -462,8 +442,33 @@ function vectorGame(game, options) {
 			victoryCondition : function() {
 				return (game.session.items.filter(function(item){return(item.type==='solidRock')}).length === 0);
 			}
-		}
-		
+		},
+	spaceDuel:	{name: "space duel", width:1000, height: 1000,
+			items: [
+				{func:"fancyShip", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50, v:0,radius:20,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
+				{func:"ship", spec:{x:850,y:600,h:0.2*Math.PI,v:0,radius:20,shield:0.5,thrust:0.2,color:'green', behaviour:attack_AI,momentum:{h:(Math.PI*1), m:6}}},		
+			],
+			effects : [],
+			addWidgets: [thrustMeter,mapWidget],
+			removeWidgets:[descentMeter,fuelMeter,fuelMeterLabel],
+			environment : {
+				gravitationalConstant: 0.1,
+				airDensity: 0.0,
+				localGravity:0
+			},
+			victoryCondition : function(){
+				var test = function(item){
+					return ((item.type==='ship') && (item.color === 'green'));
+				}
+				var filtered = game.session.items.filter(test);
+				return filtered.length === 0;
+			}
+		},
+	};
+
+	game.level = [
+		ourLevels.moonbaseAlpha,
+		ourLevels.moonbaseBeta
 	];
 
 	game.reactToControls = function(buttonsPressed){
