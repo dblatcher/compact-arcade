@@ -19,6 +19,16 @@ function vectorPhysics(game) {
 		var items = game.session.items;
 		var collide,item1,item2,itemVelocity;
 		
+		function errorTest(Q){
+			var badValues = [];
+			if (!isFinite(Q.x)) {badValues.push('x')}
+			if (!isFinite(Q.y)) {badValues.push('y')}
+			if (!isFinite(Q.m)) {badValues.push('m')}
+			if (!isFinite(Q.h)) {badValues.push('h')}
+			if (badValues.length) {return badValues}
+			return false;
+		}
+		
 		for (var i = 0; i < items.length; i++) {
 			for (var a=0;a<items[i].automaticActions.length;a++) {
 				if (typeof(items[i].automaticActions[a]) === 'function') {
@@ -27,17 +37,28 @@ function vectorPhysics(game) {
 			};
 			
 			if (items[i].queuedMove) {
-				itemVelocity = game.calc.vectorFromForces( items[i].queuedForces.concat(items[i].momentum) );
+				
+				itemVelocity = game.calc.vectorFromForces( [].concat(items[i].queuedForces,items[i].momentum) );
+				
 				items[i].queuedMove.h = game.calc.headingFromVector(itemVelocity);
 				items[i].queuedMove.m = game.calc.distance(itemVelocity);
-				items[i].queuedForces = [];
 				
 				if (items[i].queuedMove.m > items[i].maxSpeed) {
 					itemVelocity.x = itemVelocity.x * (items[i].maxSpeed/items[i].queuedMove.m);
 					itemVelocity.y = itemVelocity.y * (items[i].maxSpeed/items[i].queuedMove.m);
 					items[i].queuedMove.m = items[i].maxSpeed;
 				};
-				items[i].queuedMove.x = itemVelocity.x;	items[i].queuedMove.y = itemVelocity.y;
+				items[i].queuedMove.x = itemVelocity.x;
+				items[i].queuedMove.y = itemVelocity.y;
+				
+				if (errorTest(items[i].queuedMove)) {
+					console.log('---------------')
+					console.log(game.cycleCount, items[i].color+' '+items[i].type+' bad queuedMove',errorTest(items[i].queuedMove));
+					console.log(i, items[i].queuedMove)
+					console.log('itemVelocity',itemVelocity)
+				}
+				items[i].queuedForces = [];
+				
 			};
 		};
 		
@@ -69,18 +90,10 @@ function vectorPhysics(game) {
 			}
 		};
 		
-		function errorTest(Q){
-			if (!isFinite(Q.x)) {return Q}
-			if (!isFinite(Q.y)) {return Q}
-			if (!isFinite(Q.m)) {return Q}
-			if (!isFinite(Q.h)) {return Q}
-			return false;
-		}
-		
 		for (var i = 0; i < items.length; i++) {
 			if (items[i].queuedMove) {
 				if (errorTest(items[i].queuedMove)) {
-					console.log('*non finite queuedMove for '+items[i].type,i, items[i].queuedMove)
+					console.log(game.cycleCount, '*non finite queuedMove for '+items[i].type,i, items[i].queuedMove)
 					items[i].queuedMove = {x:0,y:0,h:0,m:0};
 				};
 			};
@@ -92,7 +105,7 @@ function vectorPhysics(game) {
 
 	VP.assignVectorPhysics = function (item,spec) {
 		if(!item.h) {item.h = spec.h || 0;}
-		item.momentum = Object.assign({},spec.momentum) || {h:0,m:0};
+		item.momentum = spec.momentum ? Object.assign({},spec.momentum) : {h:0,m:0};
 		item.thrust = spec.thrust || 0;
 		item.thrustPower = spec.thrustPower || 10;
 		item.unmovedByGravity  = spec.unmovedByGravity || false;
@@ -123,6 +136,23 @@ function vectorPhysics(game) {
 		if (item1 === item2) {return false};
 		
 		var vector = item1.queuedMove || {x:0, y:0,h:0,m:0};
+		
+		function errorTest(Q){
+			var badValues = [];
+			if (!isFinite(Q.x)) {badValues.push('x')}
+			if (!isFinite(Q.y)) {badValues.push('y')}
+			if (!isFinite(Q.m)) {badValues.push('m')}
+			if (!isFinite(Q.h)) {badValues.push('h')}
+			if (badValues.length) {return badValues}
+			return false;
+		};
+		
+		if (errorTest(vector)) {
+			console.log(game.cycleCount, 'bad vector for ' + item1.color + ' ' + item1.type + 'in checkForCircleRectCollisions')
+			console.log (vector);
+		}
+		
+		
 		var force = item1.mass && item1.momentum ? item1.mass*item1.momentum.m : 0;
 		var result = {type:null, x:item1.x+vector.x, y:item1.y-vector.y, stopPoint:{x:item1.x,y:item1.y}, item1:item1, item2:item2, force:force};
 		
@@ -154,7 +184,6 @@ function vectorPhysics(game) {
 		if (pathAreaIntersectsItem2()) { 
 			result.type = "passed through";
 			result.stopPoint = findStopPoint();
-			//console.log(findStopPoint())
 			return result;
 		};
 		
@@ -248,6 +277,24 @@ function vectorPhysics(game) {
 		if (item1 === item2) {return false};
 		
 		var vector = item1.queuedMove  || {x:0, y:0,h:0,m:0};
+		
+		
+		function errorTest(Q){
+			var badValues = [];
+			if (!isFinite(Q.x)) {badValues.push('x')}
+			if (!isFinite(Q.y)) {badValues.push('y')}
+			if (!isFinite(Q.m)) {badValues.push('m')}
+			if (!isFinite(Q.h)) {badValues.push('h')}
+			if (badValues.length) {return badValues}
+			return false;
+		};
+		
+		if (errorTest(vector)) {
+			console.log(game.cycleCount, 'bad vector for ' + item1.color + ' ' + item1.type + 'in checkForQueCircleCollisions')
+			console.log (vector)
+		}
+		
+		
 		var force = item1.mass && item1.momentum ? item1.mass*item1.momentum.m : 0;
 		
 		var movedObject = {
@@ -442,10 +489,7 @@ function vectorPhysics(game) {
 		body1.y = impactPoint.stopPoint.y;
 		
 		
-		var newHeading = game.calc.reflectHeading(body1.queuedMove.h,impactPoint.stopPoint.edge === 'x' ? Math.PI*0.01 : Math.PI*0.5)
-		
-		//console.log(newHeading/Math.PI, body1.queuedMove.h/Math.PI)
-		
+		var newHeading = game.calc.reflectHeading(body1.queuedMove.h,impactPoint.stopPoint.edge === 'x' ? Math.PI*0.01 : Math.PI*0.5)		
 		body1.queuedMove.h = newHeading;
 		
 		if (typeof(body1.elasticity) === 'number'){body1.queuedMove.m *= body1.elasticity};

@@ -4,7 +4,8 @@ function vectorCalculations(game,options) {
 		var result = {x:0,y:0};
 		roundingFactor = roundingFactor || 5;
 		
-		for (a = 0; a<forceArray.length; a++) {
+		for (var a = 0; a<forceArray.length; a++) {
+			if (!isFinite(forceArray[a].m) || !isFinite(forceArray[a].h)) {continue;}
 			result.x += forceArray[a].m * Math.sin(forceArray[a].h);
 			result.y += forceArray[a].m * Math.cos(forceArray[a].h);
 		}		
@@ -67,6 +68,12 @@ function vectorCalculations(game,options) {
 	};
 			
 	game.calc.closestpointonline = function (L1,L2,p0) {						
+		
+		if (!isFinite(L2.x) && !isFinite(L2.y) ){
+			console.log(game.cycleCount,'bad L2 passed to closestpointonline, returning L1 coords');
+			return ({x:L1.x, y:L1.y});
+		}
+		
 		var A1 = L2.y - L1.y;
 		var B1 = L1.x - L2.x;
 		var C1 = (L2.y - L1.y) * L1.x + (L1.x - L2.x) * L1.y;
