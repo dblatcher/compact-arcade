@@ -5,6 +5,13 @@ function landerGame(game, options) {
 	game.soundFiles.push ('laser.mp3','die.mp3');
 	game.spriteFiles.push ('stone.jpg','soil.jpg');
 	
+	game.touchButtons = [
+		{name:'up',type:'hold',x:800,y:600,r:50},
+		{name:'down',type:'hold',x:800,y:800,r:50},
+		{name:'left',type:'hold',x:100,y:800,r:50},
+		{name:'right',type:'hold',x:250,y:800,r:50}
+	];
+	
 	var reportImpact = function(impactPoint,isReversed) {
 		if (isReversed) return false;
 		
@@ -93,11 +100,11 @@ function landerGame(game, options) {
 	moonbaseBeta: {name: "moonbase beta", width:1000, height:2500,
 		items:[
 			{func:"landingCraft", spec:{x:500,y:1300,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0.15, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}},isPlayer:true},		
-			{func:"boulder", spec:{x:500,y:4950,radius:2550, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:500,y:4950,radius:2550, pattern:"soil.jpg"}},
 			{func:"ground", spec:{x:0,y:2500-350,width:200,height:300, pattern:"stone.jpg"}},
 			{func:"ground", spec:{x:200,y:2500-350,width:150,height:50, pattern:"stone.jpg"}},
 			{func:"ground", spec:{x:800,y:2500-650,width:200,height:600, pattern:"stone.jpg"}},
-			{func:"boulder", spec:{x:800,y:2500-80,radius:100, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:800,y:2500-80,radius:100, pattern:"soil.jpg"}},
 			{func:"landingZone", spec:{x:300,y:2500-100,width:300,height:50, isGoal:true,color:'green'}},
 			{func:"landingZone", spec:{x:50,y:2500-360,width:50,height:10, isRefuel:true,color:'red'}}
 			],
@@ -153,10 +160,10 @@ function landerGame(game, options) {
 	game.reactToControls = function(buttonsPressed){
 		
 		var control = {
-			left: (this.keyMap["ArrowLeft"] || this.swipeDirection.x==-1),
-			right: (this.keyMap["ArrowRight"] || this.swipeDirection.x==1),
-			up: (this.keyMap["ArrowUp"] || this.swipeDirection.y==-1),
-			down: (this.keyMap["ArrowDown"] || this.swipeDirection.y==1),
+			left: (this.keyMap["ArrowLeft"] || buttonsPressed.indexOf('left')>-1 || this.swipeDirection.x==-1),
+			right: (this.keyMap["ArrowRight"] || buttonsPressed.indexOf('right')>-1 || this.swipeDirection.x==1),
+			up: (this.keyMap["ArrowUp"] || buttonsPressed.indexOf('up')>-1|| this.swipeDirection.y==-1),
+			down: (this.keyMap["ArrowDown"] || buttonsPressed.indexOf('down')>-1 || this.swipeDirection.y==1),
 			fire: (this.keyMap[" "] || buttonsPressed.indexOf('fire')>-1)
 		}
 		
