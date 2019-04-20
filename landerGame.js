@@ -3,12 +3,12 @@ function landerGame(game, options) {
 		
 	var VP = game.library.vectorPhysics;
 	game.soundFiles.push ('laser.mp3','die.mp3');
-	game.spriteFiles.push ('stone.jpg');
+	game.spriteFiles.push ('stone.jpg','soil.jpg');
 	
 	var reportImpact = function(impactPoint,isReversed) {
 		if (isReversed) return false;
 		
-		var message = 'T:' + game.cycleCount + ', ' + impactPoint.item1.type + ' delivered a ' + impactPoint.force+ 'n force';
+		var message = 'T:' + game.cycleCount + ', ' + impactPoint.item1.color + ' ' + impactPoint.item1.type + ' delivered a ' + impactPoint.force+ 'n force';
 		message += ' on a ' + impactPoint.item2.color + ' ' + impactPoint.item2.type; 
 		console.log(message);
 	};
@@ -29,8 +29,10 @@ function landerGame(game, options) {
 		},
 		color: function () {
 			var green = 255, red = 0, value = this.getValue();
-			if (value < 0.75) {green = 255; red = 0}
-			else if (value > 2) {green = 0; red = 255}
+			var dangerSpeed = game.session.player.resiliance / game.session.player.mass;
+			
+			if (value < 0.5 * dangerSpeed) {green = 255; red = 0}
+			else if (value >= dangerSpeed) {green = 0; red = 255}
 			else {green = 255; red = 255};
 			return "rgb(" + red + "," + green + ",0)";
 		}
@@ -61,7 +63,7 @@ function landerGame(game, options) {
 	var ourLevels = {		
 	moonbaseAlpha: {name: "moonbase alpha", width:1000, height:2500,
 		items:[
-			{func:"landingCraft", spec:{x:600,y:2350,h:0.0*Math.PI, mass: 50,
+			{func:"landingCraft", spec:{x:200,y:1350,h:0.0*Math.PI, mass: 50,
 			v:0,radius:20,elasticity:0.25,thrust:0.1, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
 			, isPlayer:true},		
 			{func:'landingCraft', spec:{x:800,y:1350,h:0,thrust:0.45,v:0, mass:50,radius:20,color:'white'}},
@@ -72,9 +74,9 @@ function landerGame(game, options) {
 			],
 		effects:[],
 		environment : {
-			gravitationalConstant: 0.1,
+			gravitationalConstant: 1,
 			airDensity: 0.01,
-			localGravity:1
+			localGravity:0.1
 		},
 		background : {
 			planetRadius: 2000,
@@ -88,25 +90,25 @@ function landerGame(game, options) {
 			return game.session.player.stuck;
 		}
 	},
-	moonbaseBeta: {name: "moonbase beta", width:1000, height:1500,
+	moonbaseBeta: {name: "moonbase beta", width:1000, height:2500,
 		items:[
 			{func:"landingCraft", spec:{x:500,y:1300,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0.15, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}},isPlayer:true},		
-			{func:"boulder", spec:{x:500,y:3950,radius:2550, pattern:"stone.jpg"}},
-			{func:"ground", spec:{x:0,y:1500-350,width:200,height:300, pattern:"stone.jpg"}},
-			{func:"ground", spec:{x:200,y:1500-350,width:150,height:50, pattern:"stone.jpg"}},
-			{func:"ground", spec:{x:800,y:1500-650,width:200,height:600, pattern:"stone.jpg"}},
-			{func:"boulder", spec:{x:800,y:1500-80,radius:100, pattern:"stone.jpg"}},
-			{func:"landingZone", spec:{x:300,y:1400,width:300,height:50, isGoal:true,color:'green'}},
-			{func:"landingZone", spec:{x:50,y:1500-360,width:50,height:10, isRefuel:true,color:'red'}}
+			{func:"boulder", spec:{x:500,y:4950,radius:2550, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:0,y:2500-350,width:200,height:300, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:200,y:2500-350,width:150,height:50, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:800,y:2500-650,width:200,height:600, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:800,y:2500-80,radius:100, pattern:"stone.jpg"}},
+			{func:"landingZone", spec:{x:300,y:2500-100,width:300,height:50, isGoal:true,color:'green'}},
+			{func:"landingZone", spec:{x:50,y:2500-360,width:50,height:10, isRefuel:true,color:'red'}}
 			],
 		effects:[],
 		backgroundStars:{
 			number:500
 		},			
 		environment : {
-			gravitationalConstant: 0.1,
+			gravitationalConstant: 1,
 			airDensity: 0.005,
-			localGravity:1.2
+			localGravity:.12
 		},
 		victoryCondition: function () {
 			return (game.session.items.filter(function(item){return(item.isGoal && item.timePlayerOn > 20)}).length > 0);
@@ -115,18 +117,18 @@ function landerGame(game, options) {
 			return game.session.player.stuck;
 		}
 	},	
-	slowdrop:	{name: "slow drop in thick atmo", width:1000, height:1500,
+	slowdrop:	{name: "slow drop in thick atmo", width:1000, height:2500,
 			items:[
-				{func:"landingCraft", spec:{x:150,y:300,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
-				{func:'landingCraft', spec:{x:800,y:950,h:1,v:0, mass:50,radius:20,color:'white'}},
-				{func:"ground", spec:{x:0,y:1450,width:1000,height:50, pattern:"stone.jpg"}},
-				{func:"landingZone", spec:{x:500,y:1400,width:300,height:50, isGoal:true,color:'green'}},
+				{func:"landingCraft", spec:{x:150,y:2500-1200,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
+				{func:'landingCraft', spec:{x:800,y:1950,h:1,v:0, mass:50,radius:20,color:'white'}},
+				{func:"ground", spec:{x:0,y:2450,width:1000,height:50, pattern:"soil.jpg"}},
+				{func:"landingZone", spec:{x:500,y:2400,width:300,height:50, isGoal:true,color:'green'}},
 				],
 			effects:[],
 			environment : {
-				gravitationalConstant: 0.1,
+				gravitationalConstant: 1,
 				airDensity: 0.15,
-				localGravity:1.3
+				localGravity:.13
 			},
 			background : {
 				planetRadius: 2000,
@@ -278,6 +280,7 @@ function landerGame(game, options) {
 		that.fuelCapacity = spec.fuelCapacity || 200;
 		that.timeStranded = 0;
 		that.stuck = false;
+		that.resiliance = spec.resiliance || 150;
 		
 		var burnFuel = function() {
 			if (this.thrust){
@@ -307,10 +310,13 @@ function landerGame(game, options) {
 			this.dead = true;
 		};
 		
-		
 		that.hit.ground = function(impactPoint,isReversed) {
-			//reportImpact(impactPoint,isReversed);
-			if (impactPoint.force > 150) {
+			
+			if (this ==  game.session.player){
+				//reportImpact(impactPoint,isReversed);
+				//game.session.paused = true;
+			}
+			if (impactPoint.force > this.resiliance) {
 				this.explode();
 			}
 			VP.reflectForceOffFlatSurface(impactPoint,isReversed);
