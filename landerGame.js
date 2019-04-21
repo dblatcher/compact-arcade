@@ -2,7 +2,7 @@
 function landerGame(game, options) {
 		
 	var VP = game.library.vectorPhysics;
-	game.soundFiles.push ('laser.mp3','die.mp3');
+	game.soundFiles.push ('laser.mp3','die.mp3','beep.mp3');
 	game.spriteFiles.push ('stone.jpg','soil.jpg');
 	
 	game.touchButtons = [
@@ -71,15 +71,17 @@ function landerGame(game, options) {
 	moonbaseAlpha: {name: "moonbase alpha", width:1000, height:2500,
 		items:[
 			{func:"landingCraft", spec:{x:200,y:1350,h:0.0*Math.PI, mass: 50,
-			v:0,radius:20,elasticity:0.25,thrust:0.1, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
+			v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
 			, isPlayer:true},		
 			{func:'landingCraft', spec:{x:800,y:1350,h:0,thrust:0.45,v:0, mass:50,radius:20,color:'white'}},
 			{func:"boulder", spec:{x:500,y:4950,radius:2550, pattern:"stone.jpg"}},
 			{func:"landingZone", spec:{x:500,y:2400,width:300,height:50, isGoal:true,color:'green'}},
 			{func:"boulder", spec:{x: 200, y:2450, radius:50, pattern: "stone.jpg"}},
 			{func:"boulder", spec:{x: 350, y:2430, radius:60, pattern: "stone.jpg"}},
-			],
-		effects:[],
+		],
+		effects:[
+			{func:'targetGuide', spec: {x:500, width:300, height:20, lastFrame:150, color:'green'} }
+		],
 		environment : {
 			gravitationalConstant: 1,
 			airDensity: 0.01,
@@ -99,16 +101,18 @@ function landerGame(game, options) {
 	},
 	moonbaseBeta: {name: "moonbase beta", width:1000, height:2500,
 		items:[
-			{func:"landingCraft", spec:{x:500,y:1300,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0.15, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}},isPlayer:true},		
+			{func:"landingCraft", spec:{x:200,y:1300,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}},isPlayer:true},		
 			{func:"boulder", spec:{x:500,y:4950,radius:2550, pattern:"soil.jpg"}},
-			{func:"ground", spec:{x:0,y:2500-350,width:200,height:300, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:0,y:2500-500,width:200,height:500, pattern:"stone.jpg"}},
 			{func:"ground", spec:{x:200,y:2500-350,width:150,height:50, pattern:"stone.jpg"}},
 			{func:"ground", spec:{x:800,y:2500-650,width:200,height:600, pattern:"stone.jpg"}},
 			{func:"boulder", spec:{x:800,y:2500-80,radius:100, pattern:"soil.jpg"}},
 			{func:"landingZone", spec:{x:300,y:2500-100,width:300,height:50, isGoal:true,color:'green'}},
-			{func:"landingZone", spec:{x:50,y:2500-360,width:50,height:10, isRefuel:true,color:'red'}}
+			{func:"landingZone", spec:{x:50,y:2500-510,width:50,height:10, isRefuel:true,color:'red'}}
 			],
-		effects:[],
+		effects:[
+			{func:'targetGuide', spec: {x:50, width:50, height:20, lastFrame:150, color:'red'} }
+		],
 		backgroundStars:{
 			number:500
 		},			
@@ -131,7 +135,9 @@ function landerGame(game, options) {
 				{func:"ground", spec:{x:0,y:2450,width:1000,height:50, pattern:"soil.jpg"}},
 				{func:"landingZone", spec:{x:500,y:2400,width:300,height:50, isGoal:true,color:'green'}},
 				],
-			effects:[],
+			effects:[
+				{func:'targetGuide', spec: {x:500, width:300, height:20, lastFrame:200,color:'green'}},
+			],
 			environment : {
 				gravitationalConstant: 1,
 				airDensity: 0.15,
@@ -485,6 +491,36 @@ function landerGame(game, options) {
 		
 		return that;
 	};	
+	
+	game.makeEffect.targetGuide = function(spec) {
+		var that = game.makeEffect.effect(spec);
+		that.color = spec.color || 'white';
+		that.render = function(ctx,plotOffset) {
 		
+			if (game.cycleCount%30 <= 5) {
+				ctx.fillStyle = this.color;
+				ctx.strokeStyle = this.color;
+				ctx.beginPath();
+				ctx.fillRect(this.x-plotOffset.x,800,this.width,this.height);
+				ctx.stroke();
+				
+				ctx.beginPath();
+				ctx.moveTo(this.x-plotOffset.x + this.width/2 - 10, 810);
+				ctx.lineTo(this.x-plotOffset.x + this.width/2 + 10, 810);
+				ctx.lineTo(this.x-plotOffset.x + this.width/2 + 10, 840);
+				ctx.lineTo(this.x-plotOffset.x + this.width/2 + 15, 840);
+				ctx.lineTo(this.x-plotOffset.x + this.width/2     , 870);
+				ctx.lineTo(this.x-plotOffset.x + this.width/2 - 15, 840);
+				ctx.lineTo(this.x-plotOffset.x + this.width/2 - 10, 840);
+				ctx.closePath();
+				ctx.fill();
+			}
+			if (game.cycleCount%30 === 0) {
+				game.sound.play('beep.mp3');
+			};
+		}
+		return that;
+	};
+	
 	return game;
 };
