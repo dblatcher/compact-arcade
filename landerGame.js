@@ -124,7 +124,7 @@ function landerGame(game, options) {
 			return game.session.player.stuck;
 		}
 	},	
-	slowdrop:	{name: "slow drop in thick atmo", width:1000, height:2500,
+	slowdrop:	{name: "Breezio four", width:1000, height:2500,
 			items:[
 				{func:"landingCraft", spec:{x:150,y:2500-1200,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
 				{func:'landingCraft', spec:{x:800,y:1950,h:1,v:0, mass:50,radius:20,color:'white'}},
@@ -151,12 +151,39 @@ function landerGame(game, options) {
 		}	
 	};
 
+	ourLevels.slowdrop.introText = 
+	"This should be nice and easy, rookie, a chance to get a feel for the lander\'s controls. The low gravity and thick atmosphere here make it safe to free fall to the ground. All you need to do is fly right over the landing zone and wait.";
+//	ourLevels.moonbaseAlpha.introText = "";
+//	ourLevels.moonbaseBeta.introText = "";
+	
 	game.level = [
 		ourLevels.slowdrop,
 		ourLevels.moonbaseAlpha,
 		ourLevels.moonbaseBeta
 	];
 
+	splitIntoLines = function(originalText,maxLineLength){
+		maxLineLength = maxLineLength || 50;		
+		var words = originalText.split(' ');
+		var result = [""];
+		
+		var line = 0;
+		do {
+			result[line] += words[0] + ' ';
+			words.shift();
+			if (result[line].length > maxLineLength && words.length) {
+				line++;
+				result.push("");
+			}
+		} while (words.length);
+		
+		return result;
+	};
+	
+	for (var i=0; i<game.level.length; i++ ) {
+		if (game.level[i].introText) {game.level[i].introTextArray = splitIntoLines(game.level[i].introText);}
+	};
+	
 	game.reactToControls = function(buttonsPressed){
 		
 		var control = {
@@ -181,31 +208,76 @@ function landerGame(game, options) {
 	}
 	
 	game.renderLevelScreen = function (c,ctx,plotOffset) {
+		var fontUnit = c.clientHeight/100;
+		
 		ctx.beginPath();
 		
-		ctx.font = (c.clientWidth*1/10)+"px monospace";
+		ctx.font = (fontUnit*20)+"px monospace";
 		ctx.fillStyle = "white";
 		ctx.textAlign = "center";
 		ctx.textBaseline="top";
 		ctx.fillText(
-			'level ' + (this.session.currentLevel+1),
-			c.width*1/2, c.height*1/4
+			'Mission ' + (this.session.currentLevel+1),
+			c.width*1/2, fontUnit*25
 		);
-		ctx.font = (c.clientWidth*1/20) + "px monospace";
+		
+		ctx.font = (fontUnit*10) + "px monospace";
 		ctx.textAlign = "left";
 		ctx.fillText(
 			this.level[this.session.currentLevel].name, 
-			c.width*1/3, c.height*8/16
+			fontUnit*20, fontUnit*45
 		);
 		ctx.fillText(
 			"gravity: " + game.session.environment.localGravity, 
-			c.width*1/3, c.height*9/16
+			fontUnit*20, fontUnit*55
 		);
 		ctx.fillText(
 			"atmosphere: " + game.session.environment.airDensity, 
-			c.width*1/3, c.height*10/16
+			fontUnit*20, fontUnit*65
 		);
+		
+		ctx.fillStyle = "gray";
+		ctx.textAlign = "center";
+		ctx.font = (fontUnit*10)+"px italic Courier New";
+		if (this.level[this.session.currentLevel].introTextArray) {
+			var introTextArray = this.level[this.session.currentLevel].introTextArray;
+			for (var i=0; i< introTextArray.length; i++ ) {
+				ctx.fillText(introTextArray[i], c.width*1/2, fontUnit*(85 + (i*14)));	
+			}
+		}
 	};
+	
+	game.renderTitleScreen = function (c,ctx,plotOffset) {
+		
+		var fontUnit = c.clientHeight/100;
+		
+		ctx.beginPath();
+		ctx.font = (fontUnit*20) + "px monospace";
+		ctx.fillStyle = "white";
+		ctx.textAlign = "center";
+		ctx.textBaseline="bottom";
+		ctx.fillText('MOON LANDER' , c.width*5/10, c.height*2/10);
+		
+		ctx.beginPath();
+		ctx.strokeStyle = "white";
+		ctx.moveTo(c.width*2/10, c.height*2.1/10);
+		ctx.lineTo(c.width*8/10, c.height*2.1/10);
+		ctx.moveTo(c.width*2/10, c.height*2.3/10);
+		ctx.lineTo(c.width*8/10, c.height*2.3/10);
+		ctx.stroke();
+		
+		game.make.boulder({radius:1200,x:300, y:1900,pattern:'soil.jpg'}).render(ctx,plotOffset);
+		game.make.landingCraft({radius:120,x:500, y:500,h:.5,thrust:.5,color:'red'}).render(ctx,plotOffset);
+		
+		//
+		ctx.beginPath();
+		ctx.fillStyle = "red";
+		ctx.textAlign = "right";
+		ctx.textBaseline="bottom";
+		ctx.font = (fontUnit*12) + "px sans-serif";	
+		ctx.fillText(game.enableTouch ? 'Press space or touch to start' : 'Press space start',
+			c.width-5*fontUnit, c.height-10*fontUnit);	
+	}
 	
 	game.customNewLevelAction = function(level) {
 		game.library.backgroundStars.defineStars(level);
