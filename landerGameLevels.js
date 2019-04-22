@@ -90,22 +90,17 @@ function landerGameLevels(game, options) {
 				return game.session.player.stuck;
 			}
 		},
-		trench: { name:"The Grand Canyon of Cygnus four", width:1000, height:2500,
+	trench: { name:"The Grand Canyon of Cygnus 4", width:1000, height:2500,
 			items: [
-				{func:"landingCraft", spec:{x:150,y:2500-1470,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.25, thrustPower: 15,color:'red'}, isPlayer:true},
-				
-				
+				{func:"landingCraft", spec:{x:150,y:2500-1470,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.25, thrustPower: 15,color:'red'}, isPlayer:true},			
 				{func:"ground", spec:{x:0,y:2500-50,width:1000,height:50, pattern:"stone.jpg"}},
-				
 				{func:"ground", spec:{x:0,y:2500-1450,width:250,height:1400, pattern:"stone.jpg"}},
 				{func:"ground", spec:{x:750,y:2500-1450,width:250,height:1000, pattern:"stone.jpg"}},
 				{func:"ground", spec:{x:900,y:2500-350,width:100,height:400, pattern:"stone.jpg"}},
 				{func:"ground", spec:{x:900,y:2500-350,width:100,height:400, pattern:"stone.jpg"}},
-				
 				{func:"boulder", spec:{x:260,y:2500-980,radius:200, pattern:"stone.jpg"}},
 				{func:"boulder", spec:{x:760,y:2500-690,radius:240, pattern:"stone.jpg"}},
 				{func:"boulder", spec:{x:235,y:2500-50,radius:180, pattern:"stone.jpg"}},
-				
 				{func:"landingZone", spec:{x:600,y:2500-60,width:300,height:10, isGoal:true,color:'green'}},
 				
 			],
@@ -122,7 +117,49 @@ function landerGameLevels(game, options) {
 			failureCondition: function() {
 				return game.session.player.stuck;
 			}
+		},
+	cavern: { name: "Caverns of Proxima 7", width:2000, height:1000,
+		items: [
+			{func:"landingCraft", spec:{x:150,y:1000-70,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.25, thrustPower: 15,color:'red'}, isPlayer:true},			
+			{func:"ground", spec:{x:0,y:1000-50,width:2000,height:50, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:0,y:0,width:2000,height:150, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:0,y:0,width:10,height:1000, pattern:"soil.jpg"}},
+			{func:"ground", spec:{x:2000-10,y:0,width:10,height:1000, pattern:"soil.jpg"}},
+			
+			{func:"ground", spec:{x:75,y:150,width:80,height:200, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:115,y:350,radius:40, pattern:"stone.jpg"}},
+			
+			{func:"ground", spec:{x:200,y:150,width:100,height:80, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:250,y:230,radius:50, pattern:"stone.jpg"}},
+			
+			{func:"ground", spec:{x:500,y:150,width:50,height:180, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:500+25,y:150+180,radius:25, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:600,y:150,width:40,height:130, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:600+20,y:130+150,radius:20, pattern:"stone.jpg"}},
+			
+			{func:"boulder", spec:{x:500,y:1000,radius:200, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:700,y:1100,radius:200, pattern:"stone.jpg"}},
+			
+			{func:"ground", spec:{x:850,y:500,width:400,height:500, pattern:"stone.jpg"}},
+			
+			
+			{func:"ground", spec:{x:1100,y:150,width:200,height:50, pattern:"stone.jpg"}},
+			
+			{func:"boulder", spec:{x:1100,y:150,radius:50, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:1300,y:150,radius:50, pattern:"stone.jpg"}},
+			
+			{func:"ground", spec:{x:1700,y:0,width:400,height:50, pattern:"stone.jpg"}},
+		],
+		effects: [],
+		environment: {localGravity: 0.6, airDensity:0.005},
+		backgroundStars: {number:800, colorRange: ['gray'], depth :1},
+		victoryCondition: function () {
+			return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0);
+		},
+		failureCondition: function() {
+			return game.session.player.stuck;
 		}
+	}
 	};
 
 	ourLevels.slowdrop.introText = 
@@ -131,6 +168,7 @@ function landerGameLevels(game, options) {
 //	ourLevels.moonbaseBeta.introText = "";
 	
 	game.level = [
+		ourLevels.cavern,
 		ourLevels.trench,
 		ourLevels.slowdrop,
 		ourLevels.moonbaseAlpha,
