@@ -36,7 +36,7 @@ function landerGameLevels(game, options) {
 	},
 	moonbaseBeta: {name: "moonbase beta", width:1000, height:2500,
 		items:[
-			{func:"landingCraft", spec:{x:200,y:1300,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}},isPlayer:true},		
+			{func:"landingCraft", spec:{x:200,y:1300,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0,fuel:100, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}},isPlayer:true},		
 			{func:"boulder", spec:{x:500,y:4950,radius:2550, pattern:"soil.jpg"}},
 			{func:"ground", spec:{x:0,y:2500-500,width:200,height:500, pattern:"stone.jpg"}},
 			{func:"ground", spec:{x:200,y:2500-350,width:150,height:50, pattern:"stone.jpg"}},
@@ -67,16 +67,16 @@ function landerGameLevels(game, options) {
 			items:[
 				{func:"landingCraft", spec:{x:150,y:2500-1200,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
 				{func:'landingCraft', spec:{x:800,y:1950,h:1,v:0, mass:50,radius:20,color:'white'}},
-				{func:"ground", spec:{x:0,y:2450,width:1000,height:50, pattern:"soil.jpg"}},
+				{func:"ground", spec:{x:0,y:2430,width:1000,height:70, pattern:"soil.jpg"}},
 				{func:"landingZone", spec:{x:500,y:2400,width:300,height:50, isGoal:true,color:'green'}},
 				],
 			effects:[
-				{func:'targetGuide', spec: {x:500, width:300, height:20, lastFrame:200,color:'green'}},
+				{func:'targetGuide', spec: {x:500, width:300, height:20, lastFrame:200,color:'green'}}
 			],
 			environment : {
-				gravitationalConstant: 1,
-				airDensity: 0.1,
-				localGravity:.08
+				gravitationalConstant: .1,
+				airDensity: 0.04,
+				localGravity:.4
 			},
 			background : {
 				planetRadius: 2000,
@@ -104,10 +104,13 @@ function landerGameLevels(game, options) {
 				{func:"landingZone", spec:{x:600,y:2500-60,width:300,height:10, isGoal:true,color:'green'}},
 				
 			],
-			effects: [],
+			effects: [
+				{func:'targetGuide', spec: {x:600, width:300, height:20, lastFrame:200,color:'green'}},
+			],
 			environment: {
-				airDensity: 0.0015,
-				localGravity: 0.75
+				gravitationalConstant: .1,
+				airDensity: 0.01,
+				localGravity: 0.5
 			},
 			background: {},
 			
@@ -141,7 +144,24 @@ function landerGameLevels(game, options) {
 			{func:"boulder", spec:{x:700,y:1100,radius:200, pattern:"stone.jpg"}},
 			
 			{func:"ground", spec:{x:850,y:500,width:400,height:500, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:875,y:575,radius:75, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:1250,y:1000,radius:150, pattern:"stone.jpg"}},
 			
+			{func:"boulder", spec:{x:1700,y:1100,radius:400, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:1700,y:700,width:400,height:500, pattern:"stone.jpg"}},
+
+			{func:"ground", spec:{x:1500,y:500,width:40,height:300, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:1500+20,y:500,radius:20, pattern:"stone.jpg"}},
+
+			{func:"ground", spec:{x:1350,y:700,width:40,height:300, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:1350+20,y:700,radius:20, pattern:"stone.jpg"}},
+			
+			{func:"ground", spec:{x:1600,y:150,width:40,height:130, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:1600+20,y:130+150,radius:20, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:1690,y:150,width:50,height:180, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:1690+25,y:180+150,radius:25, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:1800,y:150,width:50,height:190, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:1800+25,y:150+190,radius:25, pattern:"stone.jpg"}},
 			
 			{func:"ground", spec:{x:1100,y:150,width:200,height:50, pattern:"stone.jpg"}},
 			
@@ -149,9 +169,11 @@ function landerGameLevels(game, options) {
 			{func:"boulder", spec:{x:1300,y:150,radius:50, pattern:"stone.jpg"}},
 			
 			{func:"ground", spec:{x:1700,y:0,width:400,height:50, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:2060,y:675,radius:150, pattern:"stone.jpg"}},
+			{func:"landingZone", spec:{x:1700,y:675, height:50, width:250, color:'green', isGoal:true}}
 		],
 		effects: [],
-		environment: {localGravity: 0.6, airDensity:0.005},
+		environment: {gravitationalConstant:0.1, localGravity: 0.3, airDensity:0.005},
 		backgroundStars: {number:800, colorRange: ['gray'], depth :1},
 		victoryCondition: function () {
 			return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0);
@@ -164,14 +186,20 @@ function landerGameLevels(game, options) {
 
 	ourLevels.slowdrop.introText = 
 	"This should be nice and easy, rookie, a chance to get a feel for the lander\'s controls. All you need to do is fly right over the landing zone and wait.";
-//	ourLevels.moonbaseAlpha.introText = "";
-//	ourLevels.moonbaseBeta.introText = "";
+	ourLevels.moonbaseAlpha.introText = 
+	"You'll be falling a lot faster with the gravity here. Use the retro's to control the descent, but don't burn up all your fuel or you'll drop like a rock.";
+	ourLevels.trench.introText = 
+	"Watch out on the way down, pilot. It's a tight squeeze.";
+	ourLevels.cavern.introText = 
+	"Keep an eye on the roof...";
+	ourLevels.moonbaseBeta.introText = 
+	"We're low on fuel. Lucky for you there's a refuel pad halfway down. Fill up before you lift off for the last leg.";
 	
 	game.level = [
-		ourLevels.cavern,
-		ourLevels.trench,
 		ourLevels.slowdrop,
 		ourLevels.moonbaseAlpha,
+		ourLevels.trench,
+		ourLevels.cavern,
 		ourLevels.moonbaseBeta,
 	];
 
