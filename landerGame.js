@@ -2,7 +2,7 @@
 function landerGame(game, options) {
 		
 	var VP = game.library.vectorPhysics;
-	game.soundFiles.push ('laser.mp3','die.mp3','beep.mp3');
+	game.soundFiles.push ('bang.mp3','die.mp3','beep.mp3');
 	game.spriteFiles.push ('stone.jpg','soil.jpg');
 	
 	game.touchButtons = [
@@ -243,6 +243,7 @@ function landerGame(game, options) {
 		that.timeStranded = 0;
 		that.stuck = false;
 		that.resiliance = spec.resiliance || 150;
+		that.elasticity = spec.elasticity || 0.25;
 		
 		var burnFuel = function() {
 			if (this.thrust){
@@ -274,12 +275,10 @@ function landerGame(game, options) {
 		
 		that.hit.ground = function(impactPoint,isReversed) {
 			
-			if (this ==  game.session.player){
-				//reportImpact(impactPoint,isReversed);
-				//game.session.paused = true;
-			}
 			if (impactPoint.force > this.resiliance) {
 				this.explode();
+			} else {
+				if (impactPoint.force > 25) {game.sound.play('bang.mp3');}
 			}
 			VP.reflectForceOffFlatSurface(impactPoint,isReversed);
 		}
