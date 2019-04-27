@@ -1,6 +1,5 @@
 
 function landerGameLevels(game, options) {
-		
 	
 	var ourLevels = {		
 	moonbaseAlpha: {name: "moonbase alpha", width:1000, height:2500,
@@ -17,21 +16,12 @@ function landerGameLevels(game, options) {
 		effects:[
 			{func:'targetGuide', spec: {x:500, width:300, height:20, lastFrame:150, color:'green'} }
 		],
-		environment : {
-			gravitationalConstant: 1,
-			airDensity: 0.01,
-			localGravity:0.1
-		},
+		environment : {gravitationalConstant: 1, airDensity: 0.01, localGravity:0.1},
+		score: function(){return Math.floor( 100 + game.session.player.fuel )},
 		background : {
 			planetRadius: 2000,
 			atmosphereDepth: 800,
 			atmosphereColor: '150,140,255'
-		},
-		victoryCondition: function () {
-			return (game.session.items.filter(function(item){return(item.isGoal && item.timePlayerOn > 20)}).length > 0);
-		},
-		failureCondition: function() {
-			return game.session.player.stuck;
 		}
 	},
 	moonbaseBeta: {name: "moonbase beta", width:1000, height:2500,
@@ -51,17 +41,8 @@ function landerGameLevels(game, options) {
 		backgroundStars:{
 			number:500
 		},			
-		environment : {
-			gravitationalConstant: 1,
-			airDensity: 0.008,
-			localGravity:.1
-		},
-		victoryCondition: function () {
-			return (game.session.items.filter(function(item){return(item.isGoal && item.timePlayerOn > 20)}).length > 0);
-		},
-		failureCondition: function() {
-			return game.session.player.stuck;
-		}
+		environment : {gravitationalConstant: 1,airDensity: 0.008,localGravity:.1},
+		score: function(){return Math.floor( 250 + game.session.player.fuel )}
 	},	
 	slowdrop:	{name: "Breezio four", width:1000, height:2500,
 			items:[
@@ -73,54 +54,35 @@ function landerGameLevels(game, options) {
 			effects:[
 				{func:'targetGuide', spec: {x:500, width:300, height:20, lastFrame:200,color:'green'}}
 			],
-			environment : {
-				gravitationalConstant: .1,
-				airDensity: 0.04,
-				localGravity:.4
-			},
+			environment : {gravitationalConstant: .1, airDensity: 0.04,localGravity:.4},
+			score: function(){return Math.floor( 0 + game.session.player.fuel )},
 			background : {
 				planetRadius: 2000,
 				atmosphereDepth: 1000,
 				atmosphereColor: '150,40,160'
-			},
-			victoryCondition: function () {
-				return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0);
-			},
-			failureCondition: function() {
-				return game.session.player.stuck;
 			}
 		},
 	trench: { name:"The Grand Canyon of Cygnus 4", width:1000, height:2500,
-			items: [
-				{func:"landingCraft", spec:{x:150,y:2500-1470,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.25, thrustPower: 15,color:'red'}, isPlayer:true},			
-				{func:"ground", spec:{x:0,y:2500-50,width:1000,height:50, pattern:"stone.jpg"}},
-				{func:"ground", spec:{x:0,y:2500-1450,width:250,height:1400, pattern:"stone.jpg"}},
-				{func:"ground", spec:{x:750,y:2500-1450,width:250,height:1000, pattern:"stone.jpg"}},
-				{func:"ground", spec:{x:900,y:2500-350,width:100,height:400, pattern:"stone.jpg"}},
-				{func:"ground", spec:{x:900,y:2500-350,width:100,height:400, pattern:"stone.jpg"}},
-				{func:"boulder", spec:{x:260,y:2500-980,radius:200, pattern:"stone.jpg"}},
-				{func:"boulder", spec:{x:760,y:2500-690,radius:240, pattern:"stone.jpg"}},
-				{func:"boulder", spec:{x:235,y:2500-50,radius:180, pattern:"stone.jpg"}},
-				{func:"landingZone", spec:{x:600,y:2500-60,width:300,height:10, isGoal:true,color:'green'}},
-				
-			],
-			effects: [
-				{func:'targetGuide', spec: {x:600, width:300, height:20, lastFrame:200,color:'green'}},
-			],
-			environment: {
-				gravitationalConstant: .1,
-				airDensity: 0.01,
-				localGravity: 0.5
-			},
-			background: {},
+		items: [
+			{func:"landingCraft", spec:{x:150,y:2500-1470,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.25, thrustPower: 15,color:'red'}, isPlayer:true},			
+			{func:"ground", spec:{x:0,y:2500-50,width:1000,height:50, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:0,y:2500-1450,width:250,height:1400, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:750,y:2500-1450,width:250,height:1000, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:900,y:2500-350,width:100,height:400, pattern:"stone.jpg"}},
+			{func:"ground", spec:{x:900,y:2500-350,width:100,height:400, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:260,y:2500-980,radius:200, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:760,y:2500-690,radius:240, pattern:"stone.jpg"}},
+			{func:"boulder", spec:{x:235,y:2500-50,radius:180, pattern:"stone.jpg"}},
+			{func:"landingZone", spec:{x:600,y:2500-60,width:300,height:10, isGoal:true,color:'green'}},
 			
-			victoryCondition: function () {
-				return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0);
-			},
-			failureCondition: function() {
-				return game.session.player.stuck;
-			}
-		},
+		],
+		effects: [
+			{func:'targetGuide', spec: {x:600, width:300, height:20, lastFrame:200,color:'green'}},
+		],
+		environment: {gravitationalConstant: .1,airDensity: 0.01, localGravity: 0.5},
+		score: function(){return Math.floor( 200 + game.session.player.fuel )},
+		background: {},
+	},
 	cavern: { name: "Caverns of Proxima 7", width:2000, height:1000,
 		items: [
 			{func:"landingCraft", spec:{x:150,y:1000-70,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.25, thrustPower: 15,color:'red'}, isPlayer:true},			
@@ -174,13 +136,8 @@ function landerGameLevels(game, options) {
 		],
 		effects: [],
 		environment: {gravitationalConstant:0.1, localGravity: 0.3, airDensity:0.005},
-		backgroundStars: {number:800, colorRange: ['gray'], depth :1},
-		victoryCondition: function () {
-			return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0);
-		},
-		failureCondition: function() {
-			return game.session.player.stuck;
-		}
+		score: function(){return Math.floor( 250 + game.session.player.fuel )},
+		backgroundStars: {number:800, colorRange: ['gray'], depth :1}
 	}
 	};
 
@@ -223,6 +180,12 @@ function landerGameLevels(game, options) {
 	
 	for (var i=0; i<game.level.length; i++ ) {
 		if (game.level[i].introText) {game.level[i].introTextArray = splitIntoLines(game.level[i].introText);}
+		game.level[i].victoryCondition = function () {
+			return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0 && game.session.player.dead === false );
+		};
+		game.level[i].failureCondition = function() {
+			return game.session.player.stuck;
+		};
 	};
 
 	return game;
