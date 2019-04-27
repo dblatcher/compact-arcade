@@ -168,9 +168,24 @@ function landerGame(game, options) {
 
 	game.renderBackground = function(c,ctx,plotOffset) {
 		var level = game.level[game.session.currentLevel];
+
 		game.library.backgroundStars.plotStars(c,ctx,plotOffset);
 		
 		if (level.background) {
+			if (level.background.flood) {
+				ctx.beginPath();
+				
+				if(typeof level.background.flood === 'string') {
+					ctx.fillStyle = level.background.flood;
+				};
+				if(typeof level.background.flood === 'function') {
+					ctx.fillStyle = level.background.flood(c,ctx,plotOffset);
+				};
+				
+				ctx.fillRect(0,0,c.width,c.height);
+				ctx.fill();
+			}
+			
 			if (level.background.atmosphereDepth) {
 				var planetRadius = level.background.planetRadius || 2500;
 				

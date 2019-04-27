@@ -62,6 +62,24 @@ function landerGameLevels(game, options) {
 				atmosphereColor: '150,40,160'
 			}
 		},
+	fastDrop: {name: "Breezio six", width:1000, height:2500,
+			items:[
+				{func:"landingCraft", spec:{x:600,y:2500-1200,h:0.0*Math.PI, mass: 50, v:0,radius:20,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
+				{func:'landingCraft', spec:{x:200,y:2500-1200,h:1,v:0, mass:50,radius:20,color:'white'}},
+				{func:"ground", spec:{x:0,y:2430,width:1000,height:70, pattern:"soil.jpg"}},
+				{func:"landingZone", spec:{x:500,y:2400,width:300,height:50, isGoal:true,color:'green'}},
+				],
+			effects:[
+				{func:'targetGuide', spec: {x:500, width:300, height:20, lastFrame:200,color:'green'}}
+			],
+			environment : {gravitationalConstant: .1, airDensity: 0.01,localGravity:.95},
+			score: function(){return Math.floor( 0 + game.session.player.fuel )},
+			background : {
+				planetRadius: 2000,
+				atmosphereDepth: 500,
+				atmosphereColor: '50,140,200'
+			}
+		},
 	trench: { name:"The Grand Canyon of Cygnus 4", width:1000, height:2500,
 		items: [
 			{func:"landingCraft", spec:{x:150,y:2500-1470,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.25, thrustPower: 15,color:'red'}, isPlayer:true},			
@@ -135,18 +153,28 @@ function landerGameLevels(game, options) {
 			{func:"landingZone", spec:{x:1700,y:675, height:50, width:250, color:'green', isGoal:true}}
 		],
 		effects: [],
-		environment: {gravitationalConstant:0.1, localGravity: 0.3, airDensity:0.005},
+		environment: {gravitationalConstant:0.1, localGravity: 0.35, airDensity:0.02},
 		score: function(){return Math.floor( 250 + game.session.player.fuel )},
+		background: {flood:function(c,ctx,plotOffset){
+			var grd = ctx.createLinearGradient(0,0,0,c.height);
+			grd.addColorStop(0,'darkkhaki');
+			grd.addColorStop(0.45,'black');
+			grd.addColorStop(0.55,'black');
+			grd.addColorStop(1,'darkkhaki');
+			return grd;
+		}},
 		backgroundStars: {number:800, colorRange: ['gray'], depth :1}
 	}
 	};
 
 	ourLevels.slowdrop.introText = 
-	"This should be nice and easy, rookie, a chance to get a feel for the lander\'s controls. All you need to do is fly right over the landing zone and wait.";
+	"This should be nice and easy, rookie, a chance to get a feel for the lander\'s controls. All you need to do is fly right over the landing zone and drop.";
+	ourLevels.fastDrop.introText = 
+	"You'll be falling a lot faster with the gravity here, but you're right about the target. Just use the retro's to slow down, but don't burn up all your fuel or you'll drop like a rock.";
 	ourLevels.moonbaseAlpha.introText = 
-	"You'll be falling a lot faster with the gravity here. Use the retro's to control the descent, but don't burn up all your fuel or you'll drop like a rock.";
+	"Your first real test - get over the landing zone, stay over it and don't smack into it too hard. But go easy on the retro's, will you? We get a bonus for left over fuel...";
 	ourLevels.trench.introText = 
-	"Watch out on the way down, pilot. It's a tight squeeze.";
+	"Watch out on the way down, pilot. It's a tight squeeze in places.";
 	ourLevels.cavern.introText = 
 	"Keep an eye on the roof...";
 	ourLevels.moonbaseBeta.introText = 
@@ -154,6 +182,7 @@ function landerGameLevels(game, options) {
 	
 	game.level = [
 		ourLevels.slowdrop,
+		ourLevels.fastDrop,
 		ourLevels.moonbaseAlpha,
 		ourLevels.trench,
 		ourLevels.cavern,
