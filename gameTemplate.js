@@ -789,7 +789,8 @@ function createGame (disks, options) {
 	game.reactToControls = function(){},
 			
 	game.handlePlayerWinsLevel = function () {	
-		if (this.level[this.session.currentLevel].score) {this.session.score += this.level[this.session.currentLevel].score}
+		if (typeof this.level[this.session.currentLevel].score === 'number') {this.session.score += this.level[this.session.currentLevel].score}
+		if (typeof this.level[this.session.currentLevel].score === 'function') {this.session.score += this.level[this.session.currentLevel].score()}
 		if (this.session.currentLevel+1 < this.level.length) {
 			game.session.waitingToReset = 'nextLevel';
 			game.session.resetTime = game.cycleCount + options.cyclesBetweenLevelEndAndReset;
