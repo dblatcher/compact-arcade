@@ -2,7 +2,7 @@
 function landerGame(game, options) {
 		
 	var VP = game.library.vectorPhysics;
-	game.soundFiles.push ('laser.mp3','die.mp3','beep.mp3');
+	game.soundFiles.push ('bang.mp3','die.mp3','beep.mp3');
 	game.spriteFiles.push ('stone.jpg','soil.jpg');
 	
 	game.touchButtons = [
@@ -168,9 +168,24 @@ function landerGame(game, options) {
 
 	game.renderBackground = function(c,ctx,plotOffset) {
 		var level = game.level[game.session.currentLevel];
+
 		game.library.backgroundStars.plotStars(c,ctx,plotOffset);
 		
 		if (level.background) {
+			if (level.background.flood) {
+				ctx.beginPath();
+				
+				if(typeof level.background.flood === 'string') {
+					ctx.fillStyle = level.background.flood;
+				};
+				if(typeof level.background.flood === 'function') {
+					ctx.fillStyle = level.background.flood(c,ctx,plotOffset);
+				};
+				
+				ctx.fillRect(0,0,c.width,c.height);
+				ctx.fill();
+			}
+			
 			if (level.background.atmosphereDepth) {
 				var planetRadius = level.background.planetRadius || 2500;
 				
@@ -243,6 +258,7 @@ function landerGame(game, options) {
 		that.timeStranded = 0;
 		that.stuck = false;
 		that.resiliance = spec.resiliance || 150;
+		that.elasticity = spec.elasticity || 0.25;
 		
 		var burnFuel = function() {
 			if (this.thrust){
@@ -274,12 +290,10 @@ function landerGame(game, options) {
 		
 		that.hit.ground = function(impactPoint,isReversed) {
 			
-			if (this ==  game.session.player){
-				//reportImpact(impactPoint,isReversed);
-				//game.session.paused = true;
-			}
 			if (impactPoint.force > this.resiliance) {
 				this.explode();
+			} else {
+				if (impactPoint.force > 25) {game.sound.play('bang.mp3');}
 			}
 			VP.reflectForceOffFlatSurface(impactPoint,isReversed);
 		}
