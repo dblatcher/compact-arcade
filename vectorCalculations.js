@@ -1,3 +1,4 @@
+"use strict"
 function vectorCalculations(game,options) {
 
 	game.calc.vectorFromForces = function(forceArray,roundingFactor) {

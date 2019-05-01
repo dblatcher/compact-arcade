@@ -3,7 +3,7 @@ queRoundBounce : at step 5- if body 2 isn't also bouncing, the full force should
 add lost energy for non elastic collisions
 
 */
-
+"use strict"
 function vectorPhysics(game) {
 	game.library.vectorPhysics = {};
 	var VP = game.library.vectorPhysics;

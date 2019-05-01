@@ -1,3 +1,4 @@
+"use strict"
 function backgroundStars(game) {
 	game.library.backgroundStars = {
 		defineStars : function(level) {

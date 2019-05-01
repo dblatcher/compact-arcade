@@ -1,4 +1,4 @@
-
+"use strict"
 function landerGame(game, options) {
 		
 	var VP = game.library.vectorPhysics;
@@ -251,7 +251,7 @@ function landerGame(game, options) {
 			};
 		}
 		
-		refuel = function (amount) {
+		var refuel = function (amount) {
 			this.fuel = Math.min (this.fuel + amount, this.fuelCapacity);
 		};
 		that.refuel = refuel;

@@ -1,3 +1,4 @@
+"use strict"
 function createGame (disks, options) {
 	
 	if (typeof(options) !==  "object") {options = {} };
@@ -369,11 +370,11 @@ function createGame (disks, options) {
 		};
 		function addSprite(src) {
 			var spriteElement;
-			SpriteElement = document.createElement("img");
-			SpriteElement.src = spritePath+src;
-			SpriteElement.style.display = "none";
-			game.assetHolderElement.appendChild(SpriteElement);
-			game.sprite[src] = SpriteElement;
+			spriteElement = document.createElement("img");
+			spriteElement.src = spritePath+src;
+			spriteElement.style.display = "none";
+			game.assetHolderElement.appendChild(spriteElement);
+			game.sprite[src] = spriteElement;
 		};
 		
 	};

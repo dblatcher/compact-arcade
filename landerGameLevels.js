@@ -1,4 +1,4 @@
-
+"use strict"
 function landerGameLevels(game, options) {
 		
 	
@@ -175,7 +175,7 @@ function landerGameLevels(game, options) {
 		ourLevels.moonbaseBeta,
 	];
 
-	splitIntoLines = function(originalText,maxLineLength){
+	function splitIntoLines(originalText,maxLineLength){
 		maxLineLength = maxLineLength || 50;		
 		var words = originalText.split(' ');
 		var result = [""];
