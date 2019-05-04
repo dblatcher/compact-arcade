@@ -208,7 +208,9 @@ function landerGameLevels(game, options) {
 	};
 	
 	for (var i=0; i<game.level.length; i++ ) {
-		if (game.level[i].introText) {game.level[i].introTextArray = splitIntoLines(game.level[i].introText);}
+		if (game.level[i].introText) {
+			game.level[i].introTextArray = splitIntoLines(game.level[i].introText);
+		}
 		game.level[i].victoryCondition = function () {
 			return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0 && game.session.player.dead === false );
 		};
