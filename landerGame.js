@@ -216,6 +216,58 @@ function landerGame(game, options) {
 		return that;
 	}
 
+	game.make.building = function(spec) {
+		var that= game.make.ground(spec);
+		that.color2 = spec.color2 || 'red';
+		
+		that.doorWidth = 20
+		that.doorHeight = 45;
+		
+		that.windows = [
+			{x:10,y:10,w:20,h:10},
+			{x:30,y:35,w:10,h:10},
+			{x:50,y:35,w:10,h:10},
+			{x:40,y:50,w:10,h:10},
+			{x:40,y:750,w:10,h:10}
+		]
+		
+		var render = function (ctx,plotOffset){
+			ctx.beginPath();
+			ctx.fillStyle = this.pattern ?  
+				ctx.createPattern(this.pattern, "repeat") :
+				this.color;
+			ctx.rect(this.x - plotOffset.x,this.renderY - plotOffset.y,this.width,this.height);
+			ctx.fill();	
+			
+			//door
+			ctx.beginPath();
+			ctx.fillStyle = this.color2;
+			ctx.rect(
+			this.x + (this.width - this.doorWidth)/2 - plotOffset.x,
+			this.bottom - this.doorHeight - plotOffset.y,
+			this.doorWidth,this.doorHeight);
+			ctx.fill();
+			
+			//windows
+			ctx.beginPath();
+			ctx.fillStyle = this.color2;
+			for (var i = 0; i<this.windows.length; i++) { 
+				if (this.windows[i].x+this.windows[i].w <= this.width && this.windows[i].y+this.windows[i].h <= this.height) {
+				ctx.rect(
+					this.left + this.windows[i].x - plotOffset.x,
+					this.top + this.windows[i].y - plotOffset.y,
+					this.windows[i].w,this.windows[i].h);
+				}
+			}
+			ctx.fill();	
+			
+		}
+		that.render = render;
+		
+		
+		return that;
+	}
+	
 	game.make.boulder = function(spec){
 		var that=game.make.roundItem(spec);
 		that.type='ground';	

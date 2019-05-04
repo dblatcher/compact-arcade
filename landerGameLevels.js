@@ -45,22 +45,22 @@ function landerGameLevels(game, options) {
 		score: function(){return Math.floor( 250 + game.session.player.fuel )}
 	},	
 	slowdrop:	{name: "Breezio four", width:1000, height:2500,
-			items:[
-				{func:"landingCraft", spec:{x:150,y:2500-1200,h:0.0*Math.PI, mass: 50, v:0,radius:20,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
-				{func:'landingCraft', spec:{x:800,y:1950,h:1,v:0, mass:50,radius:20,color:'white'}},
-				{func:"ground", spec:{x:0,y:2430,width:1000,height:70, pattern:"soil.jpg"}},
-				{func:"landingZone", spec:{x:500,y:2400,width:300,height:50, isGoal:true,color:'green'}},
-				],
-			effects:[
-				{func:'targetGuide', spec: {x:500, width:300, height:20, lastFrame:200,color:'green'}}
+		items:[
+			{func:"landingCraft", spec:{x:150,y:2500-1200,h:0.0*Math.PI, mass: 50, v:0,radius:20,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
+			{func:'landingCraft', spec:{x:800,y:1950,h:1,v:0, mass:50,radius:20,color:'white'}},
+			{func:"ground", spec:{x:0,y:2430,width:1000,height:70, pattern:"soil.jpg"}},
+			{func:"landingZone", spec:{x:500,y:2400,width:300,height:50, isGoal:true,color:'green'}},
 			],
-			environment : {gravitationalConstant: .1, airDensity: 0.04,localGravity:.4},
-			score: function(){return Math.floor( 0 + game.session.player.fuel )},
-			background : {
-				planetRadius: 2000,
-				atmosphereDepth: 1000,
-				atmosphereColor: '150,40,160'
-			}
+		effects:[
+			{func:'targetGuide', spec: {x:500, width:300, height:20, lastFrame:200,color:'green'}}
+		],
+		environment : {gravitationalConstant: .1, airDensity: 0.04,localGravity:.4},
+		score: function(){return Math.floor( 0 + game.session.player.fuel )},
+		background : {
+			planetRadius: 2000,
+			atmosphereDepth: 1000,
+			atmosphereColor: '150,40,160'
+		}
 		},
 	fastDrop: {name: "Breezio six", width:1000, height:2500,
 			items:[
@@ -164,6 +164,28 @@ function landerGameLevels(game, options) {
 			return grd;
 		}},
 		backgroundStars: {number:800, colorRange: ['gray'], depth :1}
+	},
+	earth: { name: "Planet fall", width:1000, widht:1000, height:3500,
+			items:[
+			{func:"landingCraft", spec:{x:150,y:500,h:0.0*Math.PI, mass: 50, v:0,radius:25,thrust:0, thrustPower: 20,color:'green',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
+			{func:'landingCraft', spec:{x:800,y:500,h:1,v:0, mass:50,radius:20,color:'white',thrust:.5}},
+			{func:"building", spec:{x:550,y:3500-400,width:100,height:275, color:'darkkhaki',color2:'brown'}},
+			{func:"building", spec:{x:75,y:3500-400,width:200,height:375, color:'canvas',color2:'black'}},
+			{func:"landingZone", spec:{x:625,y:3500-220,width:300,height:25, isGoal:true,color:'green'}},
+			{func:"ground", spec:{x:600,y:3500-210,width:350,height:75, color:'darkkhaki'}},
+			{func:"boulder", spec:{x:500,y:3500+2800,radius:3000, pattern:"soil.jpg"}},
+			],
+		effects:[
+			{func:'targetGuide', spec: {x:500, width:300, height:20, lastFrame:200,color:'green'}}
+		],
+		environment : {gravitationalConstant: .2, airDensity: 0.01,localGravity:1},
+		score: function(){return Math.floor( 0 + game.session.player.fuel )},
+		background : {
+			planetRadius: 3000,
+			atmosphereDepth: 2500,
+			atmosphereColor: '150,140,240'
+		}
+
 	}
 	};
 
@@ -181,6 +203,7 @@ function landerGameLevels(game, options) {
 	"We're low on fuel. Lucky for you there's a refuel pad halfway down. Fill up before you lift off for the last leg.";
 	
 	game.level = [
+		ourLevels.earth,
 		ourLevels.slowdrop,
 		ourLevels.fastDrop,
 		ourLevels.moonbaseAlpha,
