@@ -5,8 +5,9 @@ import { vectorGraphics } from './js/discs/vectorGraphics.js'
 import { vectorCalculations } from './js/discs/vectorCalculations.js'
 import { vectorPhysics } from './js/discs/vectorPhysics.js'
 import { vectorGame } from './js/discs/vectorGame.js'
+import { vectorGameLevels } from './js/discs/vectorGameLevels.js'
 
-var gameInstance = createGame([backgroundStars,vectorGraphics,vectorCalculations,vectorPhysics,vectorGame],{
+var gameInstance = createGame([backgroundStars,vectorGraphics,vectorCalculations,vectorPhysics,vectorGame,vectorGameLevels],{
 	startingLives:3,
 	runCollisionTestInMainLoop:false,
 	bottomOfScreenIsZeroY : false,
