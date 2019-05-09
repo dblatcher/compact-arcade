@@ -1,4 +1,4 @@
-function spriteHandling (game) {
+export function spriteHandling (game) {
 
 	var updateSpriteFrame	= function(){			
 		if (game.cycleCount % game.library.spriteHandling.gameCyclesBetweenFrameUpdates === 0 ){

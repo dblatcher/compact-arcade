@@ -1,4 +1,4 @@
-function createGame (disks, options) {
+export function createGame (disks, options) {
 	
 	if (typeof(options) !==  "object") {options = {} };
 	options.leftOffset = options.leftOffset || 500;
@@ -369,11 +369,11 @@ function createGame (disks, options) {
 		};
 		function addSprite(src) {
 			var spriteElement;
-			SpriteElement = document.createElement("img");
-			SpriteElement.src = spritePath+src;
-			SpriteElement.style.display = "none";
-			game.assetHolderElement.appendChild(SpriteElement);
-			game.sprite[src] = SpriteElement;
+			spriteElement = document.createElement("img");
+			spriteElement.src = spritePath+src;
+			spriteElement.style.display = "none";
+			game.assetHolderElement.appendChild(spriteElement);
+			game.sprite[src] = spriteElement;
 		};
 		
 	};
@@ -789,7 +789,8 @@ function createGame (disks, options) {
 	game.reactToControls = function(){},
 			
 	game.handlePlayerWinsLevel = function () {	
-		if (this.level[this.session.currentLevel].score) {this.session.score += this.level[this.session.currentLevel].score}
+		if (typeof this.level[this.session.currentLevel].score === 'number') {this.session.score += this.level[this.session.currentLevel].score}
+		if (typeof this.level[this.session.currentLevel].score === 'function') {this.session.score += this.level[this.session.currentLevel].score()}
 		if (this.session.currentLevel+1 < this.level.length) {
 			game.session.waitingToReset = 'nextLevel';
 			game.session.resetTime = game.cycleCount + options.cyclesBetweenLevelEndAndReset;

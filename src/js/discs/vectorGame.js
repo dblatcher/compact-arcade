@@ -1,5 +1,4 @@
-
-function vectorGame(game, options) {
+export function vectorGame(game, options) {
 		
 	var VP = game.library.vectorPhysics;
 	game.soundFiles.push ('zap.mp3','die.mp3');
@@ -59,49 +58,6 @@ function vectorGame(game, options) {
 		if (impactPoint.item2.type == "rock") {shatterUntilTooSmall(impactPoint.item2);}
 		if (impactPoint.item1.type == "rock") {shatterUntilTooSmall(impactPoint.item1);}
 		this.dead = true;		
-	};
-		
-	var descentMeter = {
-		render:game.library.defaultWidgets.showText,
-		xPos : 180, yPos:50,
-		textSize: (4/100),
-		font: "monospace",
-		textAlign: "right",
-		getValue: function() {
-			return -game.calc.vectorFromForces([game.session.player.momentum]).y
-		},
-		getText: function () {
-			var value = this.getValue();
-			if (value < 0.2 && value > -0.2){value = 0};
-			return value.toFixed(2) + "m/s"
-		},
-		color: function () {
-			var green = 255, red = 0, value = this.getValue();
-			if (value < 0.75) {green = 255; red = 0}
-			else if (value > 2) {green = 0; red = 255}
-			else {green = 255; red = 255};
-			return "rgb(" + red + "," + green + ",0)";
-		}
-	}
-	
-	var fuelMeter = {
-		render: game.library.defaultWidgets.barChart,
-		xPos:200, yPos:50,
-		width:40, height:100, margin:5,
-		getRange:function(){return game.session.player.fuelCapacity},
-		getValue:function(){return game.session.player.fuel},
-		barFill:'white',
-		chartFill:"rgba(200, 200, 200, 0.3)",
-	};
-	
-	var fuelMeterLabel = {
-		render:game.library.defaultWidgets.showText,
-		xPos : 200, yPos:150,
-		textSize: (1/30),
-		font: "monospace",
-		textAlign: "right",
-		textBaseline: "bottom",
-		getText: function() {return "fuel"}
 	};
 	
 	var thrustMeter = {
@@ -321,15 +277,15 @@ function vectorGame(game, options) {
 	
 	game.level = [
 		{name: "space duel", width:1000, height: 1000,
-			items: [
-				{func:"fancyShip", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50, v:0,radius:20,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
-				{func:"ship", spec:{x:850,y:600,h:0.2*Math.PI,v:0,radius:20,shield:0.5,thrust:0.2,color:'green', behaviour:attack_AI,momentum:{h:(Math.PI*1), m:6}}},		
+		items: [
+			{func:"fancyShip", spec:{x:150,y:600,h:0.0*Math.PI, mass: 25, v:0,radius:20,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}, projectile:'deadlyBullet'}, isPlayer:true},		
+			{func:"ship", spec:{x:850,y:600,h:0.2*Math.PI,v:0,radius:30, maxSpeed:20,shield:0.5,thrust:0,color:'green', behaviour:null, momentum:{h:(Math.PI*1), m:0}}},		
 			],
 			effects : [],
 			addWidgets: [thrustMeter,mapWidget],
-			removeWidgets:[descentMeter,fuelMeter,fuelMeterLabel],
+			removeWidgets:[],
 			environment : {
-				gravitationalConstant: 0.1,
+				gravitationalConstant: 0.01,
 				airDensity: 0.0,
 				localGravity:0
 			},
@@ -341,89 +297,6 @@ function vectorGame(game, options) {
 				return filtered.length === 0;
 			}
 		},
-		{name: "moonbase alpha", width:1000, height:2500,
-			items:[
-				{func:"landingCraft", spec:{x:600,y:2350,h:0.0*Math.PI, mass: 50,
-				v:0,radius:20,elasticity:0.25,thrust:0.1, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}
-				, isPlayer:true},		
-				{func:'landingCraft', spec:{x:800,y:1350,h:0,thrust:0.45,v:0, mass:50,radius:20,color:'white'}},
-				{func:"boulder", spec:{x:500,y:4950,radius:2550, pattern:"stone.jpg"}},
-				{func:"landingZone", spec:{x:500,y:2400,width:300,height:50, isGoal:true,color:'green'}},
-				{func:"boulder", spec:{x: 200, y:2450, radius:50, pattern: "stone.jpg"}},
-				{func:"boulder", spec:{x: 350, y:2430, radius:60, pattern: "stone.jpg"}},
-				],
-			effects:[],
-			removeWidgets: [thrustMeter,mapWidget],
-			addWidgets:[descentMeter,fuelMeter,fuelMeterLabel],
-			environment : {
-				gravitationalConstant: 0.1,
-				airDensity: 0.01,
-				localGravity:1
-			},
-			background : {
-				planetRadius: 2000,
-				atmosphereDepth: 800,
-				atmosphereColor: '150,140,255'
-			},
-			victoryCondition: function () {
-				return (game.session.items.filter(function(item){return(item.isGoal && item.timePlayerOn > 20)}).length > 0);
-			},
-			failureCondition: function() {
-				return game.session.player.stuck;
-			}
-		},
-		{name: "moonbase beta", width:1000, height:1500,
-			items:[
-				{func:"landingCraft", spec:{x:500,y:1300,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0.15, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}},isPlayer:true},		
-				{func:"boulder", spec:{x:500,y:3950,radius:2550, pattern:"stone.jpg"}},
-				{func:"ground", spec:{x:0,y:1500-350,width:200,height:300, pattern:"stone.jpg"}},
-				{func:"ground", spec:{x:200,y:1500-350,width:150,height:50, pattern:"stone.jpg"}},
-				{func:"ground", spec:{x:800,y:1500-650,width:200,height:600, pattern:"stone.jpg"}},
-				{func:"boulder", spec:{x:800,y:1500-80,radius:100, pattern:"stone.jpg"}},
-				{func:"landingZone", spec:{x:300,y:1400,width:300,height:50, isGoal:true,color:'green'}},
-				{func:"landingZone", spec:{x:50,y:1500-360,width:50,height:10, isRefuel:true,color:'red'}}
-				],
-			effects:[],
-			backgroundStars:{
-				number:500
-			},			
-			environment : {
-				gravitationalConstant: 0.1,
-				airDensity: 0.005,
-				localGravity:1.2
-			},
-			victoryCondition: function () {
-				return (game.session.items.filter(function(item){return(item.isGoal && item.timePlayerOn > 20)}).length > 0);
-			},
-			failureCondition: function() {
-				return game.session.player.stuck;
-			}
-		},	
-		{name: "slow drop in thick atmo", width:1000, height:1500,
-			items:[
-				{func:"landingCraft", spec:{x:150,y:300,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.25,thrust:0, thrustPower: 15,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},
-				{func:'landingCraft', spec:{x:800,y:950,h:1,v:0, mass:50,radius:20,color:'white'}},
-				{func:"ground", spec:{x:0,y:1450,width:1000,height:50, pattern:"stone.jpg"}},
-				{func:"landingZone", spec:{x:500,y:1400,width:300,height:50, isGoal:true,color:'green'}},
-				],
-			effects:[],
-			environment : {
-				gravitationalConstant: 0.1,
-				airDensity: 0.15,
-				localGravity:1.3
-			},
-			background : {
-				planetRadius: 2000,
-				atmosphereDepth: 1000,
-				atmosphereColor: '150,40,160'
-			},
-			victoryCondition: function () {
-				return (game.session.items.filter(function(item){return(item.isGoal && item.playerHasLanded)}).length > 0);
-			},
-			failureCondition: function() {
-				return game.session.player.stuck;
-			}
-		},	
 		{name: "asteroid belt", width:1000, height:1000,
 			items :[
 				{func:"fancyShip", spec:{x:150,y:600,h:0.0*Math.PI, mass: 50, v:0,radius:20,elasticity:0.5,thrust:0,color:'red',momentum:{h:(Math.PI*1), m:0}}, isPlayer:true},		
@@ -437,7 +310,7 @@ function vectorGame(game, options) {
 				airDensity: 0,
 				localGravity: 0
 			},
-			removeWidgets:[descentMeter,fuelMeter,fuelMeterLabel],
+			removeWidgets:[],
 			addWidgets:[thrustMeter,mapWidget],
 			victoryCondition : function() {
 				return (game.session.items.filter(function(item){return(item.type==='rock')}).length === 0);
@@ -523,29 +396,6 @@ function vectorGame(game, options) {
 	game.renderBackground = function(c,ctx,plotOffset) {
 		var level = game.level[game.session.currentLevel];
 		game.library.backgroundStars.plotStars(c,ctx,plotOffset);
-		
-		if (level.background) {
-			if (level.background.atmosphereDepth) {
-				var planetRadius = level.background.planetRadius || 2500;
-				
-				var atmo = {
-					depth:level.background.atmosphereDepth,
-					x: level.width*1/2-plotOffset.x,
-					y: level.height+planetRadius-plotOffset.y,
-					color: level.background.atmosphereColor ||'100,100,220'
-				};
-				
-				var gradient = ctx.createRadialGradient(atmo.x,atmo.y,planetRadius, atmo.x,atmo.y,planetRadius+atmo.depth);
-				gradient.addColorStop(0.4,'rgba('+ atmo.color +',1)');
-				gradient.addColorStop(1, 'rgba('+ atmo.color +',0)');
-				
-				ctx.beginPath();
-				ctx.fillStyle = gradient;
-				ctx.arc(atmo.x,atmo.y,planetRadius+atmo.depth,0,Math.PI*2);
-				ctx.fill();
-			}
-		}
-		
 	}; 
 	
 	
@@ -559,31 +409,6 @@ function vectorGame(game, options) {
 		var that=game.make.roundItem(spec);
 		that.type='ground';	
 		return that;
-	}
-	
-	game.make.landingZone = function(spec){
-		var that = game.make.ground(spec);
-		that.type='ground';
-		that.isGoal =  spec.isGoal || false;
-		that.isRefuel =  spec.isRefuel || false;
-		that.playerHasLanded = false;
-		that.timePlayerOn = 0;
-		
-		that.checkIfPlayerLanded = function () {
-			var player = game.session.player;
-			
-			this.playerHasLanded = (this.top - player.bottom < 1 && player.x > this.left 
-				&& player.x < this.right
-				&& player.momentum.m < 1) ;
-			if (this.playerHasLanded) {
-				this.timePlayerOn++;
-				if (this.isRefuel && typeof player.refuel === 'function') {player.refuel(1)}
-			} else {this.timePlayerOn = 0};
-		};
-		
-		that.automaticActions.push (that.checkIfPlayerLanded); 		
-		return that;
-	
 	}
 	
 	game.make.bullet = function(spec) {
@@ -602,16 +427,15 @@ function vectorGame(game, options) {
 			if (this.lifeSpan-- == 0 ) {this.dead = true};
 		});
 		
-		that.hit.ground = function(impactPoint,isReversed){
-			VP.reflectForceOffFlatSurface(impactPoint,isReversed);
-		}
+		that.hit.ground = VP.reflectForceOffFlatSurface;
+		
 		that.hit.blackHole = getSuckedIn;
 		that.hit.ship = function(impactPoint,isReversed){	
-			VP.flatBounce(impactPoint,isReversed);
+			VP.flatBounce.apply(this,[impactPoint,isReversed]);
 			this.dead = true;
 		};
 		that.hit.solidRock = function(impactPoint,isReversed){	
-			VP.mutualRoundBounce(impactPoint,isReversed);
+			VP.mutualRoundBounce.apply(this,[impactPoint,isReversed]);
 			this.dead = true;
 		};
 		that.hit.rock = breakRock;
@@ -619,6 +443,23 @@ function vectorGame(game, options) {
 		return that;
 	}
 	
+	game.make.deadlyBullet = function (spec) {
+		var that = game.make.bullet(spec);
+
+		that.hit.ship = function(impactPoint,isReversed){	
+			VP.flatBounce.apply(this,[impactPoint,isReversed]);
+			this.dead = true;
+			var shipHit = impactPoint.item1 === this ? impactPoint.item2 : impactPoint.item1;
+			console.log(game.cycleCount, shipHit.color+' '+shipHit.type+' shields='+shipHit.shield);
+			
+			shipHit.shield -= 0.1;
+			if (shipHit.shield < 0 ) {shipHit.explode()}
+			
+		};
+
+		return that;
+	}
+
 	game.make.ship = function (spec) {
 		var that = game.make.roundItem(spec);
 		that.type = 'ship';
@@ -629,6 +470,9 @@ function vectorGame(game, options) {
 		that.shield = spec.shield || 0;
 		that.coolDownLevel = 0;
 		that.coolDownDelay = 15;
+
+		that.defaultProjectile = spec.projectile || 'bullet';
+		that.defaultProjectileSpec = spec.projectileSpec || {maxSpeed:30, radius:5, color:that.color, mass:4, lifeSpan:50};
 
 		var coolDown = function(){
 			if (this.coolDownLevel){this.coolDownLevel--};
@@ -641,12 +485,12 @@ function vectorGame(game, options) {
 		
 		that.explode = function() {
 			game.sound.play("die.mp3");
-			game.session.effect.push(game.makeEffect.expandingRing({x:impactPoint.x, y:impactPoint.y, lastFrame:20}));
+			game.session.effect.push(game.makeEffect.expandingRing({x:this.x, y:this.y, lastFrame:20}));
 			this.dead = true;
 		};
 		
 		that.hit.rock = function(impactPoint,isReversed){
-			VP.flatBounce(impactPoint,isReversed);
+			VP.flatBounce.apply(this,[impactPoint,isReversed]);
 			this.explode();
 		};
 		that.hit.solidRock = that.hit.rock;
@@ -654,9 +498,9 @@ function vectorGame(game, options) {
 		that.hit.ground = function(impactPoint,isReversed) {
 			//reportImpact(impactPoint,isReversed);
 			if (impactPoint.force > 150) {
-				thia.explode();
+				//this.explode();
 			}
-			VP.reflectForceOffFlatSurface(impactPoint,isReversed);
+			VP.reflectForceOffFlatSurface.apply(this, [impactPoint,isReversed]);
 		}
 		
 		that.hit.blackHole = getSuckedIn;
@@ -694,11 +538,9 @@ function vectorGame(game, options) {
 			{com:'beginPath'},
 			{com:'fillStyle',v:'rgba(170,170,255,0.25)'},
 			{com:"moveTo", h:0.5,d:1},
-			{com:"arc", x:0,y:0,r:1.1 },			
+			{com:"arc", x:0,y:0,r:1.1 },
 			{com:'fill'}
 			];
-			
-			
 			
 			return draw;
 		}
@@ -725,26 +567,26 @@ function vectorGame(game, options) {
 		}
 		
 		
-		var launchProjectile = function(makeFunction) {
+		var launchProjectile = function(projectile,projectileSpec) {
 			var projectileVector= game.calc.vectorFromForces([  {m:this.momentum.m, h:this.momentum.h} , {m:20,h:this.h}  ]);
 			var projectileMomentum={
 				m : Math.min(game.calc.distance(projectileVector),30),
 				h : game.calc.headingFromVector(projectileVector)				
 			};
-			var projectileSpec = {
+			var spec = {
 				x:this.x + (1.5*(this.radius+10)*projectileVector.x/projectileMomentum.m),
 				y:this.y - (1.5*(this.radius+10)*projectileVector.y/projectileMomentum.m),
 				h:(this.h/Math.PI),
 				momentum:projectileMomentum,
-				maxSpeed:30,
-				radius:5,
-				color:this.color,
-				mass:4,
-				lifeSpan:50
 			};
 			
-			makeFunction = makeFunction || game.make.bullet;
-			game.session.items.push( makeFunction(projectileSpec));
+			projectileSpec = projectileSpec || this.defaultProjectileSpec;
+			var keys = Object.keys(projectileSpec);
+			for (var i=0; i<keys.length; i++) {
+				spec[keys[i]] = projectileSpec[keys[i]];
+			}
+	
+			game.session.items.push( game.make[projectile || this.defaultProjectile](spec));
 		}
 		that.launchProjectile = launchProjectile;
 				
@@ -799,122 +641,6 @@ function vectorGame(game, options) {
 		return that;
 	};
 		
-	game.make.landingCraft = function(spec) {
-		var that = game.make.ship(spec);
-		
-		that.fuel = spec.fuel || 200;
-		that.fuelCapacity = spec.fuelCapacity || 200;
-		that.timeStranded = 0;
-		that.stuck = false;
-		
-		var burnFuel = function() {
-			if (this.thrust){
-				this.fuel -=this.thrust;
-				if (this.fuel<0) {this.fuel = 0; this.thrust = 0};
-			};
-		}
-		
-		refuel = function (amount) {
-			this.fuel = Math.min (this.fuel + amount, this.fuelCapacity);
-		};
-		that.refuel = refuel;
-		
-		var checkIfStuck = function () {
-			if (this.fuel === 0 && this.momentum.m < 0.2 ) {
-				if (this.timeStranded++ > 10) {
-					that.stuck = true;
-				}
-			} else { this.timeStranded = 0;} 
-		}
-		
-		that.automaticActions.pop(); // remove dropThrust
-		that.automaticActions.push(burnFuel,checkIfStuck)
-		
-		that.command = function(commandName, commandOptions){
-			switch (commandName) {			
-			case "THRUST_INCREASE":
-				if (this.fuel){this.thrust += 0.025} 
-				break;
-			case "THRUST_DECREASE":
-				this.thrust -= 0.025 
-				break;
-			case "TURN_ANTICLOCKWISE":
-				this.h -= 0.02 * Math.PI;
-				break;
-			case "TURN_CLOCKWISE":
-				this.h += 0.02 * Math.PI;
-				break;
-			};
-		};
-		
-		that.draw = function() {
-			var flickerY1 = (Math.random())/2;
-			var flickerY2 = (Math.random())/2;
-			var flickerX1 = (Math.random()-0.5)/3;
-			var flickerX2 = (Math.random()-0.5)/3;
-			
-			var flameSize = 0.5+this.thrust*3;
-			
-			var drawFlames =  this.thrust ? [
-				{com:'beginPath'},
-				{com:'moveTo',x:-0.7,y:1},
-				{com:'quadraticCurveTo',x:-0.3,y:1,controlPoint:{y:1+flickerY1+flameSize,x:-0.5+flickerX1}},
-				{com:'fillStyle', colors:[{v:0, color:'white'},{v:0.3, color:'yellow'},{v:0.75, color:'red'}], start:0.1, end:1+flameSize+flickerY1 },				
-				{com:'fill'},	
-				
-				{com:'beginPath'},
-				{com:'moveTo',x:0.3,y:1},
-				{com:'quadraticCurveTo',x:0.7,y:1,controlPoint:{y:1+flickerY2+flameSize,x:0.5+flickerX2}},
-				{com:'fillStyle', colors:[{v:0, color:'white'},{v:0.3, color:'yellow'},{v:0.75, color:'red'}], start:0.1, end:1+flameSize+flickerY2 },				
-				{com:'fill'}]	
-			: [];
-			
-			var drawBody = [
-				{com:'beginPath'},
-				{com:'arc', x:0,y:0,r:1,startAngle:0.9, endAngle:0.1},
-				{com:'closePath'},
-				{com:'fillStyle',v:this.color},
-				{com:'fill'}			
-			];
-			
-			var drawCockpit = [
-				{com:'beginPath'},
-				{com:'arc', x:0,y:-0.2,r:0.5,startAngle:1, endAngle:0},
-				{com:'closePath'},
-				{com:'fillStyle', v:'black'},
-				{com:'fill'},			
-			];
-			
-			var drawThrusters = [			
-				{com:'beginPath'},
-				{com:'strokeStyle', v:this.color},
-				{com:'fillStyle', v:'gray'},
-				{com:'moveTo', x:-0.7 ,y:0.3 },
-				{com:'lineTo', x:-0.3 ,y:0.3 },
-				{com:'lineTo', x:-0.3 ,y:1 },
-				{com:'lineTo', x:-0.7 ,y:1 },
-				{com:'closePath'},
-				{com:'stroke'},
-				{com:'fill'},
-
-				{com:'beginPath'},
-				{com:'strokeStyle', v:this.color},
-				{com:'fillStyle', v:'gray'},
-				{com:'moveTo', x:0.7 ,y:0.3 },
-				{com:'lineTo', x:0.3 ,y:0.3 },
-				{com:'lineTo', x:0.3 ,y:1 },
-				{com:'lineTo', x:0.7 ,y:1 },
-				{com:'closePath'},
-				{com:'stroke'},
-				{com:'fill'},
-			];
-			
-			return [].concat (drawFlames, drawBody, drawCockpit, drawThrusters);
-		};
-		
-		return that;
-	};	
-		
 	game.make.rock = function(spec) {
 		var that = game.make.roundItem(spec);
 		that.type = 'rock';
@@ -936,14 +662,14 @@ function vectorGame(game, options) {
 		that.shatter = function() {
 			this.dead = true;
 			var randomHeading = game.calc.round(Math.random()*2,3);
-			var randomSpeed = game.calc.round(Math.random()*2,3);
+			var randomSpeed = game.calc.round(Math.random()*5,3);
 			var shardVector1 = game.calc.vectorFromForces([this.momentum, {h:randomHeading,m:randomSpeed}],3);
 			var shard1 = game.make.rock({
-				x:this.x,
-				y:this.y,
+				x:this.x+(5*shardVector1.x),
+				y:this.y+(5*shardVector1.y),
 				radius:Math.floor(this.radius*0.7),
 				density:this.density,
-				color:this.color
+				color:'red'
 			});
 			shard1.queuedMove = {
 				x:shardVector1.x,
@@ -955,8 +681,8 @@ function vectorGame(game, options) {
 
 			var shardVector2 = game.calc.vectorFromForces([{h:game.calc.reverseHeading(randomHeading),m:randomSpeed}],3);
 			var shard2 = game.make.rock({
-				x:this.x,
-				y:this.y,
+				x:this.x+(5*shardVector2.x),
+				y:this.y+(5*shardVector2.y),
 				radius:Math.floor(this.radius*0.7),
 				mass:this.mass/2.2,
 				color:this.color

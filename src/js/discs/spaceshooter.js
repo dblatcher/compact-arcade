@@ -1,7 +1,6 @@
 // dependency : spriteHandling
 
-function spaceShooter(game) {
-console.log('running spaceShooter')
+export function spaceShooter(game) {
 	game.soundFiles.push ('jump.mp3','land.mp3','bounce.mp3');	
 	game.spriteFiles.push ('alien.png','spaceship.png');	
 

@@ -1,4 +1,4 @@
-function backgroundStars(game) {
+export function backgroundStars(game) {
 	game.library.backgroundStars = {
 		defineStars : function(level) {
 			var currentLevel = game.level[level];

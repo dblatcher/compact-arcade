@@ -1,6 +1,4 @@
-// dependency : spriteHandling
-
-function platformGame(game) {
+export function platformGame(game) {
 
 	game.soundFiles.push ('jump.mp3','land.mp3','bounce.mp3');	
 	game.spriteFiles.push ('man.png', 'man-r.png','tree.png','orc.png','orc-r.png','bat.png');	

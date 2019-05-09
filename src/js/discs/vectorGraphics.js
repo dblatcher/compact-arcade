@@ -1,4 +1,4 @@
-function vectorGraphics(game) {
+export function vectorGraphics(game) {
 	game.library.vectorGraphics = {};
 	
 	game.library.vectorGraphics.createRelativeLinearGradient = function(item,colorStop,shape,plotOffset){
