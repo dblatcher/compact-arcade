@@ -4,6 +4,7 @@ module.exports = {
   mode: 'development',
   entry: {
     lander:'./src/ep-lander.js',
+    platform:'./src/ep-platform.js',
     spaceShooter:'./src/ep-spaceshooter.js'
   },
   output: {

@@ -12,7 +12,8 @@ app.set('view engine', 'ejs');
 
 var games = [
 	{title: 'Moon Lander', bundle:'lander'},
-	{title: 'Blob Raiders', bundle:'spaceShooter'}
+	{title: 'Blob Raiders', bundle:'spaceShooter'},
+	{title: 'Platform Demo', bundle:'platform'}
 ];
 
 
