@@ -1,0 +1,21 @@
+{
+  "name": "arcade-site",
+  "version": "1.0.0",
+  "description": "Site to serve compact arcade games",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
+  },
+  "author": "DBlatcher",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^2.6.1",
+    "es6-promise": "^4.2.6",
+    "express": "^4.16.4",
+    "webpack": "^4.30.0"
+  },
+  "devDependencies": {
+    "webpack-cli": "^3.3.1"
+  }
+}
