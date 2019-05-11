@@ -1,4 +1,4 @@
-import { createGame, pageSettings, initialiseForPage} from './js/base.js';
+import { createGame, pageSettings, initialiseForPage, appendScoreFunctionsToPageSettings} from './js/base.js';
 
 import { backgroundStars } from './js/discs/backgroundStars.js'
 import { vectorGraphics } from './js/discs/vectorGraphics.js'
@@ -13,5 +13,12 @@ var gameInstance = createGame([backgroundStars,vectorGraphics,vectorCalculations
 	bottomOfScreenIsZeroY : false,
 	gameCycleTime : 10
 });
+
+console.log (
+appendScoreFunctionsToPageSettings('scores_spacegame.json', pageSettings) 
+);
+console.log ( pageSettings);
+
+
 
 initialiseForPage(gameInstance, pageSettings);

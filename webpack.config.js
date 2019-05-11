@@ -5,6 +5,7 @@ module.exports = {
   entry: {
     lander:'./src/ep-lander.js',
     platform:'./src/ep-platform.js',
+    spacegame:'./src/ep-spacegame.js',
     spaceShooter:'./src/ep-spaceshooter.js'
   },
   output: {
