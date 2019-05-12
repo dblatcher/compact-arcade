@@ -1,6 +1,6 @@
 import { createGame } from './gameTemplate.js'
-var Promise = require('es6-promise').Promise;
-var axios = require('axios');
+//var Promise = require('es6-promise').Promise;
+
 
 
 var pageSettings = {
@@ -21,6 +21,12 @@ function initialiseForPage (game, settings) {
 
 const appendScoreFunctionsToPageSettings = function (gameName, settingsObject) {
 	
+	if (document.body.getAttribute('page-role') === 'debug') {
+		return settingsObject;
+	}
+	
+	var axios = require('axios');
+
 	const fetchScores = function() {
 		return new Promise(function(resolve, reject) {
 			axios.get('scores/'+gameName)
