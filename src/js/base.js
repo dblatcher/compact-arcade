@@ -1,5 +1,7 @@
 import { createGame } from './gameTemplate.js'
-//var Promise = require('es6-promise').Promise;
+var Promise = require('es6-promise').Promise;
+var axios = require('axios');
+
 
 var pageSettings = {
   canvasElement:document.getElementById("gameSpace"),
@@ -17,45 +19,37 @@ function initialiseForPage (game, settings) {
   }
 }
 
-
 const appendScoreFunctionsToPageSettings = function (gameName, settingsObject) {
 	
-	
-	var dummyScoreData = [
-	{name: 'Joe', score: 500, date: new Date(1550000000012)},
-	{name: 'Tim', score: 2500, date: new Date(1550000000110)},
-	{name: 'Bob', score: 300, date: new Date(1550000000050)},
-	{name: 'Joe', score: 1500, date: new Date(1550000000100)},
-	{name: 'Joe', score: 15, date: new Date(1550000000002)},
-	{name: 'Joe', score: 20, date: new Date(1550000000001)}
-	];
-
 	const fetchScores = function() {
-		console.log('fetch score request received for ' + gameName)
 		return new Promise(function(resolve, reject) {
-	// will be promise sending new score to server to put in {gameName}		
-			setTimeout(function() {
-				if (true) {
-					resolve({success:true, data:dummyScoreData});
-				} else {
+			axios.get('scores/'+gameName)
+				.then(function(response) {
+					console.log(response);
+					if (response.status == 200) {
+						resolve({success:true, data:response.data});
+					};
+					reject (response.data.message);
+				})
+				.catch(function(response) {
+					console.log(response);
 					reject ('error');
-				}		
-			}, 4000);
+				}); 
 		});
 	};
 
 	const sendScore = function(newScore) {
-		console.log('new score received for ' + gameName+' : ', newScore);
 		return new Promise (function (resolve, reject) {
-	// will be promise asking server to send data from {gameName}
-			setTimeout(function() {
-				if (true) {
-					dummyScoreData.push(newScore);
-					resolve({success:true, data:dummyScoreData});
-				} else {
+			axios.post('scores/'+gameName, newScore)
+				.then (function(response) {
+					if (response.status == 200) {
+						resolve({success:true, data:response.data});
+					};
+					reject (response.data.message);
+				})
+				.catch(function(response) {
 					reject ('error');
-				}
-			},4000);
+				});
 		});	
 	}	
 		
@@ -65,6 +59,6 @@ const appendScoreFunctionsToPageSettings = function (gameName, settingsObject) {
 	return settingsObject;
 }
 	
- 
+
 
 export {createGame, pageSettings, initialiseForPage, appendScoreFunctionsToPageSettings };

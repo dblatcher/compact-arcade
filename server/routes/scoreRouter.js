@@ -29,7 +29,7 @@ var router = function(games, scores) {
 			var gameName = req.params.name
 			
 			if (!scores[gameName]) {
-				res.send(makeNoTableError(gameName));
+				res.status(406).send(makeNoTableError(gameName));
 				return;
 			}
 			
@@ -41,22 +41,24 @@ var router = function(games, scores) {
 			var gameName = req.params.name
 			
 			if (!scores[gameName]) {
-				res.send(makeNoTableError(gameName));
+				res.status(406).send(makeNoTableError(gameName));
 				return;
 			};
 			
 			var scoreTable = scores[gameName];
+			var postedScore = req.body;
+			console.log ('incoming score for' + gameName,postedScore);
 			
-			//TO DO read from post
-			var postedScore = {score:scoreTable.length, name:'fake data'};
-			var validated = function (postedScore) {
-				return true; //TO DO make validation test
-			}();
 			
-			if (!validated) {
+			var validationProblems = [];
+			if (typeof postedScore.name !== 'string') {validationProblems.push('invalid or missing name')};	
+			if (typeof postedScore.score !== 'number') {validationProblems.push('invalid or missing score')};	
+			
+			
+			if (validationProblems.length) {
 				res.send(JSON.stringify({
 					error: 'bad data',
-					message: `score data posted for ${gameName} was bad`
+					message: `score data posted for ${gameName} was bad: ${validationProblems.toString()}`
 				}));
 				return;
 			}
