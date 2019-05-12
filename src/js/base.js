@@ -31,7 +31,6 @@ const appendScoreFunctionsToPageSettings = function (gameName, settingsObject) {
 		return new Promise(function(resolve, reject) {
 			axios.get('scores/'+gameName)
 				.then(function(response) {
-					console.log(response);
 					if (response.status == 200) {
 						resolve({success:true, data:response.data});
 					};

@@ -14,7 +14,7 @@ var gameInstance = createGame([backgroundStars,vectorGraphics,vectorCalculations
 	gameCycleTime : 10
 });
 
-
+	
 appendScoreFunctionsToPageSettings('spacegame', pageSettings) 
 
 initialiseForPage(gameInstance, pageSettings);
