@@ -15,6 +15,6 @@ var gameInstance = createGame([backgroundStars,vectorGraphics,vectorCalculations
 });
 
 
-appendScoreFunctionsToPageSettings('scores_spacegame.json', pageSettings) 
+appendScoreFunctionsToPageSettings('spacegame', pageSettings) 
 
 initialiseForPage(gameInstance, pageSettings);

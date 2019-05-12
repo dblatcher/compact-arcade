@@ -18,7 +18,7 @@ function initialiseForPage (game, settings) {
 }
 
 
-const appendScoreFunctionsToPageSettings = function (tableName, settingsObject) {
+const appendScoreFunctionsToPageSettings = function (gameName, settingsObject) {
 	
 	
 	var dummyScoreData = [
@@ -31,9 +31,9 @@ const appendScoreFunctionsToPageSettings = function (tableName, settingsObject) 
 	];
 
 	const fetchScores = function() {
-		console.log('fetch score request received for ' + tableName)
+		console.log('fetch score request received for ' + gameName)
 		return new Promise(function(resolve, reject) {
-	// will be promise sending new score to server to put in {tableName}		
+	// will be promise sending new score to server to put in {gameName}		
 			setTimeout(function() {
 				if (true) {
 					resolve({success:true, data:dummyScoreData});
@@ -45,9 +45,9 @@ const appendScoreFunctionsToPageSettings = function (tableName, settingsObject) 
 	};
 
 	const sendScore = function(newScore) {
-		console.log('new score received for ' + tableName+' : ', newScore);
+		console.log('new score received for ' + gameName+' : ', newScore);
 		return new Promise (function (resolve, reject) {
-	// will be promise asking server to send data from {tableName}
+	// will be promise asking server to send data from {gameName}
 			setTimeout(function() {
 				if (true) {
 					dummyScoreData.push(newScore);

@@ -2,15 +2,12 @@ var express = require('express');
 var ScoreRouter = express.Router();
 var path = require('path');
 
+var root = path.dirname(require.main.filename || process.mainModule.filename)
 var saveJson = require('../saveJson.js');
 var getJson = require('../getJson.js');
 
 
-var root = path.dirname(require.main.filename || process.mainModule.filename)
-console.log('root',root);
-
-
-var router = function(games) {
+var router = function(games, scores) {
 
 
 	function getFileName(gameName) {
@@ -20,40 +17,53 @@ var router = function(games) {
 			}
 		}
 		return false;
-	}
+	};
+	
+	function makeNoTableError(param){
+		return JSON.stringify({ error: 'no score table', message: `no score table for a game called ${para}`})
+	}; 
 
 	
 	ScoreRouter.route('/:name')
 		.get(function (req, res){
-			var fileName = getFileName(req.params.name);
-			if (!fileName) {
-				console.log('no file name');
-				res.send('no file name');
-			};
+			var gameName = req.params.name
 			
-			console.log('fileName',fileName);
-			res.sendFile(root+'/score-data/'+fileName);
+			if (!scores[gameName]) {
+				res.send(makeNoTableError(gameName));
+				return;
+			}
+			
+			res.send(JSON.stringify(scores[gameName]));			
 		});
 	
 	ScoreRouter.route('/:name')
 		.post(function (req, res){
-			var fileName = getFileName(req.params.name);
-			if (!fileName) {
-				console.log('no file name');
-				res.send('no file name');
+			var gameName = req.params.name
+			
+			if (!scores[gameName]) {
+				res.send(makeNoTableError(gameName));
+				return;
 			};
-		
-			var data = getJson(fileName,'./score-data/');
-			var newScore = {score:data.length, name:'fake data'};
-			data.push(newScore);		
 			
-			saveJson(fileName, './score-data/', data)
-			.then ( (results) => {
-				console.log(results, data);
-			})
-			.catch( (error)   => {console.log(error)});
+			var scoreTable = scores[gameName];
 			
-			res.send(JSON.stringify(data));
+			//TO DO read from post
+			var postedScore = {score:scoreTable.length, name:'fake data'};
+			var validated = function (postedScore) {
+				return true; //TO DO make validation test
+			}();
+			
+			if (!validated) {
+				res.send(JSON.stringify({
+					error: 'bad data',
+					message: `score data posted for ${gameName} was bad`
+				}));
+				return;
+			}
+			
+			scoreTable.push(postedScore);
+			res.send(JSON.stringify(scoreTable));
+
 		});
 	
 	return ScoreRouter;

@@ -11,13 +11,16 @@ function getJsonData(fileName, path) {
 				json = (
 					JSON.parse(fs.readFileSync(path + '/' + files[i], 'utf8'))
 				);
+				return json;
 			} catch(err) {
 				console.log(`Error in json file for the ${files[i]}!`);
 				console.log(err)
+				return json;
 			}
 		};
 	}
 	
+	console.log(`file ${fileName} not found in ${path}`)
 	return json;
 
 };

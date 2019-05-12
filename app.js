@@ -12,11 +12,13 @@ app.set('view engine', 'ejs');
 
 var games = [
 	{title: 'Moon Lander', bundle:'lander',},
-	{title: 'Blob Raiders', bundle:'spaceShooter'},
+	{title: 'Blob Raiders', bundle:'spaceShooter', scoresFileName: 'scores_blobraiders.json'},
 	{title: 'Platform Demo', bundle:'platform'},
 	{title: 'Asteroid Epic', bundle:'spacegame', scoresFileName: 'scores_spaceGame.json'}
 ];
 
+var scores = require('./server/getScoresFromFiles')(games);
+// console.log('scores',scores)
 
 app.get('/', function(req,res) {
 	res.render('standard', {title: 'Home Page', gameList:games});
@@ -28,7 +30,7 @@ games.forEach(game => {
 	});
 });
 
-var scoreRouter = require('./server/routes/scoreRouter')(games);
+var scoreRouter = require('./server/routes/scoreRouter')(games, scores);
 app.use('/scores',scoreRouter);
 
 
