@@ -9,8 +9,9 @@ export function vectorGame(game, options) {
 		var otherItem = impactPoint.item1 === this ? impactPoint.item2 : impactPoint.item1;
 		
 		var message = 'T:' + game.cycleCount + ', ' + this.type + ' delivered a ' + impactPoint.force+ 'n force';
-		message += ' on a ' + otherItem.color + ' ' + otherItem.type; 
-		console.log(message);
+		message += ' on a ' + otherItem.color + ' ' + otherItem.type;
+		var message2 ='and the' + otherItem.type + ' delivered a ' + impactPoint.force2 + 'n force on that ' + this.type; 
+		console.log(message,message2);
 	};
 	
 	var getSuckedIn = function(impactPoint, isReversed){
@@ -321,8 +322,11 @@ export function vectorGame(game, options) {
 			VP.mutualRoundBounce.apply(this,[impactPoint,isReversed]);
 			this.dead = true;
 		};
-		that.hit.rock = breakRock;
-		
+		that.hit.rock = function(impactPoint,isReversed){
+			reportImpact.apply(this,[impactPoint,isReversed]);
+			breakRock.apply(this,[impactPoint,isReversed]);
+		}
+
 		return that;
 	}
 	

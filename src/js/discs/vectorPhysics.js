@@ -159,7 +159,8 @@ export function vectorPhysics(game) {
 		
 		
 		var force = item1.mass && item1.momentum ? item1.mass*item1.momentum.m : 0;
-		var result = {type:null, x:item1.x+vector.x, y:item1.y-vector.y, stopPoint:{x:item1.x,y:item1.y}, item1:item1, item2:item2, force:force};
+		var force2 = item2.mass && item2.momentum ? item2.mass*item2.momentum.m : force;
+		var result = {type:null, x:item1.x+vector.x, y:item1.y-vector.y, stopPoint:{x:item1.x,y:item1.y}, item1:item1, item2:item2, force:force, force2:force2};
 		
 		var movedObject = {
 			x: (item1.x + vector.x),
@@ -301,7 +302,8 @@ export function vectorPhysics(game) {
 		
 		
 		var force = item1.mass && item1.momentum ? item1.mass*item1.momentum.m : 0;
-		
+		var force2 = item2.mass && item2.momentum ? item2.mass*item2.momentum.m : force;
+
 		var movedObject = {
 			x: (item1.x + vector.x),
 			y: (item1.y - vector.y),
@@ -334,14 +336,14 @@ export function vectorPhysics(game) {
 				stopPoint.y += unitVector.y*shiftDistance;
 			}
 			
-			return {type:'start inside', x:item1.x, y:item1.y, stopPoint:stopPoint, item1:item1, item2:item2, force:force};
+			return {type:'start inside', x:item1.x, y:item1.y, stopPoint:stopPoint, item1:item1, item2:item2, force:force,force2:force2};
 		};
 		
-		var d = game.calc.closestpointonline(item1,movedObject,item2);														
+		var d = game.calc.closestpointonline(item1,movedObject,item2);
 		var closestDist = game.calc.distance(item2,d);		
 		var closestDistSq = closestDist*closestDist;
 		
-		if (game.calc.areIntersecting (movedObject,item2) ) {											
+		if (game.calc.areIntersecting (movedObject,item2) ) {
 			var backdist = Math.sqrt(Math.pow(movedObject.radius + item2.radius, 2) - closestDistSq); 
 			var movementvectorlength = game.calc.distance(vector);
 			var c = {
@@ -353,7 +355,7 @@ export function vectorPhysics(game) {
 				y:c.y + (movedObject.radius * -Math.cos(game.calc.headingFromVector(c.x-item2.x,c.y-item2.y)) )
 			}
 
-			return {type:'end inside', x:i.x, y:i.y,stopPoint:c,item1:item1, item2:item2,force:force};
+			return {type:'end inside', x:i.x, y:i.y,stopPoint:c,item1:item1, item2:item2,force:force, force2:force2};
 		};
 					
 
@@ -388,7 +390,7 @@ export function vectorPhysics(game) {
 					x:c.x + (movedObject.radius * -Math.sin(game.calc.headingFromVector(c.x-item2.x,c.y-item2.y)) ),
 					y:c.y + (movedObject.radius * -Math.cos(game.calc.headingFromVector(c.x-item2.x,c.y-item2.y)) )
 					}; 
-			 return {type:'passed through', x:i.x, y:i.y, stopPoint:c,item1:item1, item2:item2,force:force};
+			 return {type:'passed through', x:i.x, y:i.y, stopPoint:c,item1:item1, item2:item2,force:force,force2:force2};
 			}
 			
 		}; 
