@@ -121,17 +121,42 @@ export function vectorPhysics(game) {
 		item.elasticity = spec.elasticity ||1;
 		item.gravityMaxRange = spec.gravityMaxRange || false;
 		
-		item.move = item.move || function (){	
+
+		var edgeBehaviourFunctions = {
+			WRAP : function() {
+				if (this.x > game.level[game.session.currentLevel].width) {this.x -= game.level[game.session.currentLevel].width}
+				if (this.x < 0) {this.x += game.level[game.session.currentLevel].width}
+				if (this.y > game.level[game.session.currentLevel].height) {this.y -= game.level[game.session.currentLevel].height}
+				if (this.y < 0) {this.y += game.level[game.session.currentLevel].height}
+			},
+			DIE : function() {
+				this.dead = true;
+			}
+		};
+
+		
+		if (typeof item.edgeBehaviour || spec.edgeBehaviour) {
+			var edgeBehaviour = item.edgeBehaviour || spec.edgeBehaviour;
+			
+			item.handleEdgeOfLevel =  edgeBehaviourFunctions.WRAP;
+			if (edgeBehaviourFunctions[edgeBehaviour]) { item.handleEdgeOfLevel = edgeBehaviourFunctions[edgeBehaviour]}
+
+		}
+
+		item.move = item.move || function () {	
 			this.x += this.queuedMove.x;
 			this.y -= this.queuedMove.y;
 			this.momentum.m = this.queuedMove.m;
 			this.momentum.h = this.queuedMove.h;
 			this.queuedMove = {x:0,y:0,h:0,m:0};
 
-			if (this.x > game.level[game.session.currentLevel].width) {this.x -= game.level[game.session.currentLevel].width}
-			if (this.x < 0) {this.x += game.level[game.session.currentLevel].width}
-			if (this.y > game.level[game.session.currentLevel].height) {this.y -= game.level[game.session.currentLevel].height}
-			if (this.y < 0) {this.y += game.level[game.session.currentLevel].height}			
+			if ( this.y < 0 || this.x < 0 ||
+			this.x > game.level[game.session.currentLevel].width ||
+			this.y > game.level[game.session.currentLevel].height) {
+					item.handleEdgeOfLevel();
+				} 
+
+						
 		};
 				
 	};

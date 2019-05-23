@@ -10,12 +10,6 @@ export function landerGame(game, options) {
 		{name:'left',type:'hold',x:100,y:800,r:50},
 		{name:'right',type:'hold',x:250,y:800,r:50}
 	];
-	
-	var reportImpact = function(impactPoint,isReversed) {
-		var message = 'T:' + game.cycleCount + ', ' + impactPoint.item1.color + ' ' + impactPoint.item1.type + ' delivered a ' + impactPoint.force+ 'n force';
-		message += ' on a ' + impactPoint.item2.color + ' ' + impactPoint.item2.type; 
-		console.log(message);
-	};
 		
 	var descentMeter = {
 		render:game.library.defaultWidgets.showText,
@@ -61,6 +55,7 @@ export function landerGame(game, options) {
 		textBaseline: "bottom",
 		getText: function() {return "fuel"}
 	};
+
 	
 	game.widgets.push(descentMeter,fuelMeter,fuelMeterLabel);
 	
@@ -431,6 +426,34 @@ export function landerGame(game, options) {
 		return that;
 	};	
 	
+	game.make.rocket = function(spec) {
+		var that = game.make.roundItem(spec);
+		that.type = 'ship';
+		that.edgeBehaviour = 'DIE';
+		game.library.vectorGraphics.assignVectorRender(that,spec);
+		game.library.vectorPhysics.assignVectorPhysics(that,spec); 
+
+		that.resiliance = spec.resiliance || Infinity;
+
+		that.hit.ground = function(impactPoint,isReversed) {
+			if (impactPoint.force > this.resiliance) {
+				this.explode();
+			} else {
+				if (impactPoint.force > 25) {game.sound.play('bang.mp3');}
+			}
+			VP.reflectForceOffFlatSurface.apply(this,[impactPoint,isReversed]);
+		}
+		that.automaticActions.push(VP.airResistForce, VP.thrustForce,VP.globalGravityForce);
+		
+		that.explode = function() {
+			game.sound.play("die.mp3");
+			game.session.effect.push(game.makeEffect.expandingRing({x:this.x, y:this.y, lastFrame:20}));
+			this.dead = true;
+		};
+
+		return that;
+	}
+
 	game.makeEffect.targetGuide = function(spec) {
 		var that = game.makeEffect.effect(spec);
 		that.color = spec.color || 'white';

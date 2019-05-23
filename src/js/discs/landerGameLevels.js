@@ -173,6 +173,7 @@ export function landerGameLevels(game, options) {
 			{func:"landingZone", spec:{x:625,y:3500-220,width:300,height:25, isGoal:true,color:'green'}},
 			{func:"ground", spec:{x:600,y:3500-210,width:350,height:75, color:'darkkhaki'}},
 			{func:"boulder", spec:{x:500,y:3500+2800,radius:3000, pattern:"soil.jpg"}},
+			{func:"rocket", spec:{x:80,y:3500-500,radius:30, color:'red', mass:100, thrust:1, thrustPower:25}},
 			],
 		effects:[
 			{func:'targetGuide', spec: {x:500, width:300, height:20, lastFrame:200,color:'green'}}
