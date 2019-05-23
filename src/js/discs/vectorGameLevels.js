@@ -1,47 +1,6 @@
 export function vectorGameLevels(game, options) {
     var lib = game.library.vectorGame;
 
-    lib.thrustMeter = {
-        render:game.library.defaultWidgets.circleChart,
-        xPos : 160, yPos:50, height:100,width:20,margin:1,
-        chartFill:"rgba(200, 200, 200, 0.3)",
-        barFill:function(barLevel,ctx){
-            var grd = ctx.createRadialGradient(
-            this.xPos+this.height/2,this.yPos+this.height/2,
-            1,
-            this.xPos+this.height/2,this.yPos+this.height/2,
-            barLevel
-            );
-            grd.addColorStop(0,'white');
-            grd.addColorStop(0.4,'yellow');
-            grd.addColorStop(0.8,'red');
-            return grd;
-        },
-        getValue: function(){return game.session.player.thrust},
-        getRange: function(){return 1},
-    }
-    lib.mapWidget = function(c,ctx,plotOffset) {
-        ctx.beginPath();
-        ctx.fillStyle = "rgba(200, 200, 200, 0.3)";
-        ctx.rect(50,50,100,100);
-        ctx.fill();
-        var X,Y,size;
-        
-        for(var i = 0; i<game.session.items.length; i++) {
-            X = 100*(game.session.items[i].x / game.level[game.session.currentLevel].width);
-            Y = 50*(game.session.items[i].y / game.level[game.session.currentLevel].height);
-            
-            size = (game.session.items[i] === game.session.player) ? 6:4;            
-            
-            ctx.beginPath();
-            ctx.fillStyle = game.session.items[i].color;
-            ctx.rect(50+X-size/2,50+Y-size/2,size,size);
-            ctx.fill();
-        }
-        
-        
-    };
-
     game.level = [
         {name: "space duel", width:1000, height: 1000,
         items: [
