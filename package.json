@@ -14,9 +14,9 @@
     "ejs": "^2.6.1",
     "es6-promise": "^4.2.6",
     "express": "^4.16.4",
-    "webpack": "^4.30.0"
+    "webpack": "^5.75.0"
   },
   "devDependencies": {
-    "webpack-cli": "^3.3.1"
+    "webpack-cli": "^5.0.1"
   }
 }
